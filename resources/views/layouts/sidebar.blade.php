@@ -47,5 +47,12 @@
       </a>
     </li>
 
+    <!-- Dashboard -->
+    <li class="menu-item {{ request()->is('pesanan') ? 'active' : '' }}">
+      <a href="{{ url('/pesanan') }}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-home-alt"></i>
+        <div>Pesanan</div>
+      </a>
+    </li>
   </ul>
 </aside>
