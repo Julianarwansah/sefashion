@@ -18,41 +18,50 @@
     <!-- Dashboard -->
     <li class="menu-item {{ request()->is('dashboard') ? 'active' : '' }}">
       <a href="{{ url('/dashboard') }}" class="menu-link">
-        <i class="menu-icon tf-icons bx bx-home-alt"></i>
+        <i class="menu-icon tf-icons bx bx-grid-alt"></i>
         <div>Dashboard</div>
       </a>
     </li>
 
-    <!-- Dashboard -->
+    <!-- Admin -->
     <li class="menu-item {{ request()->is('admin') ? 'active' : '' }}">
       <a href="{{ url('/admin') }}" class="menu-link">
-        <i class="menu-icon tf-icons bx bx-home-alt"></i>
+        <i class="menu-icon tf-icons bx bx-user-check"></i>
         <div>Admin</div>
       </a>
     </li>
 
-    <!-- Dashboard -->
+    <!-- Customer -->
     <li class="menu-item {{ request()->is('customer') ? 'active' : '' }}">
       <a href="{{ url('/customer') }}" class="menu-link">
-        <i class="menu-icon tf-icons bx bx-home-alt"></i>
+        <i class="menu-icon tf-icons bx bx-user"></i>
         <div>Customer</div>
       </a>
     </li>
 
-    <!-- Dashboard -->
+    <!-- Produk -->
     <li class="menu-item {{ request()->is('produk') ? 'active' : '' }}">
       <a href="{{ url('/produk') }}" class="menu-link">
-        <i class="menu-icon tf-icons bx bx-home-alt"></i>
+        <i class="menu-icon tf-icons bx bx-package"></i>
         <div>Produk</div>
       </a>
     </li>
 
-    <!-- Dashboard -->
+    <!-- Pesanan -->
     <li class="menu-item {{ request()->is('pesanan') ? 'active' : '' }}">
       <a href="{{ url('/pesanan') }}" class="menu-link">
-        <i class="menu-icon tf-icons bx bx-home-alt"></i>
+        <i class="menu-icon tf-icons bx bx-cart"></i>
         <div>Pesanan</div>
       </a>
     </li>
+
+    <!-- Pengiriman -->
+    <li class="menu-item {{ request()->is('pengiriman') ? 'active' : '' }}">
+      <a href="{{ url('/pengiriman') }}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-truck"></i>
+        <div>Pengiriman</div>
+      </a>
+    </li>
+
   </ul>
 </aside>
