@@ -6,6 +6,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\PesananController;
 use App\Http\Controllers\PengirimanController;
+use App\Http\Controllers\ShippingController;
 
 Route::get('/', function () {
     return view('admin.pages.dashboard');
@@ -23,3 +24,16 @@ Route::delete('/produk/{produk}/delete-image/{gambar}', [ProdukController::class
 Route::resource('pesanan', PesananController::class);
 Route::resource('pengiriman', PengirimanController::class);
 Route::get('pengiriman/{id}/track', [PengirimanController::class, 'track'])->name('pengiriman.track');
+
+// Halaman calculate shipping
+    Route::get('/calculate', [ShippingController::class, 'calculate'])->name('calculate');
+    Route::post('/calculate/shipping-cost', [ShippingController::class, 'calculateShippingCost'])->name('calculate.shipping-cost');
+    
+    // API endpoints untuk dropdown
+    Route::get('/calculate/provinces', [ShippingController::class, 'getProvinces'])->name('calculate.provinces');
+    Route::get('/calculate/cities', [ShippingController::class, 'getCities'])->name('calculate.cities');
+    Route::get('/calculate/couriers', [ShippingController::class, 'getCouriers'])->name('calculate.couriers');
+    Route::get('/calculate/api-status', [ShippingController::class, 'checkApiStatus'])->name('calculate.api-status');
+    
+    // Untuk update alamat customer
+    Route::post('/calculate/update-customer-address', [ShippingController::class, 'updateCustomerAddress'])->name('calculate.update-customer-address');
