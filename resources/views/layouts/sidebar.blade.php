@@ -55,6 +55,14 @@
       </a>
     </li>
 
+    <!-- calculate -->
+    <li class="menu-item {{ request()->is('calculate') ? 'active' : '' }}">
+      <a href="{{ url('/calculate') }}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-truck"></i>
+        <div>Calculate Shipping</div>
+      </a>
+    </li>
+
     <!-- Pengiriman -->
     <li class="menu-item {{ request()->is('pengiriman') ? 'active' : '' }}">
       <a href="{{ url('/pengiriman') }}" class="menu-link">
