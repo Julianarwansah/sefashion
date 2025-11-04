@@ -14,6 +14,11 @@ return [
     |
     */
 
+    'rajaongkir' => [
+        'key' => env('RAJAONGKIR_API_KEY', ''),
+        'package' => env('RAJAONGKIR_PACKAGE', 'starter'), // starter, basic, pro
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
