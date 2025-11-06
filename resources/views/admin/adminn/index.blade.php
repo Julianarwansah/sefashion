@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title mb-0">Data Admin</h3>
-                    <a href="{{ route('admin.create') }}" class="btn btn-primary">
+                    <a href="{{ route('adminn.create') }}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Tambah Admin
                     </a>
                 </div>
