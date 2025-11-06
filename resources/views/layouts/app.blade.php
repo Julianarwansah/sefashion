@@ -1,79 +1,162 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'SeFashion')</title>
-    
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Custom Styles -->
+<html
+  lang="en"
+  class="light-style layout-menu-fixed"
+  dir="ltr"
+  data-theme="theme-default"
+  data-assets-path="{{ asset('assets/') }}"
+  data-template="vertical-menu-template-free"
+>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+
+    <title>@yield('title', 'Dashboard Konveksi')</title>
+
+    <meta name="description" content="" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Icons. Uncomment required icon fonts -->
+    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/boxicons.css') }}" />
+
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="{{ asset('assets/vendor/css/core.css') }}" class="template-customizer-core-css" />
+    <link rel="stylesheet" href="{{ asset('assets/vendor/css/theme-default.css') }}" class="template-customizer-theme-css" />
+    <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
+
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/apex-charts/apex-charts.css') }}" />
+
+    <!-- Helpers -->
+    <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
+
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+    <script src="{{ asset('assets/js/config.js') }}"></script>
+
     <style>
-        .hero-bg {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), 
-                              url('https://images.unsplash.com/photo-1558769132-cb1aea1f1f57?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
-            background-size: cover;
-            background-position: center;
-        }
+      .badge-notifications {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        font-size: 10px;
+        padding: 3px 6px;
+      }
+
+      .dropdown-notifications .dropdown-menu {
+        width: 300px;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .article-content {
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+      }
+
+      .article-content h1, 
+      .article-content h2, 
+      .article-content h3, 
+      .article-content h4, 
+      .article-content h5, 
+      .article-content h6 {
+          margin-top: 1.5em;
+          margin-bottom: 0.5em;
+          font-weight: bold;
+      }
+
+      .article-content p {
+          margin-bottom: 1em;
+      }
+
+      .article-content ul, 
+      .article-content ol {
+          margin-bottom: 1em;
+          padding-left: 2em;
+      }
+
+      .article-content table {
+          border-collapse: collapse;
+          width: 100%;
+          margin-bottom: 1em;
+      }
+
+      .article-content table, 
+      .article-content th, 
+      .article-content td {
+          border: 1px solid #ddd;
+          padding: 8px;
+      }
+
+      .article-content th {
+          background-color: #f8f9fa;
+      }
     </style>
-</head>
-<body class="bg-white">
-      {{-- NAVBAR PIL + CENTERED di area teks --}}
-  <nav class="absolute top-8 left-1/2 -translate-x-1/2 z-20">
-    <ul class="flex items-center gap-6 px-6 py-3 rounded-full bg-white/80 backdrop-blur-md shadow-md text-sm font-medium">
-      <li><a href="{{ route('home') }}" class="hover:text-gray-900 text-gray-700">Home</a></li>
-      <li><a href="{{ route('shop') }}" class="hover:text-gray-900 text-gray-700">Shop</a></li>
-      <li><a href="#" class="hover:text-gray-900 text-gray-700">About</a></li>
-      <li><a href="#" class="hover:text-gray-900 text-gray-700">Contact</a></li>
-      <li class="ml-2">
-        <a href="{{ route('login') }}" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-300 hover:bg-gray-50">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-          Account
-        </a>
-      </li>
-      <li>
-        <a href="{{ route('shop') }}" class="inline-flex items-center px-3 py-1.5 rounded-full bg-gray-900 text-white hover:bg-black">
-          Cart
-        </a>
-      </li>
-    </ul>
-  </nav>
+  </head>
 
-    <!-- Hero Section (Optional) -->
-    @if(isset($showHero) && $showHero)
-    <div class="hero-bg relative h-64">
-        <div class="absolute inset-0 flex flex-col items-center justify-center text-white">
-            <div class="mb-4">
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M24 4L14 14L24 24L34 14L24 4Z" fill="currentColor" opacity="0.6"/>
-                    <path d="M24 24L14 34L24 44L34 34L24 24Z" fill="currentColor"/>
-                </svg>
+  <body>
+    <!-- Layout wrapper -->
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Sidebar -->
+        @include('layouts.sidebar')
+
+        <!-- Layout container -->
+        <div class="layout-page">
+          <!-- Navbar -->
+          @include('layouts.navbar')
+
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <!-- Content -->
+            <div class="container-xxl flex-grow-1 container-p-y">
+              @yield('content')
             </div>
-            <h1 class="text-4xl font-bold mb-2">@yield('hero-title', 'SeFashion')</h1>
-            <div class="text-sm">
-                <a href="{{ url('/') }}" class="hover:underline">Home</a>
-                <span class="mx-2">/</span>
-                <span>@yield('hero-breadcrumb')</span>
-            </div>
+
+            <!-- Footer -->
+            @include('layouts.footer')
+          </div>
+          <!-- Content wrapper -->
         </div>
+        <!-- / Layout page -->
+      </div>
+
+      <!-- Overlay -->
+      <div class="layout-overlay layout-menu-toggle"></div>
     </div>
-    @endif
+    <!-- / Layout wrapper -->
 
-    <!-- Main Content -->
-    <main>
-        @yield('content')
-    </main>
+    <!-- Core JS -->
+    <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/popper/popper.js') }}"></script>
+    <script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js') }}"></script>
+    <script src="{{ asset('assets/vendor/js/menu.js') }}"></script>
 
-    <!-- Footer (Optional) -->
-    <footer class="bg-gray-100 mt-16">
-        <div class="max-w-7xl mx-auto px-4 py-8 text-center text-gray-600">
-            <p>&copy; {{ date('Y') }} SeFashion. All rights reserved.</p>
-        </div>
-    </footer>
+    <!-- Vendors JS -->
+    <script src="{{ asset('assets/vendor/libs/apex-charts/apexcharts.js') }}"></script>
 
-    <!-- Scripts -->
-    @stack('scripts')
-</body>
+    <!-- Main JS -->
+    <script src="{{ asset('assets/js/main.js') }}"></script>
+
+    <!-- Page JS -->
+    <script src="{{ asset('assets/js/dashboards-analytics.js') }}"></script>
+
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </body>
 </html>
