@@ -8,12 +8,12 @@
                 <div class="card-header">
                     <h3 class="card-title">Tambah Produk Baru</h3>
                     <div class="card-tools">
-                        <a href="{{ route('produk.index') }}" class="btn btn-sm btn-secondary">
+                        <a href="{{ route('admin.produk.index') }}" class="btn btn-sm btn-secondary">
                             <i class="fas fa-arrow-left"></i> Kembali
                         </a>
                     </div>
                 </div>
-                <form action="{{ route('produk.store') }}" method="POST" enctype="multipart/form-data" id="produkForm">
+                <form action="{{ route('admin.produk.store') }}" method="POST" enctype="multipart/form-data" id="produkForm">
                     @csrf
                     <div class="card-body">
                         <!-- Informasi Produk -->
@@ -389,7 +389,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i> Simpan Produk
                         </button>
-                        <a href="{{ route('produk.index') }}" class="btn btn-secondary">
+                        <a href="{{ route('admin.produk.index') }}" class="btn btn-secondary">
                             <i class="fas fa-times"></i> Batal
                         </a>
                     </div>
