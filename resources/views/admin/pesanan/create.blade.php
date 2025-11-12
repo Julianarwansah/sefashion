@@ -7,7 +7,7 @@
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('pesanan.index') }}" class="text-decoration-none">Pesanan</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.pesanan.index') }}" class="text-decoration-none">Pesanan</a></li>
                     <li class="breadcrumb-item active">Tambah Pesanan</li>
                 </ol>
             </nav>
@@ -16,7 +16,7 @@
             </h1>
             <p class="text-muted mb-0">Buat pesanan baru untuk customer</p>
         </div>
-        <a href="{{ route('pesanan.index') }}" class="btn btn-outline-secondary">
+        <a href="{{ route('admin.pesanan.index') }}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-2"></i>Kembali
         </a>
     </div>
@@ -29,7 +29,7 @@
             </h5>
         </div>
         <div class="card-body">
-            <form action="{{ route('pesanan.store') }}" method="POST" id="pesananForm">
+            <form action="{{ route('admin.pesanan.store') }}" method="POST" id="pesananForm">
                 @csrf
                 
                 <!-- Informasi Dasar -->
@@ -134,7 +134,7 @@
                 <div class="row mt-4">
                     <div class="col-12">
                         <div class="d-flex gap-2 justify-content-end">
-                            <a href="{{ route('pesanan.index') }}" class="btn btn-outline-secondary">
+                            <a href="{{ route('admin.pesanan.index') }}" class="btn btn-outline-secondary">
                                 <i class="fas fa-times me-2"></i>Batal
                             </a>
                             <button type="submit" class="btn btn-primary">
