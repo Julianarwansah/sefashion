@@ -67,7 +67,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::get('/dashboard/real-time-stats', [DashboardController::class, 'getRealTimeStats'])->name('dashboard.stats');
     
     // Admin Management
-    Route::resource('admins', AdminController::class);
+    Route::resource('adminn', AdminController::class);
     
     // Customer Management
     Route::resource('customer', CustomerController::class);
