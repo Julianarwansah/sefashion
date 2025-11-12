@@ -9,7 +9,7 @@
                     <h4 class="mb-0">Tambah Customer Baru</h4>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('customer.store') }}" method="POST">
+                    <form action="{{ route('admin.customer.store') }}" method="POST">
                         @csrf
                         <div class="mb-3">
                             <label for="nama" class="form-label">Nama Lengkap</label>
@@ -63,7 +63,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('customer.index') }}" class="btn btn-secondary">Kembali</a>
+                            <a href="{{ route('admin.customer.index') }}" class="btn btn-secondary">Kembali</a>
                             <button type="submit" class="btn btn-primary">Simpan</button>
                         </div>
                     </form>

@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title mb-0">Data Admin</h3>
-                    <a href="{{ route('adminn.create') }}" class="btn btn-primary">
+                    <a href="{{ route('admin.adminn.create') }}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Tambah Admin
                     </a>
                 </div>
@@ -53,15 +53,15 @@
                                         <td>{{ Str::limit($admin->alamat, 30) ?? '-' }}</td>
                                         <td>
                                             <div class="btn-group btn-group-sm" role="group">
-                                                <a href="{{ route('admin.show', $admin->id_admin) }}" 
+                                                <a href="{{ route('admin.adminn.show', $admin->id_admin) }}" 
                                                    class="btn btn-info" title="Detail">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('admin.edit', $admin->id_admin) }}" 
+                                                <a href="{{ route('admin.adminn.edit', $admin->id_admin) }}" 
                                                    class="btn btn-warning" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <form action="{{ route('admin.destroy', $admin->id_admin) }}" 
+                                                <form action="{{ route('admin.adminn.destroy', $admin->id_admin) }}" 
                                                       method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')

@@ -9,7 +9,7 @@
                     <h4 class="mb-0">Edit Data Customer</h4>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('customer.update', $customer->id_customer) }}" method="POST">
+                    <form action="{{ route('admin.customer.update', $customer->id_customer) }}" method="POST">
                         @csrf
                         @method('PUT')
                         
@@ -66,7 +66,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('customer.index') }}" class="btn btn-secondary">Batal</a>
+                            <a href="{{ route('admin.customer.index') }}" class="btn btn-secondary">Batal</a>
                             <button type="submit" class="btn btn-primary">Update</button>
                         </div>
                     </form>
