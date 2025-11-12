@@ -8,10 +8,10 @@
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Detail Produk</h1>
         <div class="btn-group">
-            <a href="{{ route('produk.index') }}" class="btn btn-secondary">
+            <a href="{{ route('admin.produk.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
-            <a href="{{ route('produk.edit', $produk->id_produk) }}" class="btn btn-warning">
+            <a href="{{ route('admin.produk.edit', $produk->id_produk) }}" class="btn btn-warning">
                 <i class="fas fa-edit"></i> Edit
             </a>
             <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal">
@@ -201,7 +201,7 @@
                                         @endif
                                         <div class="mt-1 text-center">
                                             @if(!$gambar->is_primary)
-                                                <form action="{{ route('produk.set-primary-image', ['produk' => $produk->id_produk, 'gambar' => $gambar->id_gambar]) }}" 
+                                                <form action="{{ route('admin.produk.set-primary-image', ['produk' => $produk->id_produk, 'gambar' => $gambar->id_gambar]) }}" 
                                                       method="POST" class="d-inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-sm btn-outline-primary" 
@@ -210,7 +210,7 @@
                                                     </button>
                                                 </form>
                                             @endif
-                                            <form action="{{ route('produk.delete-image', ['produk' => $produk->id_produk, 'gambar' => $gambar->id_gambar]) }}" 
+                                            <form action="{{ route('admin.produk.delete-image', ['produk' => $produk->id_produk, 'gambar' => $gambar->id_gambar]) }}" 
                                                   method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
@@ -339,7 +339,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                <form action="{{ route('produk.destroy', $produk->id_produk) }}" method="POST">
+                <form action="{{ route('admin.produk.destroy', $produk->id_produk) }}" method="POST">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger">Hapus Produk</button>
