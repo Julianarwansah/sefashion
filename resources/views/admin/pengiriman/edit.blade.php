@@ -7,8 +7,8 @@
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('pengiriman.index') }}" class="text-decoration-none">Pengiriman</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('pengiriman.show', $pengiriman->id_pengiriman) }}" class="text-decoration-none">#{{ $pengiriman->id_pengiriman }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.pengiriman.index') }}" class="text-decoration-none">Pengiriman</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.pengiriman.show', $pengiriman->id_pengiriman) }}" class="text-decoration-none">#{{ $pengiriman->id_pengiriman }}</a></li>
                     <li class="breadcrumb-item active">Edit</li>
                 </ol>
             </nav>
@@ -18,10 +18,10 @@
             <p class="text-muted mb-0">#{{ $pengiriman->id_pengiriman }} - {{ $pengiriman->pemesanan->customer->nama_customer ?? 'N/A' }}</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('pengiriman.show', $pengiriman->id_pengiriman) }}" class="btn btn-outline-info">
+            <a href="{{ route('admin.pengiriman.show', $pengiriman->id_pengiriman) }}" class="btn btn-outline-info">
                 <i class="fas fa-eye me-2"></i>Detail
             </a>
-            <a href="{{ route('pengiriman.index') }}" class="btn btn-outline-secondary">
+            <a href="{{ route('admin.pengiriman.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Kembali
             </a>
         </div>
@@ -35,7 +35,7 @@
             </h5>
         </div>
         <div class="card-body">
-            <form action="{{ route('pengiriman.update', $pengiriman->id_pengiriman) }}" method="POST" id="pengirimanForm">
+            <form action="{{ route('admin.pengiriman.update', $pengiriman->id_pengiriman) }}" method="POST" id="pengirimanForm">
                 @csrf
                 @method('PUT')
                 
@@ -248,7 +248,7 @@
                 <div class="row mt-4">
                     <div class="col-12">
                         <div class="d-flex gap-2 justify-content-end">
-                            <a href="{{ route('pengiriman.show', $pengiriman->id_pengiriman) }}" class="btn btn-outline-secondary">
+                            <a href="{{ route('admin.pengiriman.show', $pengiriman->id_pengiriman) }}" class="btn btn-outline-secondary">
                                 <i class="fas fa-times me-2"></i>Batal
                             </a>
                             <button type="submit" class="btn btn-primary">
