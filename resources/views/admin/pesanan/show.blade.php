@@ -7,7 +7,7 @@
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('pesanan.index') }}" class="text-decoration-none">Pesanan</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.pesanan.index') }}" class="text-decoration-none">Pesanan</a></li>
                     <li class="breadcrumb-item active">Detail #{{ $pesanan->id_pemesanan }}</li>
                 </ol>
             </nav>
@@ -17,10 +17,10 @@
             <p class="text-muted mb-0">#{{ $pesanan->id_pemesanan }} - {{ $pesanan->customer->nama_customer ?? 'N/A' }}</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('pesanan.index') }}" class="btn btn-outline-secondary">
+            <a href="{{ route('admin.pesanan.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Kembali
             </a>
-            <a href="{{ route('pesanan.edit', $pesanan->id_pemesanan) }}" class="btn btn-warning">
+            <a href="{{ route('admin.pesanan.edit', $pesanan->id_pemesanan) }}" class="btn btn-warning">
                 <i class="fas fa-edit me-2"></i>Edit
             </a>
         </div>
@@ -204,7 +204,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('pesanan.update', $pesanan->id_pemesanan) }}" method="POST">
+                    <form action="{{ route('admin.pesanan.update', $pesanan->id_pemesanan) }}" method="POST">
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="update_only_status" value="true">

@@ -7,8 +7,8 @@
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('pesanan.index') }}" class="text-decoration-none">Pesanan</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('pesanan.show', $pesanan->id_pemesanan) }}" class="text-decoration-none">#{{ $pesanan->id_pemesanan }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.pesanan.index') }}" class="text-decoration-none">Pesanan</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.pesanan.show', $pesanan->id_pemesanan) }}" class="text-decoration-none">#{{ $pesanan->id_pemesanan }}</a></li>
                     <li class="breadcrumb-item active">Edit</li>
                 </ol>
             </nav>
@@ -18,10 +18,10 @@
             <p class="text-muted mb-0">#{{ $pesanan->id_pemesanan }} - {{ $pesanan->customer->nama_customer ?? 'N/A' }}</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('pesanan.show', $pesanan->id_pemesanan) }}" class="btn btn-outline-info">
+            <a href="{{ route('admin.pesanan.show', $pesanan->id_pemesanan) }}" class="btn btn-outline-info">
                 <i class="fas fa-eye me-2"></i>Detail
             </a>
-            <a href="{{ route('pesanan.index') }}" class="btn btn-outline-secondary">
+            <a href="{{ route('admin.pesanan.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Kembali
             </a>
         </div>
@@ -35,7 +35,7 @@
             </h5>
         </div>
         <div class="card-body">
-            <form action="{{ route('pesanan.update', $pesanan->id_pemesanan) }}" method="POST" id="pesananForm">
+            <form action="{{ route('admin.pesanan.update', $pesanan->id_pemesanan) }}" method="POST" id="pesananForm">
                 @csrf
                 @method('PUT')
                 
@@ -165,7 +165,7 @@
                 <div class="row mt-4">
                     <div class="col-12">
                         <div class="d-flex gap-2 justify-content-end">
-                            <a href="{{ route('pesanan.show', $pesanan->id_pemesanan) }}" class="btn btn-outline-secondary">
+                            <a href="{{ route('admin.pesanan.show', $pesanan->id_pemesanan) }}" class="btn btn-outline-secondary">
                                 <i class="fas fa-times me-2"></i>Batal
                             </a>
                             <button type="submit" class="btn btn-primary">
