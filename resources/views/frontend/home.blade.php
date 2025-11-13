@@ -82,7 +82,7 @@
 
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
       @forelse($products as $product)
-        <a href=""
+        <a href="{{ route('product.show', $product->id_produk) }}"
            class="group bg-gray-50 rounded-2xl overflow-hidden hover:shadow-card transition">
           <div class="aspect-[3/4] bg-white">
             @php

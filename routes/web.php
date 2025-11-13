@@ -21,7 +21,9 @@ use App\Http\Controllers\ShippingController;
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
-e('product.detail');
+Route::get('/about', function () { return view('frontend.about'); })->name('about');
+Route::get('/contact', function () { return view('frontend.contact'); })->name('contact');
+Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show');
 
 // Authentication Routes
 Route::get('/login', function () { return view('auth.login'); })->name('login')->middleware('guest');

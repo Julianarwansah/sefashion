@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts_public.app')
 
 @section('title', $product->nama_produk . ' • SeFashion')
 
