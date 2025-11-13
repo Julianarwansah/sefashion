@@ -57,9 +57,34 @@ class Produk extends Model
     // Accessor gambar URL
     public function getGambarUrlAttribute()
     {
-        return $this->attributes['gambar']
-            ? asset('storage/produk/' . $this->attributes['gambar'])
-            : asset('images/default-product.jpg');
+        // Cek gambar utama di field 'gambar'
+        if (isset($this->attributes['gambar']) && $this->attributes['gambar']) {
+            $path = storage_path('app/public/produk/' . $this->attributes['gambar']);
+            if (file_exists($path)) {
+                return asset('storage/produk/' . $this->attributes['gambar']);
+            }
+        }
+
+        // Jika tidak ada gambar utama, coba ambil dari produk_gambar yang is_primary
+        $primaryImage = $this->gambarProduk()->where('is_primary', 1)->first();
+        if ($primaryImage && $primaryImage->gambar) {
+            $path = storage_path('app/public/produk/images/' . $primaryImage->gambar);
+            if (file_exists($path)) {
+                return asset('storage/produk/images/' . $primaryImage->gambar);
+            }
+        }
+
+        // Jika masih tidak ada, ambil gambar pertama dari produk_gambar
+        $firstImage = $this->gambarProduk()->first();
+        if ($firstImage && $firstImage->gambar) {
+            $path = storage_path('app/public/produk/images/' . $firstImage->gambar);
+            if (file_exists($path)) {
+                return asset('storage/produk/images/' . $firstImage->gambar);
+            }
+        }
+
+        // Return placeholder jika gambar tidak ada
+        return 'https://via.placeholder.com/400x500/CCCCCC/666666?text=No+Image';
     }
 
     // Update total stok berdasarkan detail ukuran
