@@ -12,6 +12,7 @@ use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\PengirimanController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CheckoutController;
 
 /*
@@ -29,9 +30,9 @@ Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show
 
 // Authentication Routes
 Route::get('/login', function () { return view('auth.login'); })->name('login')->middleware('guest');
-Route::get('/register', function () { return view('auth.login'); })->middleware('guest');
+Route::get('/register', function () { return view('auth.register'); })->name('register')->middleware('guest'); // PERBAIKAN DI SINI
 Route::post('/login', [LoginController::class, 'login']);
-Route::post('/register', [RegisterController::class, 'register'])->name('register');
+Route::post('/register', [RegisterController::class, 'register'])->name('register.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Password Reset
@@ -47,8 +48,9 @@ Route::post('/password/email', [LoginController::class, 'sendResetLinkEmail'])->
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:customer'])->group(function () {
-    Route::get('/account', function () { return view('frontend.account.dashboard'); })->name('account');
-    Route::get('/my-orders', function () { return view('frontend.account.orders'); })->name('my-orders');
+    // Profile Routes
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');

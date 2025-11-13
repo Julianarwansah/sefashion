@@ -33,9 +33,9 @@
       <form method="POST" action="{{ route('register') }}" id="registerForm">
         @csrf
 
-        {{-- Name Field --}}
+        {{-- Nama Field --}}
         <div class="mb-5">
-          <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
+          <label for="nama" class="block text-sm font-semibold text-gray-700 mb-2">
             Full Name
           </label>
           <div class="relative">
@@ -46,16 +46,16 @@
             </div>
             <input
               type="text"
-              id="name"
-              name="name"
-              value="{{ old('name') }}"
+              id="nama"
+              name="nama"
+              value="{{ old('nama') }}"
               required
               autofocus
-              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition @error('name') border-red-500 @enderror"
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition @error('nama') border-red-500 @enderror"
               placeholder="John Doe"
             >
           </div>
-          @error('name')
+          @error('nama')
             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
           @enderror
         </div>
@@ -82,6 +82,56 @@
             >
           </div>
           @error('email')
+            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+          @enderror
+        </div>
+
+        {{-- Phone Number Field --}}
+        <div class="mb-5">
+          <label for="no_hp" class="block text-sm font-semibold text-gray-700 mb-2">
+            Phone Number
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
+            </div>
+            <input
+              type="tel"
+              id="no_hp"
+              name="no_hp"
+              value="{{ old('no_hp') }}"
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition @error('no_hp') border-red-500 @enderror"
+              placeholder="081234567890"
+            >
+          </div>
+          @error('no_hp')
+            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+          @enderror
+        </div>
+
+        {{-- Address Field --}}
+        <div class="mb-5">
+          <label for="alamat" class="block text-sm font-semibold text-gray-700 mb-2">
+            Address
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <textarea
+              id="alamat"
+              name="alamat"
+              rows="3"
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition @error('alamat') border-red-500 @enderror"
+              placeholder="Your complete address"
+            >{{ old('alamat') }}</textarea>
+          </div>
+          @error('alamat')
             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
           @enderror
         </div>
@@ -211,9 +261,6 @@
     </div>
   </div>
 </section>
-@endsection
-
-@push('scripts')
 <style>
 .fade-in-up {
   opacity: 0;
@@ -267,4 +314,4 @@ document.getElementById('registerForm').addEventListener('submit', function() {
   buttonLoader.classList.remove('hidden');
 });
 </script>
-@endpush
+@endsection
