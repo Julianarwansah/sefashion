@@ -11,6 +11,8 @@ use App\Http\Controllers\PesananController;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\PengirimanController;
 use App\Http\Controllers\ShippingController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,8 +49,21 @@ Route::post('/password/email', [LoginController::class, 'sendResetLinkEmail'])->
 Route::middleware(['auth:customer'])->group(function () {
     Route::get('/account', function () { return view('frontend.account.dashboard'); })->name('account');
     Route::get('/my-orders', function () { return view('frontend.account.orders'); })->name('my-orders');
-    Route::get('/cart', function () { return view('frontend.cart'); })->name('cart');
-    Route::get('/checkout', function () { return view('frontend.checkout'); })->name('checkout');
+
+    // Cart routes
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+    Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+
+    // Checkout routes
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+    Route::post('/checkout/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('checkout.shipping');
+    Route::get('/order/success/{id}', function ($id) {
+        return view('frontend.order-success', ['orderId' => $id]);
+    })->name('order.success');
 });
 
 /*

@@ -4,22 +4,28 @@
 
 @section('content')
 {{-- HERO BANNER WITH SHOP TEXT --}}
-<section class="relative h-[50vh] min-h-[400px] w-full">
-  {{-- background image --}}
+<section class="relative h-[50vh] min-h-[400px] w-full overflow-hidden">
+  {{-- background image with parallax --}}
   <div
-    class="absolute inset-0 bg-center bg-cover"
+    id="shopHeroImage"
+    class="absolute inset-0 bg-center bg-cover transition-transform duration-300"
     style="background-image:url('{{ asset('images/hero-rack.jpg') }}');">
   </div>
 
   {{-- dark overlay --}}
   <div class="absolute inset-0 bg-black/40"></div>
 
+  {{-- Animated floating elements --}}
+  <div class="absolute top-20 left-20 w-24 h-24 bg-white/5 rounded-full blur-2xl animate-float"></div>
+  <div class="absolute bottom-20 right-32 w-32 h-32 bg-white/5 rounded-full blur-3xl animate-float-delayed"></div>
+
   {{-- Centered Shop Text --}}
   <div class="relative z-10 h-full flex items-center justify-center">
     <div class="text-center">
-      <h1 class="text-white text-5xl sm:text-6xl font-extrabold">
+      <h1 class="text-white text-5xl sm:text-6xl font-extrabold animate-fade-in-up">
         Shop
       </h1>
+      <p class="mt-4 text-white/80 text-lg animate-fade-in-up animation-delay-200">Discover Your Perfect Style</p>
     </div>
   </div>
 </section>
@@ -78,15 +84,12 @@
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
       @forelse($products as $product)
         <a href="{{ route('product.show', $product->id_produk) }}"
-           class="group bg-white rounded-2xl overflow-hidden hover:shadow-lg transition border border-gray-100">
-          <div class="aspect-[3/4] bg-gray-100">
-            @php
-              $img = $product->gambar ? asset('storage/produk/'.$product->gambar) : asset('images/placeholder-product.jpg');
-            @endphp
-            <img src="{{ $img }}" class="w-full h-full object-cover group-hover:scale-[1.05] transition duration-300" alt="{{ $product->nama_produk }}">
+           class="group bg-white rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-gray-300 scroll-reveal opacity-0 translate-y-8">
+          <div class="aspect-[3/4] bg-gray-100 overflow-hidden">
+            <img src="{{ $product->gambar_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="{{ $product->nama_produk }}">
           </div>
           <div class="p-4">
-            <h3 class="font-semibold line-clamp-2 text-gray-900">{{ $product->nama_produk }}</h3>
+            <h3 class="font-semibold line-clamp-2 text-gray-900 group-hover:text-black transition">{{ $product->nama_produk }}</h3>
             @if($product->kategori)
               <p class="text-sm text-gray-500 mt-1">{{ $product->kategori }}</p>
             @endif
@@ -139,4 +142,101 @@
     @endif
   </div>
 </section>
+
+@push('styles')
+<style>
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes floatDelayed {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-25px);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: floatDelayed 7s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+.scroll-reveal {
+  transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-reveal.revealed {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+</style>
+@endpush
+
+@push('scripts')
+<script>
+// Parallax effect for shop hero
+document.addEventListener('scroll', function() {
+  const heroImage = document.getElementById('shopHeroImage');
+  if (heroImage) {
+    const scrolled = window.pageYOffset;
+    const rate = scrolled * 0.3;
+    heroImage.style.transform = `translateY(${rate}px)`;
+  }
+});
+
+// Scroll reveal for products
+const observerOptions = {
+  threshold: 0.1,
+  rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver(function(entries) {
+  entries.forEach((entry, index) => {
+    if (entry.isIntersecting) {
+      // Staggered animation
+      setTimeout(() => {
+        entry.target.classList.add('revealed');
+      }, index * 50);
+      observer.unobserve(entry.target);
+    }
+  });
+}, observerOptions);
+
+document.addEventListener('DOMContentLoaded', function() {
+  const scrollRevealElements = document.querySelectorAll('.scroll-reveal');
+  scrollRevealElements.forEach(el => observer.observe(el));
+});
+</script>
+@endpush
 @endsection

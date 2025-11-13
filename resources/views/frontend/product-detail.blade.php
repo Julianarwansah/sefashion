@@ -28,23 +28,16 @@
       <div class="space-y-4">
         {{-- Main Image --}}
         <div class="aspect-[4/5] bg-gray-100 rounded-2xl overflow-hidden">
-          @php
-            $mainImage = $product->gambar
-              ? asset('storage/produk/'.$product->gambar)
-              : ($product->gambarProduk->first()
-                  ? asset('storage/produk/images/'.$product->gambarProduk->first()->gambar)
-                  : asset('images/placeholder-product.jpg'));
-          @endphp
-          <img id="mainProductImage" src="{{ $mainImage }}" class="w-full h-full object-cover" alt="{{ $product->nama_produk }}">
+          <img id="mainProductImage" src="{{ $product->gambar_url }}" class="w-full h-full object-cover" alt="{{ $product->nama_produk }}">
         </div>
 
         {{-- Thumbnail Images --}}
         @if($product->gambarProduk->count() > 0)
         <div class="grid grid-cols-4 gap-3">
           @if($product->gambar)
-          <button onclick="changeMainImage('{{ asset('storage/produk/'.$product->gambar) }}')"
+          <button onclick="changeMainImage('{{ $product->gambar_url }}')"
                   class="aspect-square bg-gray-100 rounded-lg overflow-hidden hover:ring-2 hover:ring-gray-900 transition">
-            <img src="{{ asset('storage/produk/'.$product->gambar) }}" class="w-full h-full object-cover" alt="Thumbnail">
+            <img src="{{ $product->gambar_url }}" class="w-full h-full object-cover" alt="Thumbnail">
           </button>
           @endif
 
@@ -229,12 +222,7 @@
         <a href="{{ route('product.show', $relatedProduct->id_produk) }}"
            class="group bg-white rounded-2xl overflow-hidden hover:shadow-lg transition border border-gray-100">
           <div class="aspect-[3/4] bg-gray-100">
-            @php
-              $img = $relatedProduct->gambar
-                ? asset('storage/produk/'.$relatedProduct->gambar)
-                : asset('images/placeholder-product.jpg');
-            @endphp
-            <img src="{{ $img }}" class="w-full h-full object-cover group-hover:scale-[1.05] transition duration-300" alt="{{ $relatedProduct->nama_produk }}">
+            <img src="{{ $relatedProduct->gambar_url }}" class="w-full h-full object-cover group-hover:scale-[1.05] transition duration-300" alt="{{ $relatedProduct->nama_produk }}">
           </div>
           <div class="p-4">
             <h3 class="font-semibold line-clamp-2 text-gray-900">{{ $relatedProduct->nama_produk }}</h3>
