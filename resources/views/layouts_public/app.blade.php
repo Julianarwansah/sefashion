@@ -31,11 +31,60 @@
       <li><a href="{{ route('about') }}" class="hover:text-gray-900 text-gray-700 {{ Request::routeIs('about') ? 'text-gray-900 font-semibold' : '' }}">About</a></li>
       <li><a href="{{ route('contact') }}" class="hover:text-gray-900 text-gray-700 {{ Request::routeIs('contact') ? 'text-gray-900 font-semibold' : '' }}">Contact</a></li>
       <li class="ml-2">
-        <a href="{{ route('login') }}" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-300 hover:bg-gray-50">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-          Account
-        </a>
-      </li>
+        @auth('customer')
+            {{-- Jika customer sudah login --}}
+            <div class="relative group">
+                <button class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-300 hover:bg-gray-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    {{ Auth::guard('customer')->user()->nama }}
+                    <svg class="w-3 h-3 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                
+                {{-- Dropdown Menu --}}
+                <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div class="p-2">
+                        <div class="px-3 py-2 border-b border-gray-100">
+                            <p class="text-sm font-medium text-gray-900">{{ Auth::guard('customer')->user()->nama }}</p>
+                            <p class="text-xs text-gray-500">{{ Auth::guard('customer')->user()->email }}</p>
+                        </div>
+                        <a href="{{ route('profile') }}" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            My Account
+                        </a>
+                        <a href="#" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                            </svg>
+                            My Orders
+                        </a>
+                        <form method="POST" action="{{ route('logout') }}" class="border-t border-gray-100 pt-2">
+                            @csrf
+                            <button type="submit" class="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md w-full text-left">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                </svg>
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @else
+            {{-- Jika belum login --}}
+            <a href="{{ route('login') }}" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-300 hover:bg-gray-50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Account
+            </a>
+        @endauth
+    </li>
       <li>
         @auth('customer')
           <a href="{{ route('cart.index') }}" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-900 text-white hover:bg-black">
