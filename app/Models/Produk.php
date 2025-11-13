@@ -42,6 +42,12 @@ class Produk extends Model
         return $this->hasMany(ProdukGambar::class, 'id_produk', 'id_produk');
     }
 
+    // Alias untuk backward compatibility
+    public function gambar()
+    {
+        return $this->gambarProduk();
+    }
+
     // Scope produk tersedia
     public function scopeTersedia($query)
     {

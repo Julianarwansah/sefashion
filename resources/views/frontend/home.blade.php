@@ -86,7 +86,7 @@
            class="group bg-gray-50 rounded-2xl overflow-hidden hover:shadow-card transition">
           <div class="aspect-[3/4] bg-white">
             @php
-              $img = $product->gambar ? asset('storage/'.$product->gambar) : asset('images/placeholder-product.jpg');
+              $img = $product->gambar ? asset('storage/produk/'.$product->gambar) : asset('images/placeholder-product.jpg');
             @endphp
             <img src="{{ $img }}" class="w-full h-full object-cover group-hover:scale-[1.02] transition" alt="{{ $product->nama_produk }}">
           </div>
@@ -94,7 +94,7 @@
             <h3 class="font-semibold line-clamp-1">{{ $product->nama_produk }}</h3>
             <p class="text-sm text-gray-500 line-clamp-1">{{ $product->kategori }}</p>
             <p class="mt-1 font-semibold">
-              Rp {{ number_format($product->harga ?? 0, 0, ',', '.') }}
+              Rp {{ number_format($product->detailUkuran->min('harga') ?? 0, 0, ',', '.') }}
             </p>
           </div>
         </a>
