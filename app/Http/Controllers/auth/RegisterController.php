@@ -18,8 +18,10 @@ class RegisterController extends Controller
     {
         // Validasi input
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:customer,email',
+            'nama' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:customers,email',
+            'no_hp' => 'nullable|string|max:15',
+            'alamat' => 'nullable|string|max:500',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
@@ -31,11 +33,11 @@ class RegisterController extends Controller
 
         // Buat customer baru
         $customer = Customer::create([
-            'nama' => $request->name,
+            'nama' => $request->nama,
             'email' => $request->email,
+            'no_hp' => $request->no_hp,
+            'alamat' => $request->alamat,
             'password' => Hash::make($request->password),
-            'no_hp' => $request->no_hp ?? null,
-            'alamat' => $request->alamat ?? null,
         ]);
 
         // Auto login setelah register menggunakan guard 'customer'
