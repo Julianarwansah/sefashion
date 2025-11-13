@@ -48,7 +48,7 @@ class CustomerController extends Controller
                 'alamat' => $request->alamat,
             ]);
 
-            return redirect()->route('customer.index')->with('success', 'Customer berhasil ditambahkan.');
+            return redirect()->route('admin.customer.index')->with('success', 'Customer berhasil ditambahkan.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menambahkan customer: ' . $e->getMessage());
         }
@@ -102,7 +102,7 @@ class CustomerController extends Controller
 
             $customer->update($data);
 
-            return redirect()->route('customer.index')->with('success', 'Data customer berhasil diperbarui.');
+            return redirect()->route('admin.customer.index')->with('success', 'Data customer berhasil diperbarui.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal memperbarui customer: ' . $e->getMessage());
         }
@@ -127,7 +127,7 @@ class CustomerController extends Controller
 
             $customer->delete();
 
-            return redirect()->route('customer.index')->with('success', 'Customer berhasil dihapus.');
+            return redirect()->route('admin.customer.index')->with('success', 'Customer berhasil dihapus.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menghapus customer: ' . $e->getMessage());
         }

@@ -10,7 +10,7 @@
             </h1>
             <p class="text-muted">Daftar semua pengiriman barang</p>
         </div>
-        <a href="{{ route('pengiriman.create') }}" class="btn btn-primary">
+        <a href="{{ route('admin.pengiriman.create') }}" class="btn btn-primary">
             <i class="fas fa-plus me-2"></i>Tambah Pengiriman
         </a>
     </div>
@@ -128,18 +128,18 @@
                             </td>
                             <td>
                                 <div class="d-flex justify-content-center gap-2">
-                                    <a href="{{ route('pengiriman.show', $item->id_pengiriman) }}" 
+                                    <a href="{{ route('admin.pengiriman.show', $item->id_pengiriman) }}" 
                                        class="btn btn-sm btn-outline-info" 
                                        data-bs-toggle="tooltip" title="Lihat Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('pengiriman.edit', $item->id_pengiriman) }}" 
+                                    <a href="{{ route('admin.pengiriman.edit', $item->id_pengiriman) }}" 
                                        class="btn btn-sm btn-outline-warning"
                                        data-bs-toggle="tooltip" title="Edit Pengiriman">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     @if($item->isInTransit())
-                                    <form action="{{ route('pengiriman.update', $item->id_pengiriman) }}" 
+                                    <form action="{{ route('admin.pengiriman.update', $item->id_pengiriman) }}" 
                                           method="POST" class="d-inline">
                                         @csrf
                                         @method('PUT')
@@ -154,7 +154,7 @@
                                         </button>
                                     </form>
                                     @endif
-                                    <form action="{{ route('pengiriman.destroy', $item->id_pengiriman) }}" 
+                                    <form action="{{ route('admin.pengiriman.destroy', $item->id_pengiriman) }}" 
                                           method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
@@ -176,7 +176,7 @@
                                     <i class="fas fa-shipping-fast fa-3x text-muted mb-3"></i>
                                     <h5 class="text-muted">Belum ada pengiriman</h5>
                                     <p class="text-muted">Silakan tambah pengiriman baru</p>
-                                    <a href="{{ route('pengiriman.create') }}" class="btn btn-primary mt-2">
+                                    <a href="{{ route('admin.pengiriman.create') }}" class="btn btn-primary mt-2">
                                         <i class="fas fa-plus me-2"></i>Tambah Pengiriman Pertama
                                     </a>
                                 </div>

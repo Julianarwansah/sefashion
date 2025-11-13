@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title mb-0">Data Customer</h3>
-                    <a href="{{ route('customer.create') }}" class="btn btn-primary">
+                    <a href="{{ route('admin.customer.create') }}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Tambah Customer
                     </a>
                 </div>
@@ -53,19 +53,16 @@
                                         <td>{{ $customer->no_hp }}</td>
                                         <td>{{ Str::limit($customer->alamat, 30) }}</td>
                                         <td>
-                                            <span class="badge bg-primary">{{ $customer->pemesanan_count ?? $customer->pemesanan->count() }}</span>
-                                        </td>
-                                        <td>
                                             <div class="btn-group btn-group-sm" role="group">
-                                                <a href="{{ route('customer.show', $customer->id_customer) }}" 
+                                                <a href="{{ route('admin.customer.show', $customer->id_customer) }}" 
                                                    class="btn btn-info" title="Detail">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('customer.edit', $customer->id_customer) }}" 
+                                                <a href="{{ route('admin.customer.edit', $customer->id_customer) }}" 
                                                    class="btn btn-warning" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <form action="{{ route('customer.destroy', $customer->id_customer) }}" 
+                                                <form action="{{ route('admin.customer.destroy', $customer->id_customer) }}" 
                                                       method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')

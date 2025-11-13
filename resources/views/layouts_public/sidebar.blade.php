@@ -17,7 +17,7 @@
 
     <!-- Dashboard -->
     <li class="menu-item {{ request()->is('dashboard') ? 'active' : '' }}">
-      <a href="#" class="menu-link">
+      <a href="{{ url('/dashboard') }}" class="menu-link">
         <i class="menu-icon tf-icons bx bx-grid-alt"></i>
         <div>Dashboard</div>
       </a>
@@ -25,7 +25,7 @@
 
     <!-- Admin -->
     <li class="menu-item {{ request()->is('admin') ? 'active' : '' }}">
-      <a href="{{ route('admin.adminn.index') }}" class="menu-link">
+      <a href="{{ url('/admin') }}" class="menu-link">
         <i class="menu-icon tf-icons bx bx-user-check"></i>
         <div>Admin</div>
       </a>
@@ -33,7 +33,7 @@
 
     <!-- Customer -->
     <li class="menu-item {{ request()->is('customer') ? 'active' : '' }}">
-      <a href="{{ route('admin.customer.index') }}" class="menu-link">
+      <a href="{{ url('/customer') }}" class="menu-link">
         <i class="menu-icon tf-icons bx bx-user"></i>
         <div>Customer</div>
       </a>
@@ -41,7 +41,7 @@
 
     <!-- Produk -->
     <li class="menu-item {{ request()->is('produk') ? 'active' : '' }}">
-      <a href="{{ route('admin.produk.index') }}" class="menu-link">
+      <a href="{{ url('/produk') }}" class="menu-link">
         <i class="menu-icon tf-icons bx bx-package"></i>
         <div>Produk</div>
       </a>
@@ -49,7 +49,7 @@
 
     <!-- Pesanan -->
     <li class="menu-item {{ request()->is('pesanan') ? 'active' : '' }}">
-      <a href="{{ route('admin.pesanan.index') }}" class="menu-link">
+      <a href="{{ url('/pesanan') }}" class="menu-link">
         <i class="menu-icon tf-icons bx bx-cart"></i>
         <div>Pesanan</div>
       </a>
@@ -57,7 +57,7 @@
 
     <!-- calculate -->
     <li class="menu-item {{ request()->is('calculate') ? 'active' : '' }}">
-      <a href="#" class="menu-link">
+      <a href="{{ url('/calculate') }}" class="menu-link">
         <i class="menu-icon tf-icons bx bx-truck"></i>
         <div>Calculate Shipping</div>
       </a>
@@ -65,7 +65,7 @@
 
     <!-- Pengiriman -->
     <li class="menu-item {{ request()->is('pengiriman') ? 'active' : '' }}">
-      <a href="{{ route('admin.pengiriman.index') }}" class="menu-link">
+      <a href="{{ url('/pengiriman') }}" class="menu-link">
         <i class="menu-icon tf-icons bx bx-truck"></i>
         <div>Pengiriman</div>
       </a>

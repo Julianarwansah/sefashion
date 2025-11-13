@@ -1,27 +1,27 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\ProdukController;
-use App\Http\Controllers\PesananController;
-use App\Http\Controllers\PengirimanController;
-use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\PesananController;
+use App\Http\Controllers\ProdukController;
+use App\Http\Controllers\PengirimanController;
+use App\Http\Controllers\ShippingController;
 
 /*
 |--------------------------------------------------------------------------
-| Guest Routes (Frontend)
+| Web Routes
 |--------------------------------------------------------------------------
 */
 
-// Home Page
+// Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
-
-// Shop
 Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
+<<<<<<< HEAD
 
 // About
 Route::get('/about', function () {
@@ -35,64 +35,36 @@ Route::get('/contact', function () {
 
 // Product Detail
 Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show');
+=======
+Route::get('/about', function () { return view('frontend.about'); })->name('about');
+Route::get('/contact', function () { return view('frontend.contact'); })->name('contact');
+Route::get('/product/{id}', [HomeController::class, 'productDetail'])->name('product.detail');
+>>>>>>> 2cd4a96c689367e87f31409ec866c4920ab15c9d
 
-/*
-|--------------------------------------------------------------------------
-| Authentication Routes
-|--------------------------------------------------------------------------
-*/
-
-// Login & Register Page (Combined)
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login')->middleware('guest');
-
-Route::get('/register', function () {
-    return view('auth.login');
-})->middleware('guest');
-
-// Login Process
+// Authentication Routes
+Route::get('/login', function () { return view('auth.login'); })->name('login')->middleware('guest');
+Route::get('/register', function () { return view('auth.login'); })->middleware('guest');
 Route::post('/login', [LoginController::class, 'login']);
-
-// Register Process
 Route::post('/register', [RegisterController::class, 'register'])->name('register');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// Logout
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
-
-// Password Reset Routes
-Route::get('/password/reset', function () {
-    return view('auth.passwords.email');
+// Password Reset
+Route::get('/password/reset', function () { 
+    return view('auth.passwords.email'); 
 })->name('password.request')->middleware('guest');
 
 Route::post('/password/email', [LoginController::class, 'sendResetLinkEmail'])->name('password.email');
 
 /*
 |--------------------------------------------------------------------------
-| Customer/User Routes (Protected)
+| Customer Routes (Protected)
 |--------------------------------------------------------------------------
 */
-
-Route::middleware(['auth', 'user'])->group(function () {
-    // My Account
-    Route::get('/account', function () {
-        return view('frontend.account.dashboard');
-    })->name('account');
-    
-    // Orders
-    Route::get('/my-orders', function () {
-        return view('frontend.account.orders');
-    })->name('my-orders');
-    
-    // Cart
-    Route::get('/cart', function () {
-        return view('frontend.cart');
-    })->name('cart');
-    
-    // Checkout
-    Route::get('/checkout', function () {
-        return view('frontend.checkout');
-    })->name('checkout');
+Route::middleware(['auth:customer'])->group(function () {
+    Route::get('/account', function () { return view('frontend.account.dashboard'); })->name('account');
+    Route::get('/my-orders', function () { return view('frontend.account.orders'); })->name('my-orders');
+    Route::get('/cart', function () { return view('frontend.cart'); })->name('cart');
+    Route::get('/checkout', function () { return view('frontend.checkout'); })->name('checkout');
 });
 
 /*
@@ -100,15 +72,18 @@ Route::middleware(['auth', 'user'])->group(function () {
 | Admin Routes (Protected)
 |--------------------------------------------------------------------------
 */
-
-Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
-    // Dashboard
-    Route::get('/', function () {
-        return view('admin.pages.dashboard');
-    })->name('admin.dashboard');
+Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Dashboard Routes
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+    
+    // AJAX Routes untuk dashboard
+    Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart');
+    Route::get('/dashboard/real-time-stats', [DashboardController::class, 'getRealTimeStats'])->name('dashboard.stats');
     
     // Admin Management
-    Route::resource('admins', AdminController::class);
+    Route::resource('adminn', AdminController::class);
     
     // Customer Management
     Route::resource('customer', CustomerController::class);
@@ -143,8 +118,4 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     
     // Untuk update alamat customer
     Route::post('/calculate/update-customer-address', [ShippingController::class, 'updateCustomerAddress'])->name('calculate.update-customer-address');
-
-    Route::get('/', [HomeController::class, 'index'])->name('home');
-    Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
-    Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show');
 });

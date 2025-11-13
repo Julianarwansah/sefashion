@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title mb-0">Data Produk</h3>
-                    <a href="{{ route('produk.create') }}" class="btn btn-primary">
+                    <a href="{{ route('admin.produk.create') }}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Tambah Produk
                     </a>
                 </div>
@@ -74,15 +74,15 @@
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm" role="group">
-                                                <a href="{{ route('produk.show', $item->id_produk) }}" 
+                                                <a href="{{ route('admin.produk.show', $item->id_produk) }}" 
                                                    class="btn btn-info" title="Detail">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('produk.edit', $item->id_produk) }}" 
+                                                <a href="{{ route('admin.produk.edit', $item->id_produk) }}" 
                                                    class="btn btn-warning" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <form action="{{ route('produk.destroy', $item->id_produk) }}" 
+                                                <form action="{{ route('admin.produk.destroy', $item->id_produk) }}" 
                                                       method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
