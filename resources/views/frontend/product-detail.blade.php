@@ -176,7 +176,8 @@
             {{-- Add to Cart Button --}}
             <button type="button"
                     onclick="addToCart()"
-                    class="flex-1 px-8 py-3 bg-gray-900 text-white rounded-xl hover:bg-black transition font-medium">
+                    id="addToCartBtn"
+                    class="flex-1 px-8 py-3 bg-gray-900 text-white rounded-xl hover:bg-black transition font-medium disabled:bg-gray-400 disabled:cursor-not-allowed">
               Add to Cart
             </button>
           </div>
@@ -277,7 +278,7 @@ function filterSizesByColor(colorId) {
 
     if (optionColorId === colorId) {
       option.style.display = 'block';
-      if (!firstAvailable) {
+      if (!firstAvailable && parseInt(option.dataset.stock) > 0) {
         firstAvailable = option;
       }
     } else {
@@ -287,7 +288,11 @@ function filterSizesByColor(colorId) {
 
   // Auto select first available size
   if (firstAvailable) {
-    firstAvailable.click();
+    const sizeId = firstAvailable.dataset.sizeId;
+    const sizeName = firstAvailable.querySelector('.text-sm').textContent.trim();
+    const price = parseInt(firstAvailable.dataset.price);
+    const stock = parseInt(firstAvailable.dataset.stock);
+    selectSize(sizeId, sizeName, price, stock);
   }
 }
 
@@ -348,28 +353,127 @@ function decreaseQuantity() {
 
 function addToCart() {
   const quantity = parseInt(document.getElementById('quantity').value);
+  const addToCartBtn = document.getElementById('addToCartBtn');
 
+  // Validation checks
   if (!selectedSizeId) {
-    alert('Please select a size');
+    showNotification('Please select a size', 'error');
     return;
   }
 
   if (currentStock <= 0) {
-    alert('This product is out of stock');
+    showNotification('This product is out of stock', 'error');
     return;
   }
 
   if (quantity > currentStock) {
-    alert('Maximum stock available: ' + currentStock);
+    showNotification(`Maximum stock available: ${currentStock}`, 'error');
     return;
   }
 
-  // TODO: Implement actual add to cart functionality
-  alert('Added ' + quantity + ' item(s) to cart!\n\nProduct ID: {{ $product->id_produk }}\nSize ID: ' + selectedSizeId + '\nColor ID: ' + selectedColorId);
+  if (quantity < 1) {
+    showNotification('Quantity must be at least 1', 'error');
+    return;
+  }
 
-  // Here you would typically make an AJAX call to add the item to cart
-  // For now, we'll just redirect to cart page
-  // window.location.href = '{{ route("cart") }}';
+  // Disable button to prevent multiple clicks
+  addToCartBtn.disabled = true;
+  const originalText = addToCartBtn.textContent;
+  addToCartBtn.textContent = 'Adding...';
+
+  // Prepare data for AJAX request
+  const cartData = {
+    id_ukuran: selectedSizeId,
+    jumlah: quantity,
+    _token: '{{ csrf_token() }}'
+  };
+
+  // Make AJAX request to add to cart
+  fetch('{{ route("cart.add") }}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': '{{ csrf_token() }}',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify(cartData)
+  })
+  .then(response => {
+    // Check if response is OK
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      showNotification(data.message || 'Product added to cart successfully!', 'success');
+      updateCartCount(data.cart_count);
+      
+      // Optional: Redirect to cart page after success
+      // setTimeout(() => {
+      //   window.location.href = '{{ route("cart.index") }}';
+      // }, 1500);
+    } else {
+      showNotification(data.message || 'Failed to add product to cart', 'error');
+    }
+  })
+  .catch(error => {
+    console.error('Add to cart error:', error);
+    
+    // Show user-friendly error message
+    if (error.message.includes('HTTP error! status: 401')) {
+      showNotification('Please login to add items to cart', 'error');
+      // Redirect to login page
+      setTimeout(() => {
+        window.location.href = '{{ route("login") }}';
+      }, 2000);
+    } else if (error.message.includes('HTTP error! status: 500')) {
+      showNotification('Server error. Please try again later.', 'error');
+    } else {
+      showNotification('Network error. Please check your connection and try again.', 'error');
+    }
+  })
+  .finally(() => {
+    // Re-enable button
+    addToCartBtn.disabled = false;
+    addToCartBtn.textContent = originalText;
+  });
+}
+
+function showNotification(message, type = 'info') {
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white font-medium transform translate-x-full transition-transform duration-300 ${
+    type === 'success' ? 'bg-green-500' : 
+    type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+  }`;
+  notification.textContent = message;
+
+  // Add to page
+  document.body.appendChild(notification);
+
+  // Animate in
+  setTimeout(() => {
+    notification.classList.remove('translate-x-full');
+  }, 100);
+
+  // Remove after 3 seconds
+  setTimeout(() => {
+    notification.classList.add('translate-x-full');
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 300);
+  }, 3000);
+}
+
+function updateCartCount(count) {
+  // Update cart count in header if you have a cart counter element
+  const cartCounter = document.getElementById('cartCount');
+  if (cartCounter) {
+    cartCounter.textContent = count;
+    cartCounter.classList.remove('hidden');
+  }
 }
 
 // Initialize: Filter sizes by first color on page load

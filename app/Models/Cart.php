@@ -220,4 +220,56 @@ class Cart extends Model
             }
         });
     }
+
+    /**
+     * Check if item with same size already exists in cart
+     */
+    public static function itemExists($customerId, $ukuranId)
+    {
+        return static::where('id_customer', $customerId)
+                    ->where('id_ukuran', $ukuranId)
+                    ->exists();
+    }
+
+    /**
+     * Get cart item by size
+     */
+    public static function getItemBySize($customerId, $ukuranId)
+    {
+        return static::where('id_customer', $customerId)
+                    ->where('id_ukuran', $ukuranId)
+                    ->first();
+    }
+
+    /**
+     * Scope untuk items dengan stok yang cukup
+     */
+    public function scopeWithAvailableStock($query)
+    {
+        return $query->whereHas('detailUkuran', function ($q) {
+            $q->where('stok', '>', 0);
+        });
+    }
+
+    /**
+     * Get cart summary for customer
+     */
+    public static function getCartSummary($customerId)
+    {
+        $cartItems = static::byCustomer($customerId)
+            ->with(['detailUkuran.produk', 'detailUkuran.detailWarna'])
+            ->get();
+
+        $totalItems = $cartItems->sum('jumlah');
+        $totalPrice = $cartItems->sum(function ($item) {
+            return $item->subtotal;
+        });
+
+        return [
+            'items' => $cartItems,
+            'total_items' => $totalItems,
+            'total_price' => $totalPrice,
+            'total_price_formatted' => 'Rp ' . number_format($totalPrice, 0, ',', '.')
+        ];
+    }
 }

@@ -83,21 +83,45 @@
     {{-- Products Grid --}}
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
       @forelse($products as $product)
-        <a href="{{ route('product.show', $product->id_produk) }}"
-           class="group bg-white rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-gray-300 scroll-reveal opacity-0 translate-y-8">
-          <div class="aspect-[3/4] bg-gray-100 overflow-hidden">
-            <img src="{{ $product->gambar_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="{{ $product->nama_produk }}">
-          </div>
-          <div class="p-4">
-            <h3 class="font-semibold line-clamp-2 text-gray-900 group-hover:text-black transition">{{ $product->nama_produk }}</h3>
-            @if($product->kategori)
-              <p class="text-sm text-gray-500 mt-1">{{ $product->kategori }}</p>
-            @endif
-            <p class="mt-2 font-bold text-gray-900">
-              Rp {{ number_format($product->detailUkuran->min('harga') ?? 0, 0, ',', '.') }}
-            </p>
-          </div>
-        </a>
+        @auth('customer')
+          {{-- Jika sudah login, link ke product detail --}}
+          <a href="{{ route('product.show', $product->id_produk) }}"
+             class="group bg-white rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-gray-300 scroll-reveal opacity-0 translate-y-8">
+            <div class="aspect-[3/4] bg-gray-100 overflow-hidden">
+              <img src="{{ $product->gambar_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="{{ $product->nama_produk }}">
+            </div>
+            <div class="p-4">
+              <h3 class="font-semibold line-clamp-2 text-gray-900 group-hover:text-black transition">{{ $product->nama_produk }}</h3>
+              @if($product->kategori)
+                <p class="text-sm text-gray-500 mt-1">{{ $product->kategori }}</p>
+              @endif
+              <p class="mt-2 font-bold text-gray-900">
+                Rp {{ number_format($product->detailUkuran->min('harga') ?? 0, 0, ',', '.') }}
+              </p>
+            </div>
+          </a>
+        @else
+          {{-- Jika belum login, link ke login page dengan pesan --}}
+          <a href="{{ route('login') }}" 
+             onclick="showLoginAlert()"
+             class="group bg-white rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-gray-300 scroll-reveal opacity-0 translate-y-8 cursor-pointer">
+            <div class="aspect-[3/4] bg-gray-100 overflow-hidden">
+              <img src="{{ $product->gambar_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="{{ $product->nama_produk }}">
+            </div>
+            <div class="p-4">
+              <h3 class="font-semibold line-clamp-2 text-gray-900 group-hover:text-black transition">{{ $product->nama_produk }}</h3>
+              @if($product->kategori)
+                <p class="text-sm text-gray-500 mt-1">{{ $product->kategori }}</p>
+              @endif
+              <p class="mt-2 font-bold text-gray-900">
+                Rp {{ number_format($product->detailUkuran->min('harga') ?? 0, 0, ',', '.') }}
+              </p>
+              <div class="mt-2 text-xs text-blue-600 font-medium">
+                Login to view details
+              </div>
+            </div>
+          </a>
+        @endauth
       @empty
         <div class="col-span-full text-center py-16">
           <div class="inline-block p-6 bg-gray-50 rounded-2xl">
@@ -142,8 +166,26 @@
     @endif
   </div>
 </section>
+<script>
+  // Function to show login alert
+function showLoginAlert() {
+    if (!document.querySelector('meta[name="customer-auth"]')?.content) {
+        alert('Please login first to view product details');
+    }
+}
 
-@push('styles')
+// Check auth status and add meta tag
+document.addEventListener('DOMContentLoaded', function() {
+    const isAuthenticated = @json(auth('customer')->check());
+    if (!document.querySelector('meta[name="customer-auth"]')) {
+        const meta = document.createElement('meta');
+        meta.name = 'customer-auth';
+        meta.content = isAuthenticated ? 'true' : 'false';
+        document.head.appendChild(meta);
+    }
+});
+</script>
+
 <style>
 @keyframes fadeInUp {
   from {
@@ -201,9 +243,6 @@
   transform: translateY(0) !important;
 }
 </style>
-@endpush
-
-@push('scripts')
 <script>
 // Parallax effect for shop hero
 document.addEventListener('scroll', function() {
@@ -238,5 +277,4 @@ document.addEventListener('DOMContentLoaded', function() {
   scrollRevealElements.forEach(el => observer.observe(el));
 });
 </script>
-@endpush
 @endsection

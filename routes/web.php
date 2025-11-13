@@ -48,6 +48,9 @@ Route::post('/password/email', [LoginController::class, 'sendResetLinkEmail'])->
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:customer'])->group(function () {
+    // Product Detail - HANYA bisa diakses setelah login
+    Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show');
+
     // Profile Routes
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -58,7 +61,7 @@ Route::middleware(['auth:customer'])->group(function () {
     Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remove');
     Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
-
+    Route::get('/cart/count', [CartController::class, 'getCount'])->name('cart.count');
     // Checkout routes
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
