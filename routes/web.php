@@ -34,7 +34,7 @@ Route::get('/contact', function () {
 })->name('contact');
 
 // Product Detail
-Route::get('/product/{id}', [HomeController::class, 'productDetail'])->name('product.detail');
+Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show');
 
 /*
 |--------------------------------------------------------------------------

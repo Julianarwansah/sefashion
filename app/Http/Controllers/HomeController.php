@@ -13,7 +13,7 @@ class HomeController extends Controller
     public function index()
     {
         // Ambil produk terbaru atau featured products
-        $products = Produk::with('gambar')
+        $products = Produk::with(['detailUkuran', 'detailWarna', 'gambarProduk'])
             ->where('total_stok', '>', 0)
             ->latest()
             ->take(8)
@@ -27,15 +27,16 @@ class HomeController extends Controller
      */
     public function shop(Request $request)
     {
-        $query = Produk::with('gambar')->where('stok', '>', 0);
+        $query = Produk::with(['detailUkuran', 'detailWarna', 'gambarProduk'])
+            ->where('total_stok', '>', 0);
 
         // Filter by category if provided
-        if ($request->has('category')) {
+        if ($request->has('category') && $request->category) {
             $query->where('kategori', $request->category);
         }
 
         // Search
-        if ($request->has('search')) {
+        if ($request->has('search') && $request->search) {
             $query->where('nama_produk', 'like', '%' . $request->search . '%');
         }
 
@@ -43,10 +44,16 @@ class HomeController extends Controller
         if ($request->has('sort')) {
             switch ($request->sort) {
                 case 'price_low':
-                    $query->orderBy('harga', 'asc');
+                    $query->join('detail_ukuran', 'produk.id_produk', '=', 'detail_ukuran.id_produk')
+                        ->select('produk.*')
+                        ->groupBy('produk.id_produk')
+                        ->orderByRaw('MIN(detail_ukuran.harga) ASC');
                     break;
                 case 'price_high':
-                    $query->orderBy('harga', 'desc');
+                    $query->join('detail_ukuran', 'produk.id_produk', '=', 'detail_ukuran.id_produk')
+                        ->select('produk.*')
+                        ->groupBy('produk.id_produk')
+                        ->orderByRaw('MAX(detail_ukuran.harga) DESC');
                     break;
                 case 'newest':
                     $query->latest();
@@ -66,14 +73,15 @@ class HomeController extends Controller
     /**
      * Display product detail page
      */
-    public function productDetail($id)
+    public function show($id)
     {
-        $product = Produk::with('gambar')->findOrFail($id);
-        
+        $product = Produk::with(['detailUkuran', 'detailWarna', 'gambarProduk'])
+            ->findOrFail($id);
+
         // Related products (same category)
-        $relatedProducts = Produk::with('gambar')
+        $relatedProducts = Produk::with(['detailUkuran', 'detailWarna', 'gambarProduk'])
             ->where('kategori', $product->kategori)
-            ->where('id', '!=', $product->id)
+            ->where('id_produk', '!=', $product->id_produk)
             ->where('total_stok', '>', 0)
             ->take(4)
             ->get();
