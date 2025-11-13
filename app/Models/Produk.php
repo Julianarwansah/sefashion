@@ -42,12 +42,6 @@ class Produk extends Model
         return $this->hasMany(ProdukGambar::class, 'id_produk', 'id_produk');
     }
 
-    // Alias untuk backward compatibility
-    public function gambar()
-    {
-        return $this->gambarProduk();
-    }
-
     // Scope produk tersedia
     public function scopeTersedia($query)
     {
@@ -63,8 +57,8 @@ class Produk extends Model
     // Accessor gambar URL
     public function getGambarUrlAttribute()
     {
-        return $this->gambar
-            ? asset('storage/produk/' . $this->gambar)
+        return $this->attributes['gambar']
+            ? asset('storage/produk/' . $this->attributes['gambar'])
             : asset('images/default-product.jpg');
     }
 
