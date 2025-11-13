@@ -29,9 +29,9 @@ Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show
 
 // Authentication Routes
 Route::get('/login', function () { return view('auth.login'); })->name('login')->middleware('guest');
-Route::get('/register', function () { return view('auth.login'); })->middleware('guest');
+Route::get('/register', function () { return view('auth.register'); })->name('register')->middleware('guest'); // PERBAIKAN DI SINI
 Route::post('/login', [LoginController::class, 'login']);
-Route::post('/register', [RegisterController::class, 'register'])->name('register');
+Route::post('/register', [RegisterController::class, 'register'])->name('register.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Password Reset
