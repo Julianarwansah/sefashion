@@ -7,7 +7,7 @@
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('pengiriman.index') }}" class="text-decoration-none">Pengiriman</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.pengiriman.index') }}" class="text-decoration-none">Pengiriman</a></li>
                     <li class="breadcrumb-item active">Tambah Pengiriman</li>
                 </ol>
             </nav>
@@ -16,7 +16,7 @@
             </h1>
             <p class="text-muted mb-0">Buat pengiriman baru untuk pemesanan</p>
         </div>
-        <a href="{{ route('pengiriman.index') }}" class="btn btn-outline-secondary">
+        <a href="{{ route('admin.pengiriman.index') }}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-2"></i>Kembali
         </a>
     </div>
@@ -29,7 +29,7 @@
             </h5>
         </div>
         <div class="card-body">
-            <form action="{{ route('pengiriman.store') }}" method="POST" id="pengirimanForm">
+            <form action="{{ route('admin.pengiriman.store') }}" method="POST" id="pengirimanForm">
                 @csrf
                 
                 <!-- Informasi Pemesanan -->
@@ -235,7 +235,7 @@
                 <div class="row mt-4">
                     <div class="col-12">
                         <div class="d-flex gap-2 justify-content-end">
-                            <a href="{{ route('pengiriman.index') }}" class="btn btn-outline-secondary">
+                            <a href="{{ route('admin.pengiriman.index') }}" class="btn btn-outline-secondary">
                                 <i class="fas fa-times me-2"></i>Batal
                             </a>
                             <button type="submit" class="btn btn-primary">

@@ -74,4 +74,9 @@ class Produk extends Model
         $totalStok = $this->detailUkuran()->sum('stok');
         $this->update(['total_stok' => $totalStok]);
     }
+
+    public function gambar()
+{
+    return $this->hasMany(ProdukGambar::class, 'id_produk', 'id_produk');
+}
 }

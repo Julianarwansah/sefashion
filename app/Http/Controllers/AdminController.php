@@ -48,7 +48,7 @@ class AdminController extends Controller
                 'alamat' => $request->alamat,
             ]);
 
-            return redirect()->route('admin.index')->with('success', 'Admin berhasil ditambahkan.');
+            return redirect()->route('admin.adminn.index')->with('success', 'Admin berhasil ditambahkan.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menambahkan admin: ' . $e->getMessage());
         }
@@ -102,7 +102,7 @@ class AdminController extends Controller
 
             $admin->update($data);
 
-            return redirect()->route('admin.index')->with('success', 'Data admin berhasil diperbarui.');
+            return redirect()->route('admin.adminn.index')->with('success', 'Data admin berhasil diperbarui.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal memperbarui admin: ' . $e->getMessage());
         }
@@ -123,7 +123,7 @@ class AdminController extends Controller
 
             $admin->delete();
 
-            return redirect()->route('admin.index')->with('success', 'Admin berhasil dihapus.');
+            return redirect()->route('admin.adminn.index')->with('success', 'Admin berhasil dihapus.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menghapus admin: ' . $e->getMessage());
         }

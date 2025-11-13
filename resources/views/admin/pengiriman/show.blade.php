@@ -7,7 +7,7 @@
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('pengiriman.index') }}" class="text-decoration-none">Pengiriman</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.pengiriman.index') }}" class="text-decoration-none">Pengiriman</a></li>
                     <li class="breadcrumb-item active">Detail #{{ $pengiriman->id_pengiriman }}</li>
                 </ol>
             </nav>
@@ -17,10 +17,10 @@
             <p class="text-muted mb-0">#{{ $pengiriman->id_pengiriman }} - {{ $pengiriman->pemesanan->customer->nama_customer ?? 'N/A' }}</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('pengiriman.index') }}" class="btn btn-outline-secondary">
+            <a href="{{ route('admin.pengiriman.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Kembali
             </a>
-            <a href="{{ route('pengiriman.edit', $pengiriman->id_pengiriman) }}" class="btn btn-warning">
+            <a href="{{ route('admin.pengiriman.edit', $pengiriman->id_pengiriman) }}" class="btn btn-warning">
                 <i class="fas fa-edit me-2"></i>Edit
             </a>
         </div>
@@ -305,7 +305,7 @@
                     <div class="row">
                         @if($pengiriman->status_pengiriman == 'menunggu' && !$pengiriman->no_resi)
                         <div class="col-md-4 mb-3">
-                            <form action="{{ route('pengiriman.update', $pengiriman->id_pengiriman) }}" method="POST">
+                            <form action="{{ route('admin.pengiriman.update', $pengiriman->id_pengiriman) }}" method="POST">
                                 @csrf
                                 @method('PUT')
                                 <input type="hidden" name="mark_as_shipped" value="true">
@@ -322,7 +322,7 @@
 
                         @if($pengiriman->status_pengiriman == 'dikirim')
                         <div class="col-md-4 mb-3">
-                            <form action="{{ route('pengiriman.update', $pengiriman->id_pengiriman) }}" method="POST">
+                            <form action="{{ route('admin.pengiriman.update', $pengiriman->id_pengiriman) }}" method="POST">
                                 @csrf
                                 @method('PUT')
                                 <input type="hidden" name="update_only_status" value="true">
@@ -337,7 +337,7 @@
 
                         @if($pengiriman->isInTransit())
                         <div class="col-md-4 mb-3">
-                            <form action="{{ route('pengiriman.update', $pengiriman->id_pengiriman) }}" method="POST">
+                            <form action="{{ route('admin.pengiriman.update', $pengiriman->id_pengiriman) }}" method="POST">
                                 @csrf
                                 @method('PUT')
                                 <input type="hidden" name="update_only_status" value="true">

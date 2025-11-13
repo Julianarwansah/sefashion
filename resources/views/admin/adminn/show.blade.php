@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Detail Admin</h4>
-                    <a href="{{ route('admin.index') }}" class="btn btn-secondary btn-sm">Kembali</a>
+                    <a href="{{ route('admin.adminn.index') }}" class="btn btn-secondary btn-sm">Kembali</a>
                 </div>
                 <div class="card-body">
                     <div class="row mb-3">
@@ -53,8 +53,8 @@
                     </div>
 
                     <div class="d-flex justify-content-end">
-                        <a href="{{ route('admin.edit', $admin->id_admin) }}" class="btn btn-warning me-2">Edit</a>
-                        <form action="{{ route('admin.destroy', $admin->id_admin) }}" method="POST" class="d-inline">
+                        <a href="{{ route('admin.adminn.edit', $admin->id_admin) }}" class="btn btn-warning me-2">Edit</a>
+                        <form action="{{ route('admin.adminn.destroy', $admin->id_admin) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-danger" 

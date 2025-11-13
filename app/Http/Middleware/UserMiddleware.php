@@ -11,15 +11,13 @@ class UserMiddleware
 {
     /**
      * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::guard('customer')->check()) {
-            return $next($request);
+        if (!Auth::guard('customer')->check()) {
+            return redirect('/login')->with('error', 'Please login to access this page.');
         }
 
-        return redirect()->route('login')->with('error', 'Please login first.');
+        return $next($request);
     }
-    }
+}

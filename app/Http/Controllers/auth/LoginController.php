@@ -16,7 +16,7 @@ class LoginController extends Controller
     {
         // Validasi input
         $validator = Validator::make($request->all(), [
-            'email' => 'required|string',
+            'email' => 'required|string|email',
             'password' => 'required|string',
         ]);
 
@@ -26,16 +26,13 @@ class LoginController extends Controller
                 ->withInput();
         }
 
-        $credentials = [
-            'email' => $request->email,
-            'password' => $request->password
-        ];
+        $credentials = $request->only('email', 'password');
         $remember = $request->has('remember');
 
         // Coba login sebagai admin dulu
         if (Auth::guard('admin')->attempt($credentials, $remember)) {
             $request->session()->regenerate();
-            return redirect()->intended('/admin');
+            return redirect()->intended('/admin/dashboard');
         }
 
         // Kalau gagal, coba login sebagai customer
@@ -57,12 +54,9 @@ class LoginController extends Controller
      */
     public function logout(Request $request)
     {
-        // Logout dari admin atau customer
-        if (Auth::guard('admin')->check()) {
-            Auth::guard('admin')->logout();
-        } elseif (Auth::guard('customer')->check()) {
-            Auth::guard('customer')->logout();
-        }
+        // Logout dari semua guard yang aktif
+        Auth::guard('admin')->logout();
+        Auth::guard('customer')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -78,8 +72,6 @@ class LoginController extends Controller
         $request->validate(['email' => 'required|email']);
 
         // Implementasi password reset logic di sini
-        // Bisa pakai Laravel's built-in password reset functionality
-
         return back()->with('success', 'We have emailed your password reset link!');
     }
 }

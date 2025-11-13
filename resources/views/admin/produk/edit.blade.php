@@ -8,15 +8,15 @@
                 <div class="card-header">
                     <h3 class="card-title">Edit Produk - {{ $produk->nama_produk }}</h3>
                     <div class="card-tools">
-                        <a href="{{ route('produk.show', $produk->id_produk) }}" class="btn btn-sm btn-info">
+                        <a href="{{ route('admin.produk.show', $produk->id_produk) }}" class="btn btn-sm btn-info">
                             <i class="fas fa-eye"></i> Detail
                         </a>
-                        <a href="{{ route('produk.index') }}" class="btn btn-sm btn-secondary">
+                        <a href="{{ route('admin.produk.index') }}" class="btn btn-sm btn-secondary">
                             <i class="fas fa-arrow-left"></i> Kembali
                         </a>
                     </div>
                 </div>
-                <form action="{{ route('produk.update', $produk->id_produk) }}" method="POST" enctype="multipart/form-data" id="produkForm">
+                <form action="{{ route('admin.produk.update', $produk->id_produk) }}" method="POST" enctype="multipart/form-data" id="produkForm">
                     @csrf
                     @method('PUT')
                     <div class="card-body">
@@ -292,7 +292,7 @@
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5>Gambar Produk Tambahan</h5>
                                     <div>
-                                        <a href="{{ route('produk.show', $produk->id_produk) }}#gambar" class="btn btn-sm btn-info mr-2">
+                                        <a href="{{ route('admin.produk.show', $produk->id_produk) }}#gambar" class="btn btn-sm btn-info mr-2">
                                             <i class="fas fa-images"></i> Kelola Gambar
                                         </a>
                                         <button type="button" class="btn btn-sm btn-primary" id="tambahGambarGroup">
@@ -378,10 +378,10 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i> Update Produk
                         </button>
-                        <a href="{{ route('produk.show', $produk->id_produk) }}" class="btn btn-info">
+                        <a href="{{ route('admin.produk.show', $produk->id_produk) }}" class="btn btn-info">
                             <i class="fas fa-eye"></i> Lihat Detail
                         </a>
-                        <a href="{{ route('produk.index') }}" class="btn btn-secondary">
+                        <a href="{{ route('admin.produk.index') }}" class="btn btn-secondary">
                             <i class="fas fa-times"></i> Batal
                         </a>
                     </div>

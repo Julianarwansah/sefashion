@@ -27,8 +27,12 @@ class HomeController extends Controller
      */
     public function shop(Request $request)
     {
+<<<<<<< HEAD
         $query = Produk::with(['detailUkuran', 'detailWarna', 'gambarProduk'])
             ->where('total_stok', '>', 0);
+=======
+        $query = Produk::with('gambar')->where('total_stok', '>', 0);
+>>>>>>> 2cd4a96c689367e87f31409ec866c4920ab15c9d
 
         // Filter by category if provided
         if ($request->has('category') && $request->category) {

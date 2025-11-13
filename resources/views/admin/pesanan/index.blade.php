@@ -10,7 +10,7 @@
             </h1>
             <p class="text-muted">Daftar semua pesanan yang masuk</p>
         </div>
-        <a href="{{ route('pesanan.create') }}" class="btn btn-primary">
+        <a href="{{ route('admin.pesanan.create') }}" class="btn btn-primary">
             <i class="fas fa-plus me-2"></i>Tambah Pesanan
         </a>
     </div>
@@ -110,17 +110,17 @@
                             </td>
                             <td>
                                 <div class="d-flex justify-content-center gap-2">
-                                    <a href="{{ route('pesanan.show', $item->id_pemesanan) }}" 
+                                    <a href="{{ route('admin.pesanan.show', $item->id_pemesanan) }}" 
                                        class="btn btn-sm btn-outline-info" 
                                        data-bs-toggle="tooltip" title="Lihat Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('pesanan.edit', $item->id_pemesanan) }}" 
+                                    <a href="{{ route('admin.pesanan.edit', $item->id_pemesanan) }}" 
                                        class="btn btn-sm btn-outline-warning"
                                        data-bs-toggle="tooltip" title="Edit Pesanan">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <form action="{{ route('pesanan.destroy', $item->id_pemesanan) }}" 
+                                    <form action="{{ route('admin.pesanan.destroy', $item->id_pemesanan) }}" 
                                           method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
@@ -142,7 +142,7 @@
                                     <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
                                     <h5 class="text-muted">Belum ada pesanan</h5>
                                     <p class="text-muted">Silakan tambah pesanan baru</p>
-                                    <a href="{{ route('pesanan.create') }}" class="btn btn-primary mt-2">
+                                    <a href="{{ route('admin.pesanan.create') }}" class="btn btn-primary mt-2">
                                         <i class="fas fa-plus me-2"></i>Tambah Pesanan Pertama
                                     </a>
                                 </div>
