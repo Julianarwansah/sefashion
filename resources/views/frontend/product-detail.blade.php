@@ -369,7 +369,7 @@ function addToCart() {
 
   // Here you would typically make an AJAX call to add the item to cart
   // For now, we'll just redirect to cart page
-  // window.location.href = '{{ route("cart") }}';
+  // window.location.href = '{{ url("cart") }}';
 }
 
 // Initialize: Filter sizes by first color on page load
