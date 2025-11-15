@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 class Cart extends Model
 {
@@ -11,6 +13,7 @@ class Cart extends Model
 
     protected $table = 'cart';
     protected $primaryKey = 'id_cart';
+    public $timestamps = false;
 
     protected $fillable = [
         'id_customer',
@@ -24,28 +27,35 @@ class Cart extends Model
         'tanggal_ditambahkan' => 'datetime',
     ];
 
+    protected $appends = [
+        'subtotal',
+        'subtotal_formatted',
+        'is_stock_available'
+    ];
+
     /**
      * Relationship dengan customer
      */
-    public function customer()
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class, 'id_customer', 'id_customer');
     }
 
     /**
-     * Relationship dengan detail ukuran
+     * Relationship dengan detail ukuran dengan eager loading
      */
-    public function detailUkuran()
+    public function detailUkuran(): BelongsTo
     {
-        return $this->belongsTo(DetailUkuran::class, 'id_ukuran', 'id_ukuran');
+        return $this->belongsTo(DetailUkuran::class, 'id_ukuran', 'id_ukuran')
+            ->with(['detailWarna.produk', 'detailWarna.produkGambars']);
     }
 
     /**
      * Accessor untuk subtotal item
      */
-    public function getSubtotalAttribute()
+    public function getSubtotalAttribute(): float
     {
-        if ($this->detailUkuran) {
+        if ($this->relationLoaded('detailUkuran') && $this->detailUkuran) {
             return $this->detailUkuran->harga * $this->jumlah;
         }
         return 0;
@@ -54,69 +64,66 @@ class Cart extends Model
     /**
      * Accessor untuk format subtotal
      */
-    public function getSubtotalFormattedAttribute()
+    public function getSubtotalFormattedAttribute(): string
     {
-        return 'Rp ' . number_format((float) $this->subtotal, 0, ',', '.');
+        return 'Rp ' . number_format($this->subtotal, 0, ',', '.');
     }
 
     /**
-     * Check jika stok masih mencukupi
+     * Accessor untuk cek ketersediaan stok
      */
-    public function isStockAvailable()
+    public function getIsStockAvailableAttribute(): bool
     {
-        return $this->detailUkuran && $this->detailUkuran->stokMencukupi($this->jumlah);
-    }
-
-    /**
-     * Check jika item sudah melebihi stok
-     */
-    public function isExceedingStock()
-    {
-        if (!$this->detailUkuran) {
-            return false;
+        if ($this->relationLoaded('detailUkuran') && $this->detailUkuran) {
+            return $this->detailUkuran->stok >= $this->jumlah;
         }
-        
-        return $this->jumlah > $this->detailUkuran->stok;
+        return false;
     }
 
     /**
-     * Update jumlah item di cart
+     * Update jumlah item di cart dengan transaction
      */
-    public function updateQuantity($newQuantity)
+    public function updateQuantity(int $newQuantity): bool
     {
         if ($newQuantity <= 0) {
             return $this->delete();
         }
 
-        // Check stok tersedia
-        if ($this->detailUkuran && !$this->detailUkuran->stokMencukupi($newQuantity)) {
-            return false;
-        }
+        return DB::transaction(function () use ($newQuantity) {
+            // Reload detailUkuran untuk mendapatkan stok terbaru
+            $this->load('detailUkuran');
+            
+            if (!$this->detailUkuran || $this->detailUkuran->stok < $newQuantity) {
+                return false;
+            }
 
-        $this->update(['jumlah' => $newQuantity]);
-        return true;
+            $this->update(['jumlah' => $newQuantity]);
+            return true;
+        });
     }
 
     /**
-     * Increment quantity
+     * Increment quantity dengan transaction
      */
-    public function incrementQuantity($amount = 1)
+    public function incrementQuantity(int $amount = 1): bool
     {
-        $newQuantity = $this->jumlah + $amount;
-        
-        // Check stok tersedia
-        if ($this->detailUkuran && !$this->detailUkuran->stokMencukupi($newQuantity)) {
-            return false;
-        }
+        return DB::transaction(function () use ($amount) {
+            $newQuantity = $this->jumlah + $amount;
+            
+            $this->load('detailUkuran');
+            if (!$this->detailUkuran || $this->detailUkuran->stok < $newQuantity) {
+                return false;
+            }
 
-        $this->update(['jumlah' => $newQuantity]);
-        return true;
+            $this->update(['jumlah' => $newQuantity]);
+            return true;
+        });
     }
 
     /**
      * Decrement quantity
      */
-    public function decrementQuantity($amount = 1)
+    public function decrementQuantity(int $amount = 1): bool
     {
         $newQuantity = max(1, $this->jumlah - $amount);
         $this->update(['jumlah' => $newQuantity]);
@@ -126,7 +133,7 @@ class Cart extends Model
     /**
      * Scope untuk cart items customer tertentu
      */
-    public function scopeByCustomer($query, $customerId)
+    public function scopeByCustomer($query, int $customerId)
     {
         return $query->where('id_customer', $customerId);
     }
@@ -142,9 +149,22 @@ class Cart extends Model
     }
 
     /**
+     * Scope dengan data produk lengkap
+     */
+    public function scopeWithProductDetails($query)
+    {
+        return $query->with([
+            'detailUkuran.detailWarna.produk',
+            'detailUkuran.detailWarna.produkGambars' => function ($query) {
+                $query->where('is_primary', 1);
+            }
+        ]);
+    }
+
+    /**
      * Get total items in cart for customer
      */
-    public static function getTotalItems($customerId)
+    public static function getTotalItems(int $customerId): int
     {
         return static::byCustomer($customerId)->sum('jumlah');
     }
@@ -152,59 +172,125 @@ class Cart extends Model
     /**
      * Get total price in cart for customer
      */
-    public static function getTotalPrice($customerId)
+    public static function getTotalPrice(int $customerId): float
     {
-        $cartItems = static::byCustomer($customerId)->with('detailUkuran')->get();
+        $cartItems = static::byCustomer($customerId)
+            ->withProductDetails()
+            ->get();
         
-        return $cartItems->sum(function ($item) {
-            return $item->subtotal;
-        });
+        return $cartItems->sum('subtotal');
     }
 
     /**
      * Get formatted total price in cart for customer
      */
-    public static function getTotalPriceFormatted($customerId)
+    public static function getTotalPriceFormatted(int $customerId): string
     {
         $total = static::getTotalPrice($customerId);
-        return 'Rp ' . number_format((float) $total, 0, ',', '.');
+        return 'Rp ' . number_format($total, 0, ',', '.');
     }
 
     /**
      * Clear cart for customer
      */
-    public static function clearCart($customerId)
+    public static function clearCart(int $customerId): bool
     {
         return static::byCustomer($customerId)->delete();
     }
 
     /**
-     * Add item to cart
+     * Add item to cart dengan transaction dan validation
      */
-    public static function addToCart($customerId, $ukuranId, $quantity = 1)
+    public static function addToCart(int $customerId, int $ukuranId, int $quantity = 1): self
     {
-        // Check if item already exists in cart
-        $existingCart = static::where('id_customer', $customerId)
-                            ->where('id_ukuran', $ukuranId)
-                            ->first();
+        return DB::transaction(function () use ($customerId, $ukuranId, $quantity) {
+            // Check if item already exists in cart
+            $existingCart = static::where('id_customer', $customerId)
+                                ->where('id_ukuran', $ukuranId)
+                                ->first();
 
-        if ($existingCart) {
-            return $existingCart->incrementQuantity($quantity);
+            if ($existingCart) {
+                $existingCart->incrementQuantity($quantity);
+                return $existingCart->fresh(['detailUkuran.detailWarna.produk']);
+            }
+
+            // Check stock availability
+            $detailUkuran = DetailUkuran::with('detailWarna.produk')->find($ukuranId);
+            
+            if (!$detailUkuran) {
+                throw new \Exception('Varian produk tidak ditemukan');
+            }
+
+            if ($detailUkuran->stok < $quantity) {
+                throw new \Exception('Stok produk tidak mencukupi');
+            }
+
+            // Create new cart item
+            $cart = static::create([
+                'id_customer' => $customerId,
+                'id_ukuran' => $ukuranId,
+                'jumlah' => $quantity,
+                'tanggal_ditambahkan' => now(),
+            ]);
+
+            return $cart->load(['detailUkuran.detailWarna.produk']);
+        });
+    }
+
+    /**
+     * Validate all cart items for checkout
+     */
+    public static function validateCartForCheckout(int $customerId): array
+    {
+        $cartItems = static::byCustomer($customerId)
+            ->withProductDetails()
+            ->get();
+
+        $errors = [];
+        $validItems = [];
+
+        foreach ($cartItems as $cartItem) {
+            if (!$cartItem->is_stock_available) {
+                $errors[] = [
+                    'product' => $cartItem->detailUkuran->detailWarna->produk->nama_produk,
+                    'variant' => $cartItem->detailUkuran->detailWarna->nama_warna . ' - ' . $cartItem->detailUkuran->ukuran,
+                    'requested' => $cartItem->jumlah,
+                    'available' => $cartItem->detailUkuran->stok,
+                    'message' => 'Stok tidak mencukupi'
+                ];
+            } else {
+                $validItems[] = $cartItem;
+            }
         }
 
-        // Check stock availability
-        $detailUkuran = DetailUkuran::find($ukuranId);
-        if (!$detailUkuran || !$detailUkuran->stokMencukupi($quantity)) {
-            return false;
-        }
+        return [
+            'valid_items' => $validItems,
+            'errors' => $errors,
+            'is_valid' => empty($errors)
+        ];
+    }
 
-        // Create new cart item
-        return static::create([
-            'id_customer' => $customerId,
-            'id_ukuran' => $ukuranId,
-            'jumlah' => $quantity,
-            'tanggal_ditambahkan' => now(),
-        ]);
+    /**
+     * Get cart summary for customer
+     */
+    public static function getCartSummary(int $customerId): array
+    {
+        $cartItems = static::byCustomer($customerId)
+            ->withProductDetails()
+            ->get();
+
+        $totalQuantity = $cartItems->sum('jumlah');
+        $totalPrice = $cartItems->sum('subtotal');
+
+        return [
+            'items' => $cartItems,
+            'summary' => [
+                'total_items' => $cartItems->count(),
+                'total_quantity' => $totalQuantity,
+                'total_price' => $totalPrice,
+                'formatted_total_price' => 'Rp ' . number_format($totalPrice, 0, ',', '.')
+            ]
+        ];
     }
 
     /**
