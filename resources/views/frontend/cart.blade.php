@@ -52,42 +52,44 @@
                   <div class="flex gap-4">
                     {{-- Product Image --}}
                     <div class="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden group">
-                      <img src="{{ $item->detailUkuran->produk->gambar_url }}"
-                           alt="{{ $item->detailUkuran->produk->nama_produk }}"
+                      <img src="{{ $item->detailUkuran->produk->gambar_url ?? '/images/placeholder-product.jpg' }}"
+                           alt="{{ $item->detailUkuran->produk->nama_produk ?? 'Product Image' }}"
                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                     </div>
 
                     {{-- Product Details --}}
                     <div class="flex-1 min-w-0">
                       <h3 class="font-semibold text-gray-900 line-clamp-2 mb-1">
-                        {{ $item->detailUkuran->produk->nama_produk }}
+                        {{ $item->detailUkuran->produk->nama_produk ?? 'Product Name' }}
                       </h3>
                       <p class="text-sm text-gray-600 mb-2">
                         Color: {{ $item->detailUkuran->detailWarna->nama_warna ?? '-' }} |
-                        Size: {{ $item->detailUkuran->ukuran }}
+                        Size: {{ $item->detailUkuran->ukuran ?? '-' }}
                       </p>
                       <p class="text-lg font-bold text-gray-900">
-                        Rp {{ number_format($item->detailUkuran->harga, 0, ',', '.') }}
+                        Rp {{ number_format($item->detailUkuran->harga ?? 0, 0, ',', '.') }}
                       </p>
                       <p class="text-sm text-gray-500 mt-1">
-                        Stock: {{ $item->detailUkuran->stok }} available
+                        Stock: {{ $item->detailUkuran->stok ?? 0 }} available
                       </p>
                     </div>
 
                     {{-- Quantity Controls --}}
                     <div class="flex flex-col items-end justify-between">
                       <div class="flex items-center gap-2 bg-gray-100 rounded-lg">
-                        <button onclick="updateQuantity({{ $item->id_cart }}, {{ $item->jumlah - 1 }})"
-                                class="px-3 py-2 hover:bg-gray-200 rounded-l-lg transition"
+                        <button onclick="decrementQuantity({{ $item->id_cart }})"
+                                class="px-3 py-2 hover:bg-gray-200 rounded-l-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                id="decrement-{{ $item->id_cart }}"
                                 {{ $item->jumlah <= 1 ? 'disabled' : '' }}>
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
                           </svg>
                         </button>
-                        <span class="px-4 py-2 font-semibold quantity-display">{{ $item->jumlah }}</span>
-                        <button onclick="updateQuantity({{ $item->id_cart }}, {{ $item->jumlah + 1 }})"
-                                class="px-3 py-2 hover:bg-gray-200 rounded-r-lg transition"
-                                {{ $item->jumlah >= $item->detailUkuran->stok ? 'disabled' : '' }}>
+                        <span class="px-4 py-2 font-semibold quantity-display" id="quantity-{{ $item->id_cart }}">{{ $item->jumlah }}</span>
+                        <button onclick="incrementQuantity({{ $item->id_cart }})"
+                                class="px-3 py-2 hover:bg-gray-200 rounded-r-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                id="increment-{{ $item->id_cart }}"
+                                {{ $item->jumlah >= ($item->detailUkuran->stok ?? 0) ? 'disabled' : '' }}>
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                           </svg>
@@ -96,7 +98,7 @@
 
                       <div class="text-right mt-2">
                         <p class="text-sm text-gray-500">Subtotal</p>
-                        <p class="text-lg font-bold text-gray-900 subtotal-display">
+                        <p class="text-lg font-bold text-gray-900 subtotal-display" id="subtotal-{{ $item->id_cart }}">
                           Rp {{ number_format($item->subtotal, 0, ',', '.') }}
                         </p>
                       </div>
@@ -229,6 +231,11 @@
 .cart-item:hover {
   transform: translateX(4px);
 }
+
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
 </style>
 @endpush
 
@@ -253,55 +260,164 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
 });
 
-// Update quantity
+// Get CSRF token
+function getCsrfToken() {
+  return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
+
+// Increment quantity
+function incrementQuantity(cartId) {
+  const quantityElement = document.getElementById(`quantity-${cartId}`);
+  const currentQuantity = parseInt(quantityElement.textContent);
+  const newQuantity = currentQuantity + 1;
+  
+  updateQuantity(cartId, newQuantity);
+}
+
+// Decrement quantity
+function decrementQuantity(cartId) {
+  const quantityElement = document.getElementById(`quantity-${cartId}`);
+  const currentQuantity = parseInt(quantityElement.textContent);
+  
+  if (currentQuantity <= 1) return;
+  
+  const newQuantity = currentQuantity - 1;
+  updateQuantity(cartId, newQuantity);
+}
+
+// Update quantity function
 function updateQuantity(cartId, newQuantity) {
   if (newQuantity < 1) return;
+
+  // Show loading state
+  const cartItem = document.querySelector(`[data-cart-id="${cartId}"]`);
+  const decrementBtn = document.getElementById(`decrement-${cartId}`);
+  const incrementBtn = document.getElementById(`increment-${cartId}`);
+  
+  cartItem.classList.add('loading');
+  decrementBtn.disabled = true;
+  incrementBtn.disabled = true;
 
   fetch(`/cart/${cartId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+      'X-CSRF-TOKEN': getCsrfToken(),
+      'X-Requested-With': 'XMLHttpRequest'
     },
     body: JSON.stringify({ jumlah: newQuantity })
   })
-  .then(response => response.json())
+  .then(async response => {
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Server returned non-JSON response');
+    }
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      // Handle HTTP error status
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+    
+    return data;
+  })
   .then(data => {
     if (data.success) {
       // Update quantity display
-      const cartItem = document.querySelector(`[data-cart-id="${cartId}"]`);
-      cartItem.querySelector('.quantity-display').textContent = newQuantity;
-      cartItem.querySelector('.subtotal-display').textContent = data.subtotal_formatted;
+      const quantityElement = document.getElementById(`quantity-${cartId}`);
+      quantityElement.textContent = newQuantity;
+
+      // Update subtotal display
+      const subtotalElement = document.getElementById(`subtotal-${cartId}`);
+      subtotalElement.textContent = data.subtotal_formatted;
 
       // Update totals
       document.getElementById('total-price').textContent = data.total_formatted;
       document.getElementById('subtotal-price').textContent = data.total_formatted;
+
+      // Update button states
+      updateButtonStates(cartId, newQuantity, data.available_stock);
+      
+      // Show success message
+      showToast(data.message, 'success');
     } else {
-      alert(data.message);
+      throw new Error(data.message || 'Update failed');
     }
   })
   .catch(error => {
     console.error('Error:', error);
-    alert('Failed to update cart');
+    
+    // Check if it's an authentication error
+    if (error.message.includes('login') || error.message.includes('Session expired')) {
+      showToast('Session expired. Please login again.', 'error');
+      setTimeout(() => {
+        window.location.href = '/login'; // Adjust to your login route
+      }, 2000);
+    } else {
+      showToast(error.message || 'Failed to update cart', 'error');
+    }
+    
+    // Revert to original quantity on error
+    const quantityElement = document.getElementById(`quantity-${cartId}`);
+    const originalQuantity = parseInt(quantityElement.textContent);
+    quantityElement.textContent = originalQuantity;
+  })
+  .finally(() => {
+    // Remove loading state
+    cartItem.classList.remove('loading');
+    decrementBtn.disabled = false;
+    incrementBtn.disabled = false;
   });
+}
+
+// Update button states based on quantity and stock
+function updateButtonStates(cartId, currentQuantity, availableStock) {
+  const decrementBtn = document.getElementById(`decrement-${cartId}`);
+  const incrementBtn = document.getElementById(`increment-${cartId}`);
+
+  // Update decrement button
+  decrementBtn.disabled = currentQuantity <= 1;
+
+  // Update increment button based on available stock
+  if (availableStock !== undefined) {
+    incrementBtn.disabled = currentQuantity >= availableStock;
+  }
 }
 
 // Remove item
 function removeItem(cartId) {
   if (!confirm('Remove this item from cart?')) return;
 
+  const cartItem = document.querySelector(`[data-cart-id="${cartId}"]`);
+  cartItem.classList.add('loading');
+
   fetch(`/cart/${cartId}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+      'X-CSRF-TOKEN': getCsrfToken(),
+      'X-Requested-With': 'XMLHttpRequest'
     }
   })
-  .then(response => response.json())
+  .then(async response => {
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Server returned non-JSON response');
+    }
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+    
+    return data;
+  })
   .then(data => {
     if (data.success) {
       // Remove item with animation
-      const cartItem = document.querySelector(`[data-cart-id="${cartId}"]`);
       cartItem.style.opacity = '0';
       cartItem.style.transform = 'translateX(-100%)';
 
@@ -312,19 +428,67 @@ function removeItem(cartId) {
         document.getElementById('total-price').textContent = data.total_formatted;
         document.getElementById('subtotal-price').textContent = data.total_formatted;
 
+        // Update cart count in header if exists
+        updateCartCount(data.cart_count);
+
+        // Show success message
+        showToast(data.message, 'success');
+
         // Reload page if cart is empty
         if (data.cart_count === 0) {
-          location.reload();
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
         }
       }, 300);
     } else {
-      alert(data.message);
+      throw new Error(data.message || 'Remove failed');
     }
   })
   .catch(error => {
     console.error('Error:', error);
-    alert('Failed to remove item');
+    showToast(error.message || 'Failed to remove item', 'error');
+    cartItem.classList.remove('loading');
   });
+}
+
+// Update cart count in header (if you have a cart badge)
+function updateCartCount(count) {
+  const cartBadge = document.querySelector('.cart-badge, .cart-count');
+  if (cartBadge) {
+    cartBadge.textContent = count;
+    cartBadge.style.display = count > 0 ? 'flex' : 'none';
+  }
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+  // Remove existing toasts
+  const existingToasts = document.querySelectorAll('.custom-toast');
+  existingToasts.forEach(toast => toast.remove());
+
+  const toast = document.createElement('div');
+  toast.className = `custom-toast fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white font-semibold transform translate-x-full transition-transform duration-300 ${
+    type === 'success' ? 'bg-green-500' : 
+    type === 'error' ? 'bg-red-500' : 
+    'bg-blue-500'
+  }`;
+  toast.textContent = message;
+  
+  document.body.appendChild(toast);
+  
+  // Animate in
+  setTimeout(() => {
+    toast.style.transform = 'translateX(0)';
+  }, 100);
+  
+  // Auto remove after 3 seconds
+  setTimeout(() => {
+    toast.style.transform = 'translateX(100%)';
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 3000);
 }
 </script>
 @endpush
