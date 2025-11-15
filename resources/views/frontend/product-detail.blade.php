@@ -176,7 +176,8 @@
             {{-- Add to Cart Button --}}
             <button type="button"
                     onclick="addToCart()"
-                    class="flex-1 px-8 py-3 bg-gray-900 text-white rounded-xl hover:bg-black transition font-medium">
+                    id="addToCartBtn"
+                    class="flex-1 px-8 py-3 bg-gray-900 text-white rounded-xl hover:bg-black transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
               Add to Cart
             </button>
           </div>
@@ -248,135 +249,366 @@ let selectedColorId = {{ $product->detailWarna->first()->id_warna ?? 'null' }};
 let selectedSizeId = {{ $product->detailUkuran->first()->id_ukuran ?? 'null' }};
 let currentStock = {{ $product->detailUkuran->first()->stok ?? 0 }};
 
+// Get CSRF token
+function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
+
 function changeMainImage(imageUrl) {
-  document.getElementById('mainProductImage').src = imageUrl;
+    document.getElementById('mainProductImage').src = imageUrl;
 }
 
 function selectColor(colorId, colorName) {
-  selectedColorId = colorId;
+    selectedColorId = colorId;
 
-  // Update button styles
-  document.querySelectorAll('.color-option').forEach(btn => {
-    btn.classList.remove('border-gray-900', 'bg-gray-900', 'text-white');
-    btn.classList.add('border-gray-300', 'bg-white', 'text-gray-900');
-  });
+    // Update button styles
+    document.querySelectorAll('.color-option').forEach(btn => {
+        btn.classList.remove('border-gray-900', 'bg-gray-900', 'text-white');
+        btn.classList.add('border-gray-300', 'bg-white', 'text-gray-900');
+    });
 
-  event.target.closest('.color-option').classList.remove('border-gray-300', 'bg-white', 'text-gray-900');
-  event.target.closest('.color-option').classList.add('border-gray-900', 'bg-gray-900', 'text-white');
+    event.target.closest('.color-option').classList.remove('border-gray-300', 'bg-white', 'text-gray-900');
+    event.target.closest('.color-option').classList.add('border-gray-900', 'bg-gray-900', 'text-white');
 
-  // Filter size options by color
-  filterSizesByColor(colorId);
+    // Filter size options by color
+    filterSizesByColor(colorId);
 }
 
 function filterSizesByColor(colorId) {
-  const sizeOptions = document.querySelectorAll('.size-option');
-  let firstAvailable = null;
+    const sizeOptions = document.querySelectorAll('.size-option');
+    let firstAvailable = null;
 
-  sizeOptions.forEach(option => {
-    const optionColorId = parseInt(option.dataset.colorId);
+    sizeOptions.forEach(option => {
+        const optionColorId = parseInt(option.dataset.colorId);
 
-    if (optionColorId === colorId) {
-      option.style.display = 'block';
-      if (!firstAvailable) {
-        firstAvailable = option;
-      }
+        if (optionColorId === colorId) {
+            option.style.display = 'block';
+            if (!firstAvailable && parseInt(option.dataset.stock) > 0) {
+                firstAvailable = option;
+            }
+        } else {
+            option.style.display = 'none';
+        }
+    });
+
+    // Auto select first available size
+    if (firstAvailable) {
+        const sizeId = firstAvailable.dataset.sizeId;
+        const sizeName = firstAvailable.querySelector('.text-sm').textContent.trim();
+        const price = parseInt(firstAvailable.dataset.price);
+        const stock = parseInt(firstAvailable.dataset.stock);
+        selectSize(sizeId, sizeName, price, stock);
     } else {
-      option.style.display = 'none';
+        // No available sizes for this color
+        selectedSizeId = null;
+        currentStock = 0;
+        updateAddToCartButton();
     }
-  });
-
-  // Auto select first available size
-  if (firstAvailable) {
-    firstAvailable.click();
-  }
 }
 
 function selectSize(sizeId, sizeName, price, stock) {
-  selectedSizeId = sizeId;
-  currentStock = stock;
+    selectedSizeId = sizeId;
+    currentStock = stock;
 
-  // Update button styles
-  document.querySelectorAll('.size-option').forEach(btn => {
-    if (btn.style.display !== 'none') {
-      btn.classList.remove('border-gray-900', 'bg-gray-900', 'text-white');
-      btn.classList.add('border-gray-300', 'bg-white', 'text-gray-900');
+    // Update button styles
+    document.querySelectorAll('.size-option').forEach(btn => {
+        if (btn.style.display !== 'none') {
+            btn.classList.remove('border-gray-900', 'bg-gray-900', 'text-white');
+            btn.classList.add('border-gray-300', 'bg-white', 'text-gray-900');
+        }
+    });
+
+    event.target.closest('.size-option').classList.remove('border-gray-300', 'bg-white', 'text-gray-900');
+    event.target.closest('.size-option').classList.add('border-gray-900', 'bg-gray-900', 'text-white');
+
+    // Update price display
+    document.getElementById('priceValue').textContent = new Intl.NumberFormat('id-ID').format(price);
+
+    // Update stock display
+    document.getElementById('stockValue').textContent = stock;
+
+    // Update stock indicator color
+    const stockIndicator = document.getElementById('stockIndicator').querySelector('span.w-2');
+    if (stock > 10) {
+        stockIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
+    } else if (stock > 0) {
+        stockIndicator.className = 'w-2 h-2 bg-yellow-500 rounded-full';
+    } else {
+        stockIndicator.className = 'w-2 h-2 bg-red-500 rounded-full';
     }
-  });
 
-  event.target.closest('.size-option').classList.remove('border-gray-300', 'bg-white', 'text-gray-900');
-  event.target.closest('.size-option').classList.add('border-gray-900', 'bg-gray-900', 'text-white');
+    // Reset quantity to 1
+    document.getElementById('quantity').value = 1;
 
-  // Update price display
-  document.getElementById('priceValue').textContent = new Intl.NumberFormat('id-ID').format(price);
+    // Update add to cart button state
+    updateAddToCartButton();
+}
 
-  // Update stock display
-  document.getElementById('stockValue').textContent = stock;
-
-  // Update stock indicator color
-  const stockIndicator = document.getElementById('stockIndicator').querySelector('span.w-2');
-  if (stock > 10) {
-    stockIndicator.className = 'w-2 h-2 bg-green-500 rounded-full';
-  } else if (stock > 0) {
-    stockIndicator.className = 'w-2 h-2 bg-yellow-500 rounded-full';
-  } else {
-    stockIndicator.className = 'w-2 h-2 bg-red-500 rounded-full';
-  }
-
-  // Reset quantity to 1
-  document.getElementById('quantity').value = 1;
+function updateAddToCartButton() {
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    if (!selectedSizeId || currentStock <= 0) {
+        addToCartBtn.disabled = true;
+        addToCartBtn.textContent = 'Out of Stock';
+    } else {
+        addToCartBtn.disabled = false;
+        addToCartBtn.textContent = 'Add to Cart';
+    }
 }
 
 function increaseQuantity() {
-  const quantityInput = document.getElementById('quantity');
-  let currentValue = parseInt(quantityInput.value);
+    const quantityInput = document.getElementById('quantity');
+    let currentValue = parseInt(quantityInput.value);
 
-  if (currentValue < currentStock) {
-    quantityInput.value = currentValue + 1;
-  } else {
-    alert('Maximum stock available: ' + currentStock);
-  }
+    if (currentValue < currentStock) {
+        quantityInput.value = currentValue + 1;
+    } else {
+        showToast('Maximum stock available: ' + currentStock, 'warning');
+    }
 }
 
 function decreaseQuantity() {
-  const quantityInput = document.getElementById('quantity');
-  let currentValue = parseInt(quantityInput.value);
+    const quantityInput = document.getElementById('quantity');
+    let currentValue = parseInt(quantityInput.value);
 
-  if (currentValue > 1) {
-    quantityInput.value = currentValue - 1;
-  }
+    if (currentValue > 1) {
+        quantityInput.value = currentValue - 1;
+    }
 }
 
+// ... kode JavaScript sebelumnya ...
+
 function addToCart() {
-  const quantity = parseInt(document.getElementById('quantity').value);
+    const quantity = parseInt(document.getElementById('quantity').value);
 
-  if (!selectedSizeId) {
-    alert('Please select a size');
-    return;
-  }
+    if (!selectedSizeId) {
+        showToast('Please select a size', 'warning');
+        return;
+    }
 
-  if (currentStock <= 0) {
-    alert('This product is out of stock');
-    return;
-  }
+    if (currentStock <= 0) {
+        showToast('This product is out of stock', 'error');
+        return;
+    }
 
-  if (quantity > currentStock) {
-    alert('Maximum stock available: ' + currentStock);
-    return;
-  }
+    if (quantity > currentStock) {
+        showToast('Maximum stock available: ' + currentStock, 'error');
+        return;
+    }
 
-  // TODO: Implement actual add to cart functionality
-  alert('Added ' + quantity + ' item(s) to cart!\n\nProduct ID: {{ $product->id_produk }}\nSize ID: ' + selectedSizeId + '\nColor ID: ' + selectedColorId);
+    // Show loading state
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    const originalText = addToCartBtn.textContent;
+    addToCartBtn.disabled = true;
+    addToCartBtn.innerHTML = '<span class="flex items-center justify-center gap-2"><svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Adding...</span>';
 
-  // Here you would typically make an AJAX call to add the item to cart
-  // For now, we'll just redirect to cart page
-  // window.location.href = '{{ url("cart") }}';
+    // Make AJAX call to add to cart
+    fetch('{{ route("cart.add") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': getCsrfToken(),
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            id_ukuran: selectedSizeId,
+            jumlah: quantity
+        })
+    })
+    .then(async response => {
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response');
+        }
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        }
+        
+        return data;
+    })
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            
+            // Update cart count in header if exists
+            updateCartCount(data.cart_count);
+            
+            // Optional: Redirect to cart page after success
+            // setTimeout(() => {
+            //     window.location.href = '{{ route("cart.index") }}';
+            // }, 1500);
+        } else {
+            throw new Error(data.message || 'Failed to add to cart');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        
+        if (error.message.includes('login') || error.message.includes('Session expired')) {
+            showToast('Please login to add items to cart', 'error');
+            setTimeout(() => {
+                // Ganti dengan route login yang benar di aplikasi Anda
+                window.location.href = '/login'; // atau route('login') jika sudah didefinisikan
+            }, 2000);
+        } else {
+            showToast(error.message || 'Failed to add item to cart', 'error');
+        }
+    })
+    .finally(() => {
+        // Restore button state
+        addToCartBtn.disabled = false;
+        addToCartBtn.textContent = originalText;
+    });
+}
+
+// ... kode JavaScript lainnya ...
+
+// Update cart count in header (if you have a cart badge)
+function updateCartCount(count) {
+    const cartBadge = document.querySelector('.cart-badge, .cart-count');
+    if (cartBadge) {
+        cartBadge.textContent = count;
+        cartBadge.style.display = count > 0 ? 'flex' : 'none';
+    }
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+    // Remove existing toasts
+    const existingToasts = document.querySelectorAll('.custom-toast');
+    existingToasts.forEach(toast => toast.remove());
+
+    const toast = document.createElement('div');
+    toast.className = `custom-toast fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white font-semibold transform translate-x-full transition-transform duration-300 ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 
+        type === 'warning' ? 'bg-yellow-500' : 
+        'bg-blue-500'
+    }`;
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 3000);
 }
 
 // Initialize: Filter sizes by first color on page load
 document.addEventListener('DOMContentLoaded', function() {
-  if (selectedColorId) {
-    filterSizesByColor(selectedColorId);
-  }
+    if (selectedColorId) {
+        filterSizesByColor(selectedColorId);
+    }
+    updateAddToCartButton();
 });
+
+
+// ... kode JavaScript sebelumnya ...
+
+function updateQuantity(cartId, newQuantity) {
+    if (newQuantity < 1) return;
+
+    // Show loading state
+    const cartItem = document.querySelector(`[data-cart-id="${cartId}"]`);
+    const decrementBtn = document.getElementById(`decrement-${cartId}`);
+    const incrementBtn = document.getElementById(`increment-${cartId}`);
+    
+    cartItem.classList.add('loading');
+    decrementBtn.disabled = true;
+    incrementBtn.disabled = true;
+
+    fetch(`/cart/${cartId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': getCsrfToken(),
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ jumlah: newQuantity })
+    })
+    .then(async response => {
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response');
+        }
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        }
+        
+        return data;
+    })
+    .then(data => {
+        if (data.success) {
+            // Update quantity display
+            const quantityElement = document.getElementById(`quantity-${cartId}`);
+            quantityElement.textContent = newQuantity;
+
+            // Update subtotal display
+            const subtotalElement = document.getElementById(`subtotal-${cartId}`);
+            subtotalElement.textContent = data.subtotal_formatted;
+
+            // Update totals
+            document.getElementById('total-price').textContent = data.total_formatted;
+            document.getElementById('subtotal-price').textContent = data.total_formatted;
+
+            // Update button states
+            updateButtonStates(cartId, newQuantity, data.available_stock);
+            
+            // Show success message
+            showToast(data.message, 'success');
+        } else {
+            throw new Error(data.message || 'Update failed');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        
+        // Check if it's an authentication error
+        if (error.message.includes('login') || error.message.includes('Session expired')) {
+            showToast('Session expired. Please login again.', 'error');
+            setTimeout(() => {
+                // Ganti dengan route login yang benar
+                window.location.href = '/login';
+            }, 2000);
+        } else {
+            showToast(error.message || 'Failed to update cart', 'error');
+        }
+        
+        // Revert to original quantity on error
+        const quantityElement = document.getElementById(`quantity-${cartId}`);
+        const originalQuantity = parseInt(quantityElement.textContent);
+        quantityElement.textContent = originalQuantity;
+    })
+    .finally(() => {
+        // Remove loading state
+        cartItem.classList.remove('loading');
+        decrementBtn.disabled = false;
+        incrementBtn.disabled = false;
+    });
+}
+
+// ... kode JavaScript lainnya ...
+
 </script>
+
+<style>
+.custom-toast {
+    max-width: 300px;
+    word-wrap: break-word;
+}
+</style>
 @endpush
