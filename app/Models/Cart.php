@@ -12,25 +12,19 @@ class Cart extends Model
     protected $table = 'cart';
     protected $primaryKey = 'id_cart';
 
+    // Nonaktifkan timestamps otomatis
+    public $timestamps = false;
+
     protected $fillable = [
         'id_customer',
-        'id_ukuran',
+        'id_ukuran', 
         'jumlah',
-        'tanggal_ditambahkan',
+        'tanggal_ditambahkan'
     ];
 
     protected $casts = [
-        'jumlah' => 'integer',
         'tanggal_ditambahkan' => 'datetime',
     ];
-
-    /**
-     * Relationship dengan customer
-     */
-    public function customer()
-    {
-        return $this->belongsTo(Customer::class, 'id_customer', 'id_customer');
-    }
 
     /**
      * Relationship dengan detail ukuran
@@ -41,11 +35,26 @@ class Cart extends Model
     }
 
     /**
+     * Relationship dengan produk melalui detailUkuran
+     */
+    public function produk()
+    {
+        return $this->hasOneThrough(
+            Produk::class,
+            DetailUkuran::class,
+            'id_ukuran',
+            'id_produk',
+            'id_ukuran',
+            'id_produk'
+        );
+    }
+
+    /**
      * Accessor untuk subtotal item
      */
     public function getSubtotalAttribute()
     {
-        if ($this->detailUkuran) {
+        if ($this->detailUkuran && $this->detailUkuran->harga) {
             return $this->detailUkuran->harga * $this->jumlah;
         }
         return 0;
@@ -64,19 +73,7 @@ class Cart extends Model
      */
     public function isStockAvailable()
     {
-        return $this->detailUkuran && $this->detailUkuran->stokMencukupi($this->jumlah);
-    }
-
-    /**
-     * Check jika item sudah melebihi stok
-     */
-    public function isExceedingStock()
-    {
-        if (!$this->detailUkuran) {
-            return false;
-        }
-        
-        return $this->jumlah > $this->detailUkuran->stok;
+        return $this->detailUkuran && $this->detailUkuran->stok >= $this->jumlah;
     }
 
     /**
@@ -89,12 +86,12 @@ class Cart extends Model
         }
 
         // Check stok tersedia
-        if ($this->detailUkuran && !$this->detailUkuran->stokMencukupi($newQuantity)) {
+        if ($this->detailUkuran && $this->detailUkuran->stok < $newQuantity) {
             return false;
         }
 
-        $this->update(['jumlah' => $newQuantity]);
-        return true;
+        // Update hanya kolom jumlah tanpa updated_at
+        return $this->update(['jumlah' => $newQuantity]);
     }
 
     /**
@@ -105,12 +102,11 @@ class Cart extends Model
         $newQuantity = $this->jumlah + $amount;
         
         // Check stok tersedia
-        if ($this->detailUkuran && !$this->detailUkuran->stokMencukupi($newQuantity)) {
+        if ($this->detailUkuran && $this->detailUkuran->stok < $newQuantity) {
             return false;
         }
 
-        $this->update(['jumlah' => $newQuantity]);
-        return true;
+        return $this->update(['jumlah' => $newQuantity]);
     }
 
     /**
@@ -119,8 +115,7 @@ class Cart extends Model
     public function decrementQuantity($amount = 1)
     {
         $newQuantity = max(1, $this->jumlah - $amount);
-        $this->update(['jumlah' => $newQuantity]);
-        return true;
+        return $this->update(['jumlah' => $newQuantity]);
     }
 
     /**
@@ -132,7 +127,7 @@ class Cart extends Model
     }
 
     /**
-     * Scope untuk items yang stoknya tersedia
+     * Scope untuk items dengan stok tersedia
      */
     public function scopeAvailableStock($query)
     {
@@ -154,8 +149,10 @@ class Cart extends Model
      */
     public static function getTotalPrice($customerId)
     {
-        $cartItems = static::byCustomer($customerId)->with('detailUkuran')->get();
-        
+        $cartItems = static::byCustomer($customerId)
+            ->with('detailUkuran')
+            ->get();
+
         return $cartItems->sum(function ($item) {
             return $item->subtotal;
         });
@@ -194,82 +191,16 @@ class Cart extends Model
 
         // Check stock availability
         $detailUkuran = DetailUkuran::find($ukuranId);
-        if (!$detailUkuran || !$detailUkuran->stokMencukupi($quantity)) {
+        if (!$detailUkuran || $detailUkuran->stok < $quantity) {
             return false;
         }
 
-        // Create new cart item
+        // Create new cart item - tanpa created_at dan updated_at
         return static::create([
             'id_customer' => $customerId,
             'id_ukuran' => $ukuranId,
             'jumlah' => $quantity,
             'tanggal_ditambahkan' => now(),
         ]);
-    }
-
-    /**
-     * Boot method untuk handle events
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($model) {
-            if (empty($model->tanggal_ditambahkan)) {
-                $model->tanggal_ditambahkan = now();
-            }
-        });
-    }
-
-    /**
-     * Check if item with same size already exists in cart
-     */
-    public static function itemExists($customerId, $ukuranId)
-    {
-        return static::where('id_customer', $customerId)
-                    ->where('id_ukuran', $ukuranId)
-                    ->exists();
-    }
-
-    /**
-     * Get cart item by size
-     */
-    public static function getItemBySize($customerId, $ukuranId)
-    {
-        return static::where('id_customer', $customerId)
-                    ->where('id_ukuran', $ukuranId)
-                    ->first();
-    }
-
-    /**
-     * Scope untuk items dengan stok yang cukup
-     */
-    public function scopeWithAvailableStock($query)
-    {
-        return $query->whereHas('detailUkuran', function ($q) {
-            $q->where('stok', '>', 0);
-        });
-    }
-
-    /**
-     * Get cart summary for customer
-     */
-    public static function getCartSummary($customerId)
-    {
-        $cartItems = static::byCustomer($customerId)
-            ->with(['detailUkuran.produk', 'detailUkuran.detailWarna'])
-            ->get();
-
-        $totalItems = $cartItems->sum('jumlah');
-        $totalPrice = $cartItems->sum(function ($item) {
-            return $item->subtotal;
-        });
-
-        return [
-            'items' => $cartItems,
-            'total_items' => $totalItems,
-            'total_price' => $totalPrice,
-            'total_price_formatted' => 'Rp ' . number_format($totalPrice, 0, ',', '.')
-        ];
     }
 }

@@ -32,7 +32,7 @@
       <div class="order-2 lg:order-1 fade-in-left">
         <div class="relative">
           <div class="aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100">
-            <img src="{{ asset('images/about-founder.jpg') }}"
+            <img src="{{ asset('images/test.jpeg') }}"
                  class="w-full h-full object-cover"
                  alt="Founder"
                  onerror="this.src='https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop'">
