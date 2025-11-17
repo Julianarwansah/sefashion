@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Models\DetailUkuran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
@@ -21,8 +22,13 @@ class CartController extends Controller
             ->orderBy('tanggal_ditambahkan', 'desc')
             ->get();
 
-        $totalPrice = Cart::getTotalPrice($customerId);
-        $totalItems = Cart::getTotalItems($customerId);
+        $totalPrice = 0;
+        $totalItems = 0;
+
+        foreach ($cartItems as $item) {
+            $totalPrice += $item->subtotal;
+            $totalItems += $item->jumlah;
+        }
 
         return view('frontend.cart', compact('cartItems', 'totalPrice', 'totalItems'));
     }
@@ -32,6 +38,15 @@ class CartController extends Controller
      */
     public function add(Request $request)
     {
+        // Check authentication first
+        if (!Auth::guard('customer')->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please login first',
+                'redirect' => route('login') // Ganti dengan route login yang benar
+            ], 401);
+        }
+
         $request->validate([
             'id_ukuran' => 'required|exists:detail_ukuran,id_ukuran',
             'jumlah' => 'required|integer|min:1',
@@ -103,6 +118,15 @@ class CartController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Check authentication first
+        if (!Auth::guard('customer')->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session expired. Please login again.',
+                'redirect' => route('login') // Ganti dengan route login yang benar
+            ], 401);
+        }
+
         $request->validate([
             'jumlah' => 'required|integer|min:1',
         ]);
@@ -111,25 +135,50 @@ class CartController extends Controller
 
         $cartItem = Cart::where('id_cart', $id)
             ->where('id_customer', $customerId)
-            ->firstOrFail();
+            ->first();
 
-        $result = $cartItem->updateQuantity($request->jumlah);
+        if (!$cartItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item keranjang tidak ditemukan'
+            ], 404);
+        }
 
-        if (!$result) {
+        // Check stock
+        if ($cartItem->detailUkuran && $cartItem->detailUkuran->stok < $request->jumlah) {
             return response()->json([
                 'success' => false,
                 'message' => 'Stock not available'
             ], 400);
         }
 
+        // Update using query builder to avoid timestamp issues
+        $updated = DB::table('cart')
+            ->where('id_cart', $id)
+            ->where('id_customer', $customerId)
+            ->update(['jumlah' => $request->jumlah]);
+
+        if ($updated) {
+            // Reload the item to get fresh data
+            $cartItem = Cart::find($id);
+            $cartItem->load('detailUkuran');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Keranjang berhasil diupdate',
+                'subtotal' => $cartItem->subtotal,
+                'subtotal_formatted' => $cartItem->subtotal_formatted,
+                'total' => Cart::getTotalPrice($customerId),
+                'total_formatted' => Cart::getTotalPriceFormatted($customerId),
+                'cart_count' => Cart::getTotalItems($customerId),
+                'available_stock' => $cartItem->detailUkuran->stok ?? 0
+            ]);
+        }
+
         return response()->json([
-            'success' => true,
-            'message' => 'Cart updated successfully',
-            'subtotal' => $cartItem->fresh()->subtotal,
-            'subtotal_formatted' => $cartItem->fresh()->subtotal_formatted,
-            'total' => Cart::getTotalPrice($customerId),
-            'total_formatted' => Cart::getTotalPriceFormatted($customerId)
-        ]);
+            'success' => false,
+            'message' => 'Gagal mengupdate keranjang'
+        ], 400);
     }
 
     /**
@@ -137,11 +186,27 @@ class CartController extends Controller
      */
     public function remove($id)
     {
+        // Check authentication first
+        if (!Auth::guard('customer')->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session expired. Please login again.',
+                'redirect' => route('login') // Ganti dengan route login yang benar
+            ], 401);
+        }
+
         $customerId = Auth::guard('customer')->id();
 
         $cartItem = Cart::where('id_cart', $id)
             ->where('id_customer', $customerId)
-            ->firstOrFail();
+            ->first();
+
+        if (!$cartItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item keranjang tidak ditemukan'
+            ], 404);
+        }
 
         $cartItem->delete();
 
@@ -164,17 +229,5 @@ class CartController extends Controller
         Cart::clearCart($customerId);
 
         return redirect()->route('cart.index')->with('success', 'Cart cleared successfully');
-    }
-
-    /**
-     * Get cart count for AJAX requests
-     */
-    public function getCount()
-    {
-        $customerId = Auth::guard('customer')->id();
-        
-        return response()->json([
-            'count' => Cart::getTotalItems($customerId)
-        ]);
     }
 }
