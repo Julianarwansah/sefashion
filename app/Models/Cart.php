@@ -12,7 +12,6 @@ class Cart extends Model
     protected $table = 'cart';
     protected $primaryKey = 'id_cart';
 
-    // Nonaktifkan timestamps otomatis
     public $timestamps = false;
 
     protected $fillable = [
@@ -180,7 +179,6 @@ class Cart extends Model
      */
     public static function addToCart($customerId, $ukuranId, $quantity = 1)
     {
-        // Check if item already exists in cart
         $existingCart = static::where('id_customer', $customerId)
                             ->where('id_ukuran', $ukuranId)
                             ->first();
@@ -189,13 +187,11 @@ class Cart extends Model
             return $existingCart->incrementQuantity($quantity);
         }
 
-        // Check stock availability
         $detailUkuran = DetailUkuran::find($ukuranId);
         if (!$detailUkuran || $detailUkuran->stok < $quantity) {
             return false;
         }
 
-        // Create new cart item - tanpa created_at dan updated_at
         return static::create([
             'id_customer' => $customerId,
             'id_ukuran' => $ukuranId,
