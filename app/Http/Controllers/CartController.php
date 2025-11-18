@@ -38,12 +38,11 @@ class CartController extends Controller
      */
     public function add(Request $request)
     {
-        // Check authentication first
         if (!Auth::guard('customer')->check()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Please login first',
-                'redirect' => route('login') // Ganti dengan route login yang benar
+                'redirect' => route('login')
             ], 401);
         }
 
@@ -54,7 +53,6 @@ class CartController extends Controller
 
         $customerId = Auth::guard('customer')->id();
 
-        // Check if the size exists and has enough stock
         $detailUkuran = DetailUkuran::find($request->id_ukuran);
         
         if (!$detailUkuran) {
@@ -71,13 +69,11 @@ class CartController extends Controller
             ], 400);
         }
 
-        // Check if item already exists in cart
         $existingCart = Cart::where('id_customer', $customerId)
                             ->where('id_ukuran', $request->id_ukuran)
                             ->first();
 
         if ($existingCart) {
-            // Update quantity if item exists
             $newQuantity = $existingCart->jumlah + $request->jumlah;
             
             if ($detailUkuran->stok < $newQuantity) {
@@ -90,7 +86,6 @@ class CartController extends Controller
             $existingCart->update(['jumlah' => $newQuantity]);
             $cartItem = $existingCart;
         } else {
-            // Create new cart item
             $cartItem = Cart::create([
                 'id_customer' => $customerId,
                 'id_ukuran' => $request->id_ukuran,
@@ -118,12 +113,11 @@ class CartController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Check authentication first
         if (!Auth::guard('customer')->check()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Session expired. Please login again.',
-                'redirect' => route('login') // Ganti dengan route login yang benar
+                'redirect' => route('login')
             ], 401);
         }
 
@@ -152,14 +146,12 @@ class CartController extends Controller
             ], 400);
         }
 
-        // Update using query builder to avoid timestamp issues
         $updated = DB::table('cart')
             ->where('id_cart', $id)
             ->where('id_customer', $customerId)
             ->update(['jumlah' => $request->jumlah]);
 
         if ($updated) {
-            // Reload the item to get fresh data
             $cartItem = Cart::find($id);
             $cartItem->load('detailUkuran');
 
@@ -191,7 +183,7 @@ class CartController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Session expired. Please login again.',
-                'redirect' => route('login') // Ganti dengan route login yang benar
+                'redirect' => route('login')
             ], 401);
         }
 
