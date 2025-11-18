@@ -4,36 +4,36 @@
 
 @section('content')
 {{-- BREADCRUMB --}}
-<section class="py-6 bg-gray-50 mt-20">
+<section class="py-4 sm:py-6 bg-gray-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
-    <div class="flex items-center gap-2 text-sm text-gray-600">
-      <a href="{{ route('home') }}" class="hover:text-gray-900">Home</a>
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-600 overflow-x-auto">
+      <a href="{{ route('home') }}" class="hover:text-gray-900 whitespace-nowrap">Home</a>
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
       </svg>
-      <a href="{{ route('shop') }}" class="hover:text-gray-900">Shop</a>
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <a href="{{ route('shop') }}" class="hover:text-gray-900 whitespace-nowrap">Shop</a>
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
       </svg>
-      <span class="text-gray-900 font-medium">{{ $product->nama_produk }}</span>
+      <span class="text-gray-900 font-medium truncate">{{ $product->nama_produk }}</span>
     </div>
   </div>
 </section>
 
 {{-- PRODUCT DETAIL --}}
-<section class="py-10 sm:py-16">
+<section class="py-6 sm:py-10 md:py-16">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
-    <div class="grid lg:grid-cols-2 gap-8 lg:gap-12">
+    <div class="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
       {{-- Product Images --}}
-      <div class="space-y-4">
+      <div class="space-y-3 sm:space-y-4">
         {{-- Main Image --}}
-        <div class="aspect-[4/5] bg-gray-100 rounded-2xl overflow-hidden">
+        <div class="aspect-[4/5] sm:aspect-[4/5] bg-gray-100 rounded-xl sm:rounded-2xl overflow-hidden">
           <img id="mainProductImage" src="{{ $product->gambar_url }}" class="w-full h-full object-cover" alt="{{ $product->nama_produk }}">
         </div>
 
         {{-- Thumbnail Images --}}
         @if($product->gambarProduk->count() > 0)
-        <div class="grid grid-cols-4 gap-3">
+        <div class="grid grid-cols-4 gap-2 sm:gap-3">
           @if($product->gambar)
           <button onclick="changeMainImage('{{ $product->gambar_url }}')"
                   class="aspect-square bg-gray-100 rounded-lg overflow-hidden hover:ring-2 hover:ring-gray-900 transition">
@@ -52,7 +52,7 @@
       </div>
 
       {{-- Product Info --}}
-      <div class="space-y-6">
+      <div class="space-y-4 sm:space-y-6">
         {{-- Category --}}
         @if($product->kategori)
         <div>
@@ -63,7 +63,7 @@
         @endif
 
         {{-- Product Name --}}
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">
           {{ $product->nama_produk }}
         </h1>
 
@@ -75,11 +75,11 @@
           @endphp
 
           @if($minPrice == $maxPrice)
-            <p class="text-3xl font-bold text-gray-900">
+            <p class="text-2xl sm:text-3xl font-bold text-gray-900">
               Rp {{ number_format($minPrice, 0, ',', '.') }}
             </p>
           @else
-            <p class="text-3xl font-bold text-gray-900">
+            <p class="text-2xl sm:text-3xl font-bold text-gray-900">
               Rp {{ number_format($minPrice, 0, ',', '.') }} - Rp {{ number_format($maxPrice, 0, ',', '.') }}
             </p>
           @endif

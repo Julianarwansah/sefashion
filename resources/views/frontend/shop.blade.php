@@ -4,7 +4,7 @@
 
 @section('content')
 {{-- HERO BANNER WITH SHOP TEXT --}}
-<section class="relative h-[50vh] min-h-[400px] w-full overflow-hidden">
+<section class="relative h-[40vh] sm:h-[50vh] min-h-[300px] sm:min-h-[400px] w-full overflow-hidden">
   {{-- background image with parallax --}}
   <div
     id="shopHeroImage"
@@ -15,17 +15,17 @@
   {{-- dark overlay --}}
   <div class="absolute inset-0 bg-black/40"></div>
 
-  {{-- Animated floating elements --}}
-  <div class="absolute top-20 left-20 w-24 h-24 bg-white/5 rounded-full blur-2xl animate-float"></div>
-  <div class="absolute bottom-20 right-32 w-32 h-32 bg-white/5 rounded-full blur-3xl animate-float-delayed"></div>
+  {{-- Animated floating elements - hidden on mobile --}}
+  <div class="hidden md:block absolute top-20 left-20 w-24 h-24 bg-white/5 rounded-full blur-2xl animate-float"></div>
+  <div class="hidden md:block absolute bottom-20 right-32 w-32 h-32 bg-white/5 rounded-full blur-3xl animate-float-delayed"></div>
 
   {{-- Centered Shop Text --}}
-  <div class="relative z-10 h-full flex items-center justify-center">
+  <div class="relative z-10 h-full flex items-center justify-center px-4">
     <div class="text-center">
-      <h1 class="text-white text-5xl sm:text-6xl font-extrabold animate-fade-in-up">
+      <h1 class="text-white text-4xl sm:text-5xl md:text-6xl font-extrabold animate-fade-in-up">
         Shop
       </h1>
-      <p class="mt-4 text-white/80 text-lg animate-fade-in-up animation-delay-200">Discover Your Perfect Style</p>
+      <p class="mt-3 sm:mt-4 text-white/80 text-base sm:text-lg animate-fade-in-up animation-delay-200">Discover Your Perfect Style</p>
     </div>
   </div>
 </section>
@@ -44,13 +44,13 @@
 </section>
 
 {{-- FILTER & SORT BAR --}}
-<section class="py-6 border-b bg-gray-50">
+<section class="py-4 sm:py-6 border-b bg-gray-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
       {{-- Filter by Category --}}
-      <div class="flex items-center gap-3">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
         <label class="text-sm font-medium text-gray-700">Category:</label>
-        <select onchange="window.location.href = this.value" class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10">
+        <select onchange="window.location.href = this.value" class="border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10">
           <option value="{{ route('shop') }}">All Categories</option>
           <option value="{{ route('shop', ['category' => 'Men']) }}" {{ request('category') == 'Men' ? 'selected' : '' }}>Men</option>
           <option value="{{ route('shop', ['category' => 'Women']) }}" {{ request('category') == 'Women' ? 'selected' : '' }}>Women</option>
@@ -60,9 +60,9 @@
       </div>
 
       {{-- Sort --}}
-      <div class="flex items-center gap-3">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
         <label class="text-sm font-medium text-gray-700">Sort by:</label>
-        <select onchange="window.location.href = this.value" class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10">
+        <select onchange="window.location.href = this.value" class="border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10">
           <option value="{{ route('shop', array_merge(request()->query(), ['sort' => 'newest'])) }}" {{ request('sort') == 'newest' || !request('sort') ? 'selected' : '' }}>Newest</option>
           <option value="{{ route('shop', array_merge(request()->query(), ['sort' => 'price_low'])) }}" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
           <option value="{{ route('shop', array_merge(request()->query(), ['sort' => 'price_high'])) }}" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>

@@ -4,23 +4,23 @@
 
 @section('content')
 {{-- HERO/BREADCRUMB SECTION --}}
-<section class="relative h-[30vh] min-h-[250px] w-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-  <div class="absolute inset-0 flex items-center justify-center">
+<section class="relative h-[25vh] sm:h-[30vh] min-h-[200px] sm:min-h-[250px] w-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+  <div class="absolute inset-0 flex items-center justify-center px-4">
     <div class="text-center animate-fade-in-up">
-      <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-2">Shopping Cart</h1>
-      <p class="text-gray-600">Manage your selected items</p>
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">Shopping Cart</h1>
+      <p class="text-gray-600 text-sm sm:text-base">Manage your selected items</p>
     </div>
   </div>
 </section>
 
 {{-- CART CONTENT --}}
-<section class="py-10 sm:py-14 bg-white">
+<section class="py-6 sm:py-10 md:py-14 bg-white">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
 
     @if(session('success'))
-      <div class="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl animate-slide-down">
+      <div class="mb-4 sm:mb-6 bg-green-50 border border-green-200 text-green-800 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl animate-slide-down text-sm sm:text-base">
         <div class="flex items-center">
-          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
           </svg>
           {{ session('success') }}
@@ -29,17 +29,17 @@
     @endif
 
     @if($cartItems->count() > 0)
-      <div class="grid lg:grid-cols-3 gap-8">
+      <div class="grid lg:grid-cols-3 gap-6 sm:gap-8">
 
         {{-- Cart Items List --}}
         <div class="lg:col-span-2">
-          <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden scroll-reveal opacity-0 translate-y-8">
-            <div class="p-6 border-b border-gray-200 bg-gray-50">
+          <div class="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden scroll-reveal opacity-0 translate-y-8">
+            <div class="p-4 sm:p-6 border-b border-gray-200 bg-gray-50">
               <div class="flex items-center justify-between">
-                <h2 class="text-xl font-bold text-gray-900">Cart Items ({{ $totalItems }})</h2>
+                <h2 class="text-lg sm:text-xl font-bold text-gray-900">Cart Items ({{ $totalItems }})</h2>
                 <form action="{{ route('cart.clear') }}" method="POST" onsubmit="return confirm('Clear all items from cart?')">
                   @csrf
-                  <button type="submit" class="text-sm text-red-600 hover:text-red-700 hover:underline">
+                  <button type="submit" class="text-xs sm:text-sm text-red-600 hover:text-red-700 hover:underline">
                     Clear Cart
                   </button>
                 </form>
@@ -48,10 +48,10 @@
 
             <div class="divide-y divide-gray-200">
               @foreach($cartItems as $item)
-                <div class="p-6 cart-item scroll-reveal opacity-0 translate-x-4 hover:bg-gray-50 transition-colors duration-200" data-cart-id="{{ $item->id_cart }}">
-                  <div class="flex gap-4">
+                <div class="p-4 sm:p-6 cart-item scroll-reveal opacity-0 translate-x-4 hover:bg-gray-50 transition-colors duration-200" data-cart-id="{{ $item->id_cart }}">
+                  <div class="flex gap-3 sm:gap-4">
                     {{-- Product Image --}}
-                    <div class="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden group">
+                    <div class="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-gray-100 rounded-lg sm:rounded-xl overflow-hidden group">
                       <img src="{{ $item->detailUkuran->produk->gambar_url ?? '/images/placeholder-product.jpg' }}"
                            alt="{{ $item->detailUkuran->produk->nama_produk ?? 'Product Image' }}"
                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -59,45 +59,45 @@
 
                     {{-- Product Details --}}
                     <div class="flex-1 min-w-0">
-                      <h3 class="font-semibold text-gray-900 line-clamp-2 mb-1">
+                      <h3 class="font-semibold text-gray-900 line-clamp-2 mb-1 text-sm sm:text-base">
                         {{ $item->detailUkuran->produk->nama_produk ?? 'Product Name' }}
                       </h3>
-                      <p class="text-sm text-gray-600 mb-2">
+                      <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
                         Color: {{ $item->detailUkuran->detailWarna->nama_warna ?? '-' }} |
                         Size: {{ $item->detailUkuran->ukuran ?? '-' }}
                       </p>
-                      <p class="text-lg font-bold text-gray-900">
+                      <p class="text-base sm:text-lg font-bold text-gray-900">
                         Rp {{ number_format($item->detailUkuran->harga ?? 0, 0, ',', '.') }}
                       </p>
-                      <p class="text-sm text-gray-500 mt-1">
+                      <p class="text-xs sm:text-sm text-gray-500 mt-1">
                         Stock: {{ $item->detailUkuran->stok ?? 0 }} available
                       </p>
                     </div>
 
                     {{-- Quantity Controls --}}
                     <div class="flex flex-col items-end justify-between">
-                      <div class="flex items-center gap-2 bg-gray-100 rounded-lg">
+                      <div class="flex items-center gap-1 sm:gap-2 bg-gray-100 rounded-lg">
                         <button onclick="decrementQuantity({{ $item->id_cart }})"
-                                class="px-3 py-2 hover:bg-gray-200 rounded-l-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-gray-200 rounded-l-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                                 id="decrement-{{ $item->id_cart }}"
                                 {{ $item->jumlah <= 1 ? 'disabled' : '' }}>
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
                           </svg>
                         </button>
-                        <span class="px-4 py-2 font-semibold quantity-display" id="quantity-{{ $item->id_cart }}">{{ $item->jumlah }}</span>
+                        <span class="px-2 sm:px-4 py-1.5 sm:py-2 font-semibold text-sm sm:text-base quantity-display" id="quantity-{{ $item->id_cart }}">{{ $item->jumlah }}</span>
                         <button onclick="incrementQuantity({{ $item->id_cart }})"
-                                class="px-3 py-2 hover:bg-gray-200 rounded-r-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-gray-200 rounded-r-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                                 id="increment-{{ $item->id_cart }}"
                                 {{ $item->jumlah >= ($item->detailUkuran->stok ?? 0) ? 'disabled' : '' }}>
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                           </svg>
                         </button>
                       </div>
 
                       <div class="text-right mt-2">
-                        <p class="text-sm text-gray-500">Subtotal</p>
+                        <p class="text-xs sm:text-sm text-gray-500">Subtotal</p>
                         <p class="text-lg font-bold text-gray-900 subtotal-display" id="subtotal-{{ $item->id_cart }}">
                           Rp {{ number_format($item->subtotal, 0, ',', '.') }}
                         </p>
