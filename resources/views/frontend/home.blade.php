@@ -580,19 +580,6 @@
   </div>
 </section>
 
-{{-- INSTAGRAM / NEWSLETTER --}}
-<section class="py-12 sm:py-16 bg-white">
-  <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center scroll-reveal opacity-0 translate-y-8 transition-all duration-700">
-    <h3 class="text-2xl sm:text-3xl font-extrabold">Our Instagram</h3>
-    <p class="mt-2 text-gray-600 text-sm sm:text-base">follow our style di @sefashion.id</p>
-    <form class="mt-6 max-w-md mx-auto flex flex-col sm:flex-row gap-3">
-      <input type="email" class="flex-1 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-900/10 transition text-sm sm:text-base"
-             placeholder="Enter your email">
-      <button type="button" class="px-5 py-3 bg-gray-900 text-white rounded-xl hover:bg-black hover:scale-105 transition-all duration-300 whitespace-nowrap text-sm sm:text-base font-medium">SIGN UP</button>
-    </form>
-  </div>
-</section>
-
 @push('styles')
 <style>
 /* Enhanced Animation keyframes */
