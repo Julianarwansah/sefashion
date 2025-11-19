@@ -47,6 +47,11 @@ Route::get('/password/reset', function () {
 
 Route::post('/password/email', [LoginController::class, 'sendResetLinkEmail'])->name('password.email');
 
+// =========================================================================
+// XENDIT WEBHOOK ROUTES (HARUS PUBLIC KARENA DIAKSES OLEH XENDIT SERVER)
+// =========================================================================
+Route::post('/webhook/xendit', [CheckoutController::class, 'handleWebhook'])->name('webhook.xendit');
+
 /*
 |--------------------------------------------------------------------------
 | Customer Routes (Protected)
@@ -73,6 +78,12 @@ Route::middleware(['auth:customer'])->group(function () {
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
     Route::post('/checkout/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('checkout.shipping');
     
+    // Payment Status Routes
+    Route::get('/payment/status/{orderId}', [CheckoutController::class, 'checkPaymentStatus'])->name('payment.status');
+    Route::get('/payment/success/{orderId}', [CheckoutController::class, 'paymentSuccess'])->name('payment.success');
+    Route::get('/payment/failed/{orderId}', [CheckoutController::class, 'paymentFailed'])->name('payment.failed');
+    
+    // Order Success Route
     Route::get('/order/success/{id}', function ($id) {
         return view('frontend.order-success', ['orderId' => $id]);
     })->name('order.success');
@@ -116,4 +127,60 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     // Shipping Management
     Route::resource('pengiriman', PengirimanController::class);
     Route::get('pengiriman/{id}/track', [PengirimanController::class, 'track'])->name('pengiriman.track');
+});
+
+// routes/web.php
+Route::get('/test-xendit', function() {
+    try {
+        $service = new App\Services\XenditService();
+        
+        // Test connection
+        $response = Http::withBasicAuth(config('xendit.secret_key'), '')
+            ->get('https://api.xendit.co/balance');
+            
+        return response()->json([
+            'success' => true,
+            'balance' => $response->json()
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+});
+
+// routes/web.php - Temporary debug route
+Route::post('/debug-checkout', function(Request $request) {
+    try {
+        $validator = Validator::make($request->all(), [
+            'nama_penerima' => 'required|string|max:255',
+            'no_hp_penerima' => 'required|string|max:20',
+            'alamat_tujuan' => 'required|string',
+            'metode_pembayaran' => 'required|in:va,ewallet,qris,retail,cod',
+            'channel' => 'nullable|string',
+            'ekspedisi' => 'nullable|string',
+            'layanan' => 'nullable|string',
+            'biaya_ongkir' => 'required|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()->toArray(),
+                'request_data' => $request->all()
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Validation passed'
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ], 500);
+    }
 });

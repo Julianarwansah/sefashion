@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Pembayaran extends Model
 {
@@ -16,40 +17,41 @@ class Pembayaran extends Model
         'id_pemesanan',
         'metode_pembayaran',
         'channel',
-        'external_id',
-        'invoice_id',
-        'payment_url',
-        'tanggal_pembayaran',
         'jumlah_bayar',
         'status_pembayaran',
-        'raw_response',
+        'external_id',
+        'xendit_id',
+        'xendit_external_id',
+        'xendit_payment_url',
+        'xendit_expiry_date',
+        'xendit_merchant_name',
+        'xendit_account_number',
     ];
 
     protected $casts = [
-        'tanggal_pembayaran' => 'datetime',
-        'jumlah_bayar' => 'float',
-        'raw_response' => 'array',
+        'jumlah_bayar' => 'decimal:2',
+        'xendit_expiry_date' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
+
+    /**
+     * Status constants
+     */
+    const STATUS_MENUNGGU = 'menunggu';
+    const STATUS_BELUM_BAYAR = 'belum_bayar';
+    const STATUS_SUDAH_BAYAR = 'sudah_bayar';
+    const STATUS_KADALUARSA = 'kadaluarsa';
+    const STATUS_GAGAL = 'gagal';
 
     /**
      * Metode pembayaran constants
      */
-    const METHOD_TRANSFER = 'transfer';
-    const METHOD_COD = 'cod';
-    const METHOD_EWALLET = 'ewallet';
     const METHOD_VA = 'va';
+    const METHOD_EWALLET = 'ewallet';
     const METHOD_QRIS = 'qris';
-    const METHOD_CREDIT_CARD = 'credit_card';
-
-    /**
-     * Status pembayaran constants
-     */
-    const STATUS_BELUM_BAYAR = 'belum_bayar';
-    const STATUS_MENUNGGU = 'menunggu';
-    const STATUS_SUDAH_BAYAR = 'sudah_bayar';
-    const STATUS_GAGAL = 'gagal';
-    const STATUS_EXPIRED = 'expired';
-    const STATUS_REFUND = 'refund';
+    const METHOD_RETAIL = 'retail';
+    const METHOD_COD = 'cod';
 
     /**
      * Relationship dengan pemesanan
@@ -68,69 +70,35 @@ class Pembayaran extends Model
     }
 
     /**
-     * Accessor untuk tanggal pembayaran format Indonesia
+     * Accessor untuk nomor akun yang diformat
      */
-    public function getTanggalPembayaranFormattedAttribute()
+    public function getAccountNumberDisplayAttribute()
     {
-        return $this->tanggal_pembayaran?->format('d F Y H:i') ?? '-';
+        if (!$this->xendit_account_number) {
+            return '-';
+        }
+
+        // Format nomor VA agar lebih mudah dibaca
+        return preg_replace('/(\d{4})(?=\d)/', '$1 ', $this->xendit_account_number);
     }
 
     /**
-     * Accessor untuk status pembayaran dalam bahasa Indonesia
+     * Check jika pembayaran sudah expired
      */
-    public function getStatusPembayaranTextAttribute()
+    public function isExpired()
     {
-        $statuses = [
-            self::STATUS_BELUM_BAYAR => 'Belum Bayar',
-            self::STATUS_MENUNGGU => 'Menunggu Konfirmasi',
-            self::STATUS_SUDAH_BAYAR => 'Sudah Bayar',
-            self::STATUS_GAGAL => 'Gagal',
-            self::STATUS_EXPIRED => 'Kadaluarsa',
-            self::STATUS_REFUND => 'Refund',
-        ];
-
-        return $statuses[$this->status_pembayaran] ?? $this->status_pembayaran;
+        if (!$this->xendit_expiry_date) {
+            return false;
+        }
+        return now()->greaterThan($this->xendit_expiry_date);
     }
 
     /**
-     * Accessor untuk metode pembayaran dalam bahasa Indonesia
+     * Check jika pembayaran masih pending
      */
-    public function getMetodePembayaranTextAttribute()
+    public function isPending()
     {
-        $methods = [
-            self::METHOD_TRANSFER => 'Transfer Bank',
-            self::METHOD_COD => 'Cash on Delivery',
-            self::METHOD_EWALLET => 'E-Wallet',
-            self::METHOD_VA => 'Virtual Account',
-            self::METHOD_QRIS => 'QRIS',
-            self::METHOD_CREDIT_CARD => 'Kartu Kredit',
-        ];
-
-        return $methods[$this->metode_pembayaran] ?? $this->metode_pembayaran;
-    }
-
-    /**
-     * Scope untuk status tertentu
-     */
-    public function scopeStatus($query, $status)
-    {
-        return $query->where('status_pembayaran', $status);
-    }
-
-    /**
-     * Scope untuk pembayaran yang berhasil
-     */
-    public function scopeBerhasil($query)
-    {
-        return $query->where('status_pembayaran', self::STATUS_SUDAH_BAYAR);
-    }
-
-    /**
-     * Scope untuk pembayaran yang pending
-     */
-    public function scopePending($query)
-    {
-        return $query->whereIn('status_pembayaran', [self::STATUS_BELUM_BAYAR, self::STATUS_MENUNGGU]);
+        return $this->status_pembayaran === self::STATUS_MENUNGGU;
     }
 
     /**
@@ -142,131 +110,118 @@ class Pembayaran extends Model
     }
 
     /**
-     * Check jika pembayaran masih pending
+     * Check jika pembayaran COD
      */
-    public function isPending()
+    public function isCOD()
     {
-        return in_array($this->status_pembayaran, [self::STATUS_BELUM_BAYAR, self::STATUS_MENUNGGU]);
+        return $this->metode_pembayaran === self::METHOD_COD;
     }
 
     /**
-     * Check jika pembayaran expired
+     * Update status pembayaran
      */
-    public function isExpired()
+    public function updateStatus($status)
     {
-        return $this->status_pembayaran === self::STATUS_EXPIRED;
-    }
-
-    /**
-     * Check jika pembayaran gagal
-     */
-    public function isFailed()
-    {
-        return in_array($this->status_pembayaran, [self::STATUS_GAGAL, self::STATUS_EXPIRED]);
-    }
-
-    /**
-     * Mark sebagai sudah bayar
-     */
-    public function markAsPaid($tanggalPembayaran = null)
-    {
-        $this->update([
-            'status_pembayaran' => self::STATUS_SUDAH_BAYAR,
-            'tanggal_pembayaran' => $tanggalPembayaran ?? now(),
-        ]);
-
-        // Update status pemesanan jika perlu
-        if ($this->pemesanan && $this->pemesanan->status === Pemesanan::STATUS_PENDING) {
+        $this->update(['status_pembayaran' => $status]);
+        
+        // Jika status sudah bayar, update pemesanan
+        if ($status === self::STATUS_SUDAH_BAYAR && $this->pemesanan) {
             $this->pemesanan->update(['status' => Pemesanan::STATUS_DIPROSES]);
         }
     }
 
     /**
-     * Mark sebagai expired
+     * Get payment URL untuk redirect
      */
-    public function markAsExpired()
+    public function getPaymentUrlAttribute()
     {
-        $this->update([
-            'status_pembayaran' => self::STATUS_EXPIRED,
-        ]);
+        return $this->xendit_payment_url;
     }
 
     /**
-     * Process webhook callback dari payment gateway
+     * Get nama metode pembayaran yang lebih friendly
      */
-    public function processWebhook($data)
+    public function getMetodePembayaranDisplayAttribute()
     {
-        $this->update([
-            'raw_response' => $data,
-            'status_pembayaran' => $this->determineStatusFromWebhook($data),
-            'tanggal_pembayaran' => $this->extractPaymentDate($data),
-        ]);
+        $displayNames = [
+            self::METHOD_VA => 'Virtual Account',
+            self::METHOD_EWALLET => 'E-Wallet',
+            self::METHOD_QRIS => 'QRIS',
+            self::METHOD_RETAIL => 'Retail Outlet',
+            self::METHOD_COD => 'Cash on Delivery',
+        ];
 
-        // Simpan invoice_id jika ada
-        if (isset($data['invoice_id']) && !$this->invoice_id) {
-            $this->update(['invoice_id' => $data['invoice_id']]);
-        }
+        return $displayNames[$this->metode_pembayaran] ?? $this->metode_pembayaran;
     }
 
     /**
-     * Determine status from webhook data
+     * Get nama channel yang lebih friendly
      */
-    private function determineStatusFromWebhook($data)
+    public function getChannelDisplayAttribute()
     {
-        // Logic untuk menentukan status berdasarkan data webhook
-        // Sesuaikan dengan format response dari payment gateway (Xendit/Midtrans)
-        if (isset($data['status'])) {
-            $status = strtolower($data['status']);
-            
-            switch ($status) {
-                case 'paid':
-                case 'settlement':
-                    return self::STATUS_SUDAH_BAYAR;
-                case 'pending':
-                    return self::STATUS_MENUNGGU;
-                case 'expired':
-                    return self::STATUS_EXPIRED;
-                case 'failed':
-                case 'deny':
-                    return self::STATUS_GAGAL;
-                case 'refund':
-                    return self::STATUS_REFUND;
-            }
-        }
+        $channelNames = [
+            'BCA' => 'BCA',
+            'BRI' => 'BRI',
+            'BNI' => 'BNI',
+            'MANDIRI' => 'Mandiri',
+            'PERMATA' => 'Permata',
+            'DANA' => 'DANA',
+            'OVO' => 'OVO',
+            'SHOPEEPAY' => 'ShopeePay',
+            'LINKAJA' => 'LinkAja',
+            'ALFAMART' => 'Alfamart',
+            'INDOMARET' => 'Indomaret',
+            'COD' => 'Cash on Delivery',
+        ];
 
-        return $this->status_pembayaran;
+        return $channelNames[$this->channel] ?? $this->channel;
     }
 
     /**
-     * Extract payment date from webhook data
-     */
-    private function extractPaymentDate($data)
-    {
-        if (isset($data['paid_at'])) {
-            return $data['paid_at'];
-        }
-        if (isset($data['settlement_time'])) {
-            return $data['settlement_time'];
-        }
-        if (isset($data['transaction_time'])) {
-            return $data['transaction_time'];
-        }
-
-        return null;
-    }
-
-    /**
-     * Boot method untuk handle events
+     * Boot method untuk generate external_id otomatis
      */
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($model) {
-            // Generate external_id jika belum ada
             if (empty($model->external_id)) {
-                $model->external_id = 'INV-' . time() . '-' . rand(1000, 9999);
+                $model->external_id = 'PAY-' . now()->format('YmdHis') . '-' . Str::random(6);
             }
+        });
+    }
+
+    /**
+     * Scope queries untuk status tertentu
+     */
+    public function scopePending($query)
+    {
+        return $query->where('status_pembayaran', self::STATUS_MENUNGGU);
+    }
+
+    public function scopePaid($query)
+    {
+        return $query->where('status_pembayaran', self::STATUS_SUDAH_BAYAR);
+    }
+
+    public function scopeExpired($query)
+    {
+        return $query->where('status_pembayaran', self::STATUS_KADALUARSA);
+    }
+
+    public function scopeFailed($query)
+    {
+        return $query->where('status_pembayaran', self::STATUS_GAGAL);
+    }
+
+    /**
+     * Scope untuk pembayaran yang belum expired
+     */
+    public function scopeNotExpired($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('xendit_expiry_date')
+              ->orWhere('xendit_expiry_date', '>', now());
         });
     }
 }
