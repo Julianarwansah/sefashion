@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         // ]); // COMMENT BARIS INI JIKA ADA
 
         $this->call([
-            AdminSeeder::class,
+            CustomerSeeder::class,
             // Tambahkan seeder lainnya di sini
         ]);
     }
