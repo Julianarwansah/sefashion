@@ -149,28 +149,6 @@ return new class extends Migration
                 ->onUpdate('cascade');
         });
 
-        // 8. Pembayaran (disesuaikan untuk Xendit/Midtrans)
-        Schema::create('pembayaran', function (Blueprint $table) {
-            $table->id('id_pembayaran');
-            $table->unsignedBigInteger('id_pemesanan');
-            $table->enum('metode_pembayaran', ['transfer', 'cod', 'ewallet', 'va', 'qris', 'credit_card'])->default('transfer');
-            $table->string('channel', 100)->nullable();
-            $table->string('external_id', 100)->unique();
-            $table->string('invoice_id', 100)->unique()->nullable();
-            $table->string('payment_url', 255)->nullable();
-            $table->dateTime('tanggal_pembayaran')->nullable();
-            $table->decimal('jumlah_bayar', 12, 2);
-            $table->enum('status_pembayaran', ['belum_bayar', 'menunggu', 'sudah_bayar', 'gagal', 'expired', 'refund'])->default('belum_bayar');
-            $table->json('raw_response')->nullable();
-            $table->timestamps();
-
-            $table->foreign('id_pemesanan')
-                ->references('id_pemesanan')
-                ->on('pemesanan')
-                ->onDelete('cascade')
-                ->onUpdate('cascade');
-        });
-
         // 9. Keranjang Belanja
         Schema::create('cart', function (Blueprint $table) {
             $table->id('id_cart');
