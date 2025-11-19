@@ -49,7 +49,6 @@ class Pembayaran extends Model
      */
     const METHOD_VA = 'va';
     const METHOD_EWALLET = 'ewallet';
-    const METHOD_QRIS = 'qris';
     const METHOD_RETAIL = 'retail';
     const METHOD_COD = 'cod';
 
@@ -146,7 +145,6 @@ class Pembayaran extends Model
         $displayNames = [
             self::METHOD_VA => 'Virtual Account',
             self::METHOD_EWALLET => 'E-Wallet',
-            self::METHOD_QRIS => 'QRIS',
             self::METHOD_RETAIL => 'Retail Outlet',
             self::METHOD_COD => 'Cash on Delivery',
         ];

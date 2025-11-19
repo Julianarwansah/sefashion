@@ -38,7 +38,6 @@ class PembayaranController extends Controller
             Pembayaran::METHOD_COD => 'Cash on Delivery',
             Pembayaran::METHOD_EWALLET => 'E-Wallet',
             Pembayaran::METHOD_VA => 'Virtual Account',
-            Pembayaran::METHOD_QRIS => 'QRIS',
             Pembayaran::METHOD_CREDIT_CARD => 'Kartu Kredit',
         ];
 
@@ -52,7 +51,7 @@ class PembayaranController extends Controller
     {
         $request->validate([
             'id_pemesanan' => 'required|exists:pemesanan,id_pemesanan',
-            'metode_pembayaran' => 'required|in:transfer,cod,ewallet,va,qris,credit_card',
+            'metode_pembayaran' => 'required|in:transfer,cod,ewallet,va,credit_card',
             'channel' => 'nullable|string|max:255',
             'jumlah_bayar' => 'required|numeric|min:0',
             'status_pembayaran' => 'required|in:belum_bayar,menunggu,sudah_bayar,gagal,expired,refund',
@@ -129,7 +128,6 @@ class PembayaranController extends Controller
             Pembayaran::METHOD_COD => 'Cash on Delivery',
             Pembayaran::METHOD_EWALLET => 'E-Wallet',
             Pembayaran::METHOD_VA => 'Virtual Account',
-            Pembayaran::METHOD_QRIS => 'QRIS',
             Pembayaran::METHOD_CREDIT_CARD => 'Kartu Kredit',
         ];
 
@@ -151,7 +149,7 @@ class PembayaranController extends Controller
     public function update(Request $request, string $id)
     {
         $request->validate([
-            'metode_pembayaran' => 'required|in:transfer,cod,ewallet,va,qris,credit_card',
+            'metode_pembayaran' => 'required|in:transfer,cod,ewallet,va,credit_card',
             'channel' => 'nullable|string|max:255',
             'jumlah_bayar' => 'required|numeric|min:0',
             'status_pembayaran' => 'required|in:belum_bayar,menunggu,sudah_bayar,gagal,expired,refund',

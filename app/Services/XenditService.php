@@ -71,112 +71,68 @@ class XenditService
      * Create E-Wallet Payment
      */
     public function createEWalletPayment($data)
-    {
-        try {
-            $payload = [
-                'reference_id' => $data['external_id'],
-                'currency' => 'IDR',
-                'amount' => $data['amount'],
-                'checkout_method' => 'ONE_TIME_PAYMENT',
-                'channel_code' => $data['channel_code'],
-                'channel_properties' => [
-                    'success_redirect_url' => $data['success_redirect_url'],
-                    'failure_redirect_url' => $data['failure_redirect_url'],
-                ],
-                'metadata' => [
-                    'order_id' => $data['order_id']
-                ]
+{
+    try {
+        $payload = [
+            'reference_id' => $data['external_id'],
+            'currency' => 'IDR',
+            'amount' => $data['amount'],
+            'checkout_method' => 'ONE_TIME_PAYMENT',
+            'channel_code' => $data['channel_code'],
+
+            // WAJIB → FIX ERROR CALLBACK_URL_NOT_FOUND
+            'callback_url' => $data['callback_url'],
+
+            'channel_properties' => [
+                'success_redirect_url' => $data['success_redirect_url'],
+                'failure_redirect_url' => $data['failure_redirect_url'],
+            ],
+
+            'metadata' => [
+                'order_id' => $data['order_id']
+            ]
+        ];
+
+        // Untuk OVO, tambahkan mobile number
+        if ($data['channel_code'] === 'ID_OVO' && isset($data['phone_number'])) {
+            $payload['channel_properties']['mobile_number'] = $data['phone_number'];
+        }
+
+        Log::info('PAYLOAD E-WALLET DIKIRIM:', $payload);
+
+        $response = Http::withBasicAuth($this->secretKey, '')
+            ->post($this->baseUrl . '/ewallets/charges', $payload);
+
+        Log::info('Xendit E-Wallet Response:', [
+            'status' => $response->status(),
+            'response' => $response->json()
+        ]);
+
+        if ($response->successful()) {
+            return [
+                'success' => true,
+                'data' => $response->json()
             ];
-
-            // Untuk OVO, tambahkan mobile number
-            if ($data['channel_code'] === 'ID_OVO' && isset($data['phone_number'])) {
-                $payload['channel_properties']['mobile_number'] = $data['phone_number'];
-            }
-
-            $response = Http::withBasicAuth($this->secretKey, '')
-                ->post($this->baseUrl . '/ewallets/charges', $payload);
-
-            Log::info('Xendit E-Wallet Response:', [
-                'status' => $response->status(),
-                'response' => $response->json()
-            ]);
-
-            if ($response->successful()) {
-                return [
-                    'success' => true,
-                    'data' => $response->json()
-                ];
-            } else {
-                $errorResponse = $response->json();
-                return [
-                    'success' => false,
-                    'error' => $errorResponse['message'] ?? 'Unknown error from Xendit'
-                ];
-            }
-
-        } catch (Exception $e) {
-            Log::error('Xendit E-Wallet Exception:', [
-                'message' => $e->getMessage(),
-                'data' => $data
-            ]);
-
+        } else {
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $response->json()['message'] ?? 'Unknown error from Xendit'
             ];
         }
+
+    } catch (Exception $e) {
+        Log::error('Xendit E-Wallet Exception:', [
+            'message' => $e->getMessage(),
+            'data' => $data
+        ]);
+
+        return [
+            'success' => false,
+            'error' => $e->getMessage()
+        ];
     }
+}
 
-    /**
-     * Create QR Code Payment
-     */
-    public function createQRISPayment($data)
-    {
-        try {
-            $params = [
-                'reference_id' => $data['external_id'],
-                'type' => 'DYNAMIC',
-                'currency' => 'IDR',
-                'amount' => $data['amount'],
-                'expires_at' => $data['expiration_date'] ?? now()->addDays(1)->toISOString(),
-                'metadata' => [
-                    'order_id' => $data['order_id']
-                ]
-            ];
-
-            $response = Http::withBasicAuth($this->secretKey, '')
-                ->post($this->baseUrl . '/qr_codes', $params);
-
-            Log::info('Xendit QRIS Response:', [
-                'status' => $response->status(),
-                'response' => $response->json()
-            ]);
-
-            if ($response->successful()) {
-                return [
-                    'success' => true,
-                    'data' => $response->json()
-                ];
-            } else {
-                $errorResponse = $response->json();
-                return [
-                    'success' => false,
-                    'error' => $errorResponse['message'] ?? 'Unknown error from Xendit'
-                ];
-            }
-
-        } catch (Exception $e) {
-            Log::error('Xendit QRIS Exception:', [
-                'message' => $e->getMessage(),
-                'data' => $data
-            ]);
-
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
-        }
-    }
 
     /**
      * Create Retail Outlet Payment
@@ -235,7 +191,6 @@ class XenditService
             $endpoint = match($type) {
                 'va' => "/callback_virtual_accounts/{$paymentId}",
                 'ewallet' => "/ewallets/charges/{$paymentId}",
-                'qris' => "/qr_codes/{$paymentId}",
                 'retail' => "/fixed_payment_code/{$paymentId}",
                 default => throw new Exception('Invalid payment type')
             };

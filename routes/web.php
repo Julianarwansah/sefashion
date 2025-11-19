@@ -157,7 +157,7 @@ Route::post('/debug-checkout', function(Request $request) {
             'nama_penerima' => 'required|string|max:255',
             'no_hp_penerima' => 'required|string|max:20',
             'alamat_tujuan' => 'required|string',
-            'metode_pembayaran' => 'required|in:va,ewallet,qris,retail,cod',
+            'metode_pembayaran' => 'required|in:va,ewallet,retail,cod',
             'channel' => 'nullable|string',
             'ekspedisi' => 'nullable|string',
             'layanan' => 'nullable|string',
