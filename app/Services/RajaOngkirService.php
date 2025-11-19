@@ -10,217 +10,162 @@ class RajaOngkirService
 {
     protected $apiKey;
     protected $baseUrl;
-    protected $package;
+    protected $accountType;
+    protected $origin;
 
     public function __construct()
     {
-        $this->apiKey = config('services.rajaongkir.key');
-        $this->package = config('services.rajaongkir.package', 'starter');
-        
-        if ($this->package === 'pro') {
-            $this->baseUrl = 'https://pro.rajaongkir.com/api/';
-        } else {
-            $this->baseUrl = 'https://api.rajaongkir.com/'. $this->package .'/';
-        }
+        $this->apiKey = env('RAJAONGKIR_API_KEY');
+        $this->accountType = env('RAJAONGKIR_ACCOUNT_TYPE', 'starter');
+        $this->origin = [
+            'city_id' => env('STORE_CITY_ID', 152),
+            'province_id' => env('STORE_PROVINCE_ID', 6),
+            'city' => env('STORE_CITY', 'Jakarta Selatan'),
+            'province' => env('STORE_PROVINCE', 'DKI Jakarta'),
+        ];
+
+        $this->baseUrl = $this->accountType === 'pro' 
+            ? 'https://pro.rajaongkir.com/api/'
+            : 'https://api.rajaongkir.com/' . $this->accountType . '/';
     }
 
-
     /**
-     * Make API request to RajaOngkir dengan timeout lebih pendek
+     * Make API request to RajaOngkir
      */
-    private function makeRequest($endpoint, $params = [], $method = 'GET')
+    private function makeRequest($endpoint, $data = [], $method = 'GET')
     {
         try {
             $url = $this->baseUrl . $endpoint;
             
             $response = Http::withHeaders([
                 'key' => $this->apiKey,
-                'Content-Type' => 'application/x-www-form-urlencoded'
-            ])->timeout(10) // Timeout diperpendek dari 30 ke 10 detik
-              ->retry(2, 100); // Retry 2x dengan delay 100ms
+                'Content-Type' => 'application/x-www-form-urlencoded',
+            ])->timeout(30)->{$method}($url, $data);
 
-            if ($method === 'POST') {
-                $response = $response->asForm()->post($url, $params);
-            } else {
-                $response = $response->get($url, $params);
+            if ($response->successful()) {
+                $result = $response->json();
+                if (isset($result['rajaongkir']['status']['code']) && $result['rajaongkir']['status']['code'] === 200) {
+                    return $result['rajaongkir']['results'] ?? $result['rajaongkir'];
+                }
             }
 
-            // Check if response is successful
-            if (!$response->successful()) {
-                Log::warning('RajaOngkir API Response Failed', [
-                    'endpoint' => $endpoint,
-                    'status' => $response->status(),
-                    'response' => $response->body()
-                ]);
-                return null;
-            }
-
-            $data = $response->json();
-            
-            if (!isset($data['rajaongkir']['status']['code']) || $data['rajaongkir']['status']['code'] !== 200) {
-                Log::error('RajaOngkir API Error', [
-                    'endpoint' => $endpoint,
-                    'response' => $data
-                ]);
-                return null;
-            }
-
-            return $data['rajaongkir'];
+            Log::error('RajaOngkir API Error: ' . $response->body());
+            return null;
 
         } catch (\Exception $e) {
-            Log::error('RajaOngkir API Exception: ' . $e->getMessage());
+            Log::error('RajaOngkir Service Exception: ' . $e->getMessage());
             return null;
         }
     }
 
     /**
-     * Get provinces dengan cache yang lebih lama
+     * Get all provinces
      */
     public function getProvinces()
     {
-        return Cache::remember('rajaongkir_provinces', now()->addDays(30), function () { // Cache 30 hari
-            $result = $this->makeRequest('province');
-            return $result['results'] ?? [];
+        return Cache::remember('rajaongkir_provinces', 86400, function () { // 1 day cache
+            return $this->makeRequest('province');
         });
     }
 
     /**
-     * Get cities dengan cache yang lebih lama
+     * Get cities by province
      */
     public function getCities($provinceId = null)
     {
         $cacheKey = 'rajaongkir_cities' . ($provinceId ? '_' . $provinceId : '');
-
-        return Cache::remember($cacheKey, now()->addDays(30), function () use ($provinceId) { // Cache 30 hari
-            $params = [];
+        
+        return Cache::remember($cacheKey, 86400, function () use ($provinceId) {
+            $data = [];
             if ($provinceId) {
-                $params['province'] = $provinceId;
+                $data['province'] = $provinceId;
             }
-
-            $result = $this->makeRequest('city', $params);
-            return $result['results'] ?? [];
+            return $this->makeRequest('city', $data);
         });
     }
 
     /**
-     * Get city by ID dengan cache
+     * Get shipping cost
      */
-    public function getCity($cityId)
+    public function getCost($destination, $weight, $courier = 'jne')
     {
-        $cacheKey = 'rajaongkir_city_' . $cityId;
-
-        return Cache::remember($cacheKey, now()->addDays(30), function () use ($cityId) {
-            $result = $this->makeRequest('city', ['id' => $cityId]);
-            return $result['results'] ?? null;
-        });
-    }
-
-    /**
-     * Get shipping cost dengan timeout khusus
-     */
-    public function getShippingCost($origin, $destination, $weight, $courier)
-    {
-        $cacheKey = "shipping_cost_{$origin}_{$destination}_{$weight}_{$courier}";
-
-        return Cache::remember($cacheKey, now()->addHours(2), function () use ($origin, $destination, $weight, $courier) {
-            // Pre-check untuk parameter yang invalid
-            if (empty($origin) || empty($destination) || empty($weight) || empty($courier)) {
-                return [];
-            }
-
-            $result = $this->makeRequest('cost', [
-                'origin' => $origin,
-                'destination' => $destination,
-                'weight' => $weight,
-                'courier' => $courier
-            ], 'POST');
-
-            if (isset($result['results'][0]['costs'])) {
-                return $result['results'][0]['costs'];
-            }
-
-            return [];
-        });
-    }
-
-    /**
-     * Get international shipping cost (untuk package pro)
-     */
-    public function getInternationalCost($origin, $destination, $weight, $courier)
-    {
-        if ($this->package !== 'pro') {
-            return [];
-        }
-
-        return Cache::remember("international_cost_{$origin}_{$destination}_{$weight}_{$courier}", 
-            now()->addHours(1), 
-            function () use ($origin, $destination, $weight, $courier) {
-                $result = $this->makeRequest('v2/internationalCost', [
-                    'origin' => $origin,
-                    'destination' => $destination,
-                    'weight' => $weight,
-                    'courier' => $courier
-                ], 'POST');
-
-                return $result['results'][0]['costs'] ?? [];
-            }
-        );
-    }
-
-    /**
-     * Get all available couriers
-     */
-    public function getAvailableCouriers()
-    {
-        $couriers = [
-            'jne' => 'JNE',
-            'pos' => 'POS Indonesia',
-            'tiki' => 'TIKI',
+        $data = [
+            'origin' => $this->origin['city_id'],
+            'destination' => $destination,
+            'weight' => $weight,
+            'courier' => $courier,
         ];
 
-        // Untuk package basic dan pro, tambahkan courier lainnya
-        if (in_array($this->package, ['basic', 'pro'])) {
-            $additionalCouriers = [
-                'rpx' => 'RPX',
-                'esl' => 'Eka Sari Lorena',
-                'pcp' => 'PCP',
-                'pandu' => 'Pandu',
-                'wahana' => 'Wahana',
-                'sicepat' => 'SiCepat',
-                'jnt' => 'J&T',
-                'pahala' => 'Pahala',
-                'cahaya' => 'Cahaya',
-                'sat' => 'Sat',
-                'jet' => 'JET',
-                'indah' => 'Indah Logistic',
-                'dse' => '21 Express',
-                'slis' => 'Solusi Express',
-                'first' => 'First Logistics',
-                'ncs' => 'Nusantara Card Semesta',
-                'star' => 'Star Cargo',
-            ];
-            $couriers = array_merge($couriers, $additionalCouriers);
-        }
-
-        return $couriers;
+        return $this->makeRequest('cost', $data, 'POST');
     }
 
     /**
-     * Check API status dengan timeout sangat singkat
+     * Get shipping cost for multiple couriers
      */
-    public function checkApiStatus()
+    public function getMultipleCosts($destination, $weight, $couriers = ['jne', 'tiki', 'pos'])
     {
-        try {
-            // Gunakan endpoint yang ringan (province) dengan timeout sangat pendek
-            $response = Http::withHeaders([
-                'key' => $this->apiKey
-            ])->timeout(3) // Timeout 3 detik untuk status check
-              ->get($this->baseUrl . 'province');
-
-            return $response->successful();
-        } catch (\Exception $e) {
-            Log::warning('RajaOngkir API Status Check Failed: ' . $e->getMessage());
-            return false;
+        $results = [];
+        
+        foreach ($couriers as $courier) {
+            $cost = $this->getCost($destination, $weight, $courier);
+            if ($cost && isset($cost['costs']) && !empty($cost['costs'])) {
+                $results[$courier] = $this->formatCosts($cost);
+            }
         }
+
+        return $results;
+    }
+
+    /**
+     * Format costs response
+     */
+    private function formatCosts($costData)
+    {
+        $formatted = [];
+        
+        foreach ($costData['costs'] as $cost) {
+            $service = $cost['service'];
+            $etd = $cost['cost'][0]['etd'] ?? '';
+            $price = $cost['cost'][0]['value'] ?? 0;
+
+            $formatted[] = [
+                'service' => $service,
+                'description' => $cost['description'] ?? '',
+                'cost' => $price,
+                'etd' => $this->cleanEtd($etd),
+                'formatted_cost' => 'Rp ' . number_format($price, 0, ',', '.'),
+                'formatted_etd' => $this->formatEtd($etd),
+            ];
+        }
+
+        return $formatted;
+    }
+
+    /**
+     * Clean ETD string
+     */
+    private function cleanEtd($etd)
+    {
+        if (strpos($etd, 'HARI') !== false) {
+            return str_replace(' HARI', '', $etd);
+        }
+        return $etd;
+    }
+
+    /**
+     * Format ETD for display
+     */
+    private function formatEtd($etd)
+    {
+        $cleanedEtd = $this->cleanEtd($etd);
+        return $cleanedEtd ? "{$cleanedEtd} hari" : '1-3 hari';
+    }
+
+    /**
+     * Get store origin info
+     */
+    public function getOrigin()
+    {
+        return $this->origin;
     }
 }
