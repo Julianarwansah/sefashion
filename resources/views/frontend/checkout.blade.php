@@ -84,10 +84,8 @@
                 <select name="layanan" id="layanan" onchange="updateShippingCost()"
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition">
                   <option value="REG">Regular (2-3 days)</option>
-                  <option value="YES">Express (1-2 days)</option>
-                  <option value="OKE">Economy (3-5 days)</option>
-                  <option value="ONS">Overnight</option>
-                  <option value="EXPRESS">Same Day</option>
+                  <option value="EXPRESS">Express (1 day)</option>
+                  <option value="YES">Same Day</option>
                 </select>
               </div>
             </div>
@@ -114,7 +112,7 @@
           </div>
           <div class="p-6 space-y-3">
             {{-- Virtual Account --}}
-            <label class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-gray-900 hover:bg-gray-50 transition group has-radio">
+            <label class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-gray-900 hover:bg-gray-50 transition group">
               <input type="radio" name="metode_pembayaran" value="va" class="w-5 h-5 text-gray-900" onchange="toggleChannelOptions()">
               <div class="flex-1">
                 <p class="font-semibold text-gray-900">Virtual Account</p>
@@ -126,31 +124,27 @@
             </label>
 
             {{-- Channel options for VA --}}
-            <div id="va-channels" class="hidden ml-8 space-y-2 channel-options">
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+            <div id="va-channels" class="hidden ml-8 space-y-2">
+              <label class="flex items-center gap-3">
                 <input type="radio" name="channel" value="BCA" class="w-4 h-4 text-gray-900">
-                <span class="text-sm font-medium">BCA Virtual Account</span>
+                <span class="text-sm">BCA Virtual Account</span>
               </label>
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <label class="flex items-center gap-3">
                 <input type="radio" name="channel" value="BRI" class="w-4 h-4 text-gray-900">
-                <span class="text-sm font-medium">BRI Virtual Account</span>
+                <span class="text-sm">BRI Virtual Account</span>
               </label>
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <label class="flex items-center gap-3">
                 <input type="radio" name="channel" value="BNI" class="w-4 h-4 text-gray-900">
-                <span class="text-sm font-medium">BNI Virtual Account</span>
+                <span class="text-sm">BNI Virtual Account</span>
               </label>
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <label class="flex items-center gap-3">
                 <input type="radio" name="channel" value="MANDIRI" class="w-4 h-4 text-gray-900">
-                <span class="text-sm font-medium">Mandiri Virtual Account</span>
-              </label>
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                <input type="radio" name="channel" value="PERMATA" class="w-4 h-4 text-gray-900">
-                <span class="text-sm font-medium">Permata Virtual Account</span>
+                <span class="text-sm">Mandiri Virtual Account</span>
               </label>
             </div>
 
             {{-- E-Wallet --}}
-            <label class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-gray-900 hover:bg-gray-50 transition group has-radio">
+            <label class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-gray-900 hover:bg-gray-50 transition group">
               <input type="radio" name="metode_pembayaran" value="ewallet" class="w-5 h-5 text-gray-900" onchange="toggleChannelOptions()">
               <div class="flex-1">
                 <p class="font-semibold text-gray-900">E-Wallet</p>
@@ -162,43 +156,27 @@
             </label>
 
             {{-- Channel options for E-Wallet --}}
-            <div id="ewallet-channels" class="hidden ml-8 space-y-2 channel-options">
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+            <div id="ewallet-channels" class="hidden ml-8 space-y-2">
+              <label class="flex items-center gap-3">
                 <input type="radio" name="channel" value="ID_OVO" class="w-4 h-4 text-gray-900">
-                <span class="text-sm font-medium">OVO</span>
+                <span class="text-sm">OVO</span>
               </label>
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <label class="flex items-center gap-3">
                 <input type="radio" name="channel" value="ID_DANA" class="w-4 h-4 text-gray-900">
-                <span class="text-sm font-medium">DANA</span>
+                <span class="text-sm">DANA</span>
               </label>
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <label class="flex items-center gap-3">
                 <input type="radio" name="channel" value="ID_LINKAJA" class="w-4 h-4 text-gray-900">
-                <span class="text-sm font-medium">LinkAja</span>
+                <span class="text-sm">LinkAja</span>
               </label>
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <label class="flex items-center gap-3">
                 <input type="radio" name="channel" value="ID_SHOPEEPAY" class="w-4 h-4 text-gray-900">
-                <span class="text-sm font-medium">ShopeePay</span>
-              </label>
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                <input type="radio" name="channel" value="ID_GOPAY" class="w-4 h-4 text-gray-900">
-                <span class="text-sm font-medium">GoPay</span>
+                <span class="text-sm">ShopeePay</span>
               </label>
             </div>
 
-            {{-- QRIS --}}
-            <label class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-gray-900 hover:bg-gray-50 transition group has-radio">
-              <input type="radio" name="metode_pembayaran" value="qris" class="w-5 h-5 text-gray-900" onchange="toggleChannelOptions()">
-              <div class="flex-1">
-                <p class="font-semibold text-gray-900">QRIS</p>
-                <p class="text-sm text-gray-600">Scan QR code to pay</p>
-              </div>
-              <svg class="w-6 h-6 text-gray-400 group-hover:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
-              </svg>
-            </label>
-
             {{-- Retail Outlet --}}
-            <label class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-gray-900 hover:bg-gray-50 transition group has-radio">
+            <label class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-gray-900 hover:bg-gray-50 transition group">
               <input type="radio" name="metode_pembayaran" value="retail" class="w-5 h-5 text-gray-900" onchange="toggleChannelOptions()">
               <div class="flex-1">
                 <p class="font-semibold text-gray-900">Retail Outlet</p>
@@ -210,19 +188,19 @@
             </label>
 
             {{-- Channel options for Retail --}}
-            <div id="retail-channels" class="hidden ml-8 space-y-2 channel-options">
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+            <div id="retail-channels" class="hidden ml-8 space-y-2">
+              <label class="flex items-center gap-3">
                 <input type="radio" name="channel" value="ALFAMART" class="w-4 h-4 text-gray-900">
-                <span class="text-sm font-medium">Alfamart</span>
+                <span class="text-sm">Alfamart</span>
               </label>
-              <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <label class="flex items-center gap-3">
                 <input type="radio" name="channel" value="INDOMARET" class="w-4 h-4 text-gray-900">
-                <span class="text-sm font-medium">Indomaret</span>
+                <span class="text-sm">Indomaret</span>
               </label>
             </div>
 
             {{-- COD --}}
-            <label class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-gray-900 hover:bg-gray-50 transition group has-radio">
+            <label class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-gray-900 hover:bg-gray-50 transition group">
               <input type="radio" name="metode_pembayaran" value="cod" class="w-5 h-5 text-gray-900" onchange="toggleChannelOptions()">
               <div class="flex-1">
                 <p class="font-semibold text-gray-900">Cash on Delivery</p>
@@ -232,16 +210,6 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
               </svg>
             </label>
-
-            {{-- Payment Method Validation --}}
-            <div id="payment-validation" class="hidden mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                </svg>
-                <p class="text-sm text-yellow-800">Please select a payment channel</p>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -257,17 +225,9 @@
             @foreach($cartItems as $item)
               <div class="flex gap-3">
                 <div class="w-16 h-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
-                  @if($item->detailUkuran->produk->gambar)
-                    <img src="{{ asset('storage/' . $item->detailUkuran->produk->gambar) }}"
-                         alt="{{ $item->detailUkuran->produk->nama_produk }}"
-                         class="w-full h-full object-cover">
-                  @else
-                    <div class="w-full h-full bg-gray-200 flex items-center justify-center">
-                      <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                      </svg>
-                    </div>
-                  @endif
+                  <img src="{{ $item->detailUkuran->produk->gambar_url }}"
+                       alt="{{ $item->detailUkuran->produk->nama_produk }}"
+                       class="w-full h-full object-cover">
                 </div>
                 <div class="flex-1 min-w-0">
                   <h4 class="font-semibold text-sm text-gray-900 line-clamp-1">
@@ -278,7 +238,7 @@
                   </p>
                   <p class="text-xs text-gray-600">Qty: {{ $item->jumlah }}</p>
                   <p class="text-sm font-bold text-gray-900 mt-1">
-                    Rp {{ number_format($item->subtotal, 0, ',', '.') }}
+                    {{ $item->subtotal_formatted }}
                   </p>
                 </div>
               </div>
@@ -305,7 +265,7 @@
 
           {{-- Submit Button --}}
           <button type="submit" id="submitBtn"
-                  class="w-full py-3 px-6 bg-gray-900 text-white text-center rounded-xl hover:bg-black transition-all duration-300 hover:scale-105 hover:shadow-xl font-semibold mb-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+                  class="w-full py-3 px-6 bg-gray-900 text-white text-center rounded-xl hover:bg-black transition-all duration-300 hover:scale-105 hover:shadow-xl font-semibold mb-3">
             <span id="btn-text">Place Order</span>
             <span id="btn-loading" class="hidden">
               <svg class="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -380,24 +340,6 @@
   opacity: 1 !important;
   transform: translateY(0) !important;
 }
-
-.line-clamp-1 {
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Style untuk radio button yang dipilih */
-.has-radio:has(input:checked) {
-  border-color: #111827;
-  background-color: #f9fafb;
-}
-
-.channel-options label:has(input:checked) {
-  background-color: #eff6ff;
-  border-radius: 0.5rem;
-}
 </style>
 @endpush
 
@@ -424,33 +366,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Toggle channel options based on payment method
 function toggleChannelOptions() {
-    const paymentMethod = document.querySelector('input[name="metode_pembayaran"]:checked');
-    if (!paymentMethod) return;
-    
-    const methodValue = paymentMethod.value;
+    const paymentMethod = document.querySelector('input[name="metode_pembayaran"]:checked').value;
     
     // Hide all channel options first
-    document.querySelectorAll('.channel-options').forEach(el => {
-        el.classList.add('hidden');
-    });
-    
-    // Hide validation message
-    document.getElementById('payment-validation').classList.add('hidden');
+    document.getElementById('va-channels').classList.add('hidden');
+    document.getElementById('ewallet-channels').classList.add('hidden');
+    document.getElementById('retail-channels').classList.add('hidden');
     
     // Show relevant channel options
-    if (methodValue === 'va') {
+    if (paymentMethod === 'va') {
         document.getElementById('va-channels').classList.remove('hidden');
-    } else if (methodValue === 'ewallet') {
+    } else if (paymentMethod === 'ewallet') {
         document.getElementById('ewallet-channels').classList.remove('hidden');
-    } else if (methodValue === 'retail') {
+    } else if (paymentMethod === 'retail') {
         document.getElementById('retail-channels').classList.remove('hidden');
     }
-    
-    // Uncheck all channel options when switching payment method
-    document.querySelectorAll('input[name="channel"]').forEach(radio => {
-        radio.checked = false;
-    });
 }
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleChannelOptions();
+});
 
 // Update shipping cost based on courier and service
 function updateShippingCost() {
@@ -487,134 +423,69 @@ function updateShippingCost() {
   });
 }
 
-// Validate payment method selection
-function validatePaymentMethod() {
-    const paymentMethod = document.querySelector('input[name="metode_pembayaran"]:checked');
-    if (!paymentMethod) {
-        return { valid: false, message: 'Please select a payment method' };
-    }
-
-    const methodValue = paymentMethod.value;
-    
-    // Untuk metode yang membutuhkan channel selection
-    if (['va', 'ewallet', 'retail'].includes(methodValue)) {
-        const channel = document.querySelector('input[name="channel"]:checked');
-        if (!channel) {
-            return { 
-                valid: false, 
-                message: `Please select a ${methodValue === 'va' ? 'bank' : methodValue === 'ewallet' ? 'e-wallet' : 'retail outlet'} for payment` 
-            };
-        }
-    }
-
-    return { valid: true };
-}
-
 // Handle checkout form submission
 document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+  e.preventDefault();
 
-    const submitBtn = document.getElementById('submitBtn');
-    const btnText = document.getElementById('btn-text');
-    const btnLoading = document.getElementById('btn-loading');
-    const validationDiv = document.getElementById('payment-validation');
+  const submitBtn = document.getElementById('submitBtn');
+  const btnText = document.getElementById('btn-text');
+  const btnLoading = document.getElementById('btn-loading');
 
-    // Validate payment method
-    const validation = validatePaymentMethod();
-    if (!validation.valid) {
-        validationDiv.querySelector('p').textContent = validation.message;
-        validationDiv.classList.remove('hidden');
-        validationDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
+  // Validate channel selection for specific payment methods
+  const paymentMethod = document.querySelector('input[name="metode_pembayaran"]:checked').value;
+  const channel = document.querySelector('input[name="channel"]:checked');
+  
+  if ((paymentMethod === 'va' || paymentMethod === 'ewallet' || paymentMethod === 'retail') && !channel) {
+    alert('Please select a payment channel');
+    return;
+  }
+
+  // Disable button and show loading
+  submitBtn.disabled = true;
+  btnText.classList.add('hidden');
+  btnLoading.classList.remove('hidden');
+
+  const formData = new FormData(this);
+  const data = Object.fromEntries(formData.entries());
+
+  // Add channel to data if exists
+  if (channel) {
+    data.channel = channel.value;
+  }
+
+  fetch('{{ route("checkout.process") }}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Redirect to success page or payment URL
+      if (data.payment_url) {
+        window.location.href = data.payment_url;
+      } else {
+        window.location.href = data.redirect_url;
+      }
+    } else {
+      alert(data.message);
+      // Re-enable button
+      submitBtn.disabled = false;
+      btnText.classList.remove('hidden');
+      btnLoading.classList.add('hidden');
     }
-
-    // Hide validation message if valid
-    validationDiv.classList.add('hidden');
-
-    // Disable button and show loading
-    submitBtn.disabled = true;
-    btnText.classList.add('hidden');
-    btnLoading.classList.remove('hidden');
-
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData.entries());
-
-    // Add channel to data if exists
-    const channel = document.querySelector('input[name="channel"]:checked');
-    if (channel) {
-        data.channel = channel.value;
-    } else if (data.metode_pembayaran === 'cod') {
-        // Untuk COD, set channel default
-        data.channel = 'COD';
-    }
-
-    // Debug: lihat data yang akan dikirim
-    console.log('Checkout data:', data);
-
-    fetch('{{ route("checkout.process") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Checkout response:', data);
-        
-        if (data.success) {
-            // Jika COD, redirect ke success page
-            if (data.is_cod) {
-                window.location.href = data.redirect_url;
-            } 
-            // Jika ada payment URL, redirect ke payment page
-            else if (data.payment_url && data.payment_url !== data.redirect_url) {
-                window.location.href = data.payment_url;
-            } 
-            // Fallback ke redirect URL
-            else {
-                window.location.href = data.redirect_url;
-            }
-        } else {
-            // Show error message
-            alert(data.message || 'Failed to process checkout');
-            // Re-enable button
-            submitBtn.disabled = false;
-            btnText.classList.remove('hidden');
-            btnLoading.classList.add('hidden');
-        }
-    })
-    .catch(error => {
-        console.error('Checkout error:', error);
-        alert('Failed to process checkout. Please check your connection and try again.');
-        // Re-enable button
-        submitBtn.disabled = false;
-        btnText.classList.remove('hidden');
-        btnLoading.classList.add('hidden');
-    });
-});
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Set default payment method jika belum ada
-    if (!document.querySelector('input[name="metode_pembayaran"]:checked')) {
-        document.querySelector('input[name="metode_pembayaran"][value="va"]').checked = true;
-    }
-    toggleChannelOptions();
-    
-    // Add event listeners untuk channel options
-    document.querySelectorAll('input[name="channel"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            // Sembunyikan pesan validasi ketika channel dipilih
-            document.getElementById('payment-validation').classList.add('hidden');
-        });
-    });
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Failed to process checkout. Please try again.');
+    // Re-enable button
+    submitBtn.disabled = false;
+    btnText.classList.remove('hidden');
+    btnLoading.classList.add('hidden');
+  });
 });
 </script>
 @endpush

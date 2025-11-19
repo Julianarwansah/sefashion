@@ -65,7 +65,6 @@
                                         @elseif($pembayaran->metode_pembayaran == 'cod') fa-money-bill 
                                         @elseif($pembayaran->metode_pembayaran == 'ewallet') fa-mobile-alt 
                                         @elseif($pembayaran->metode_pembayaran == 'va') fa-credit-card 
-                                        @elseif($pembayaran->metode_pembayaran == 'qris') fa-qrcode 
                                         @elseif($pembayaran->metode_pembayaran == 'credit_card') fa-credit-card 
                                         @else fa-money-bill 
                                         @endif me-1">

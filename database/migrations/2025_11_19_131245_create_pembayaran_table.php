@@ -15,7 +15,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_pemesanan');
             
             // Metode pembayaran
-            $table->enum('metode_pembayaran', ['va', 'ewallet', 'qris', 'retail', 'cod'])->default('va');
+            $table->enum('metode_pembayaran', ['va', 'ewallet', 'retail', 'cod'])->default('va');
             $table->string('channel', 100)->nullable()->comment('BCA, BRI, DANA, OVO, etc');
             
             // Informasi jumlah bayar

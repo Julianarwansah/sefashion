@@ -81,7 +81,7 @@ public function process(Request $request)
         'nama_penerima' => 'required|string|max:255',
         'no_hp_penerima' => 'required|string|max:20',
         'alamat_tujuan' => 'required|string',
-        'metode_pembayaran' => 'required|in:va,ewallet,qris,retail,cod',
+        'metode_pembayaran' => 'required|in:va,ewallet,retail,cod',
         'channel' => 'nullable|string', // Ubah menjadi nullable
         'ekspedisi' => 'nullable|string',
         'layanan' => 'nullable|string',
@@ -255,23 +255,17 @@ public function process(Request $request)
             $result = $this->xenditService->createEWalletPayment(array_merge($baseData, [
                 'channel_code' => $request->channel,
                 'phone_number' => $customer->no_hp,
+
+                // WAJIB DITAMBAHKAN
+                'callback_url' => route('xendit.callback'),
             ]));
+
             
             if ($result['success']) {
                 $responseData = $result['data'];
                 $pembayaranData['xendit_id'] = $responseData['id'] ?? null;
                 $pembayaranData['xendit_payment_url'] = $responseData['checkout_url'] ?? 
                     $responseData['actions']['desktop_web_checkout_url'] ?? null;
-            }
-            break;
-
-        case 'qris':
-            $result = $this->xenditService->createQRISPayment($baseData);
-            
-            if ($result['success']) {
-                $responseData = $result['data'];
-                $pembayaranData['xendit_id'] = $responseData['id'] ?? null;
-                $pembayaranData['xendit_payment_url'] = $responseData['qr_string'] ?? null;
             }
             break;
 
@@ -297,9 +291,10 @@ public function process(Request $request)
 
     return [
         'success' => true,
-        'payment_url' => $pembayaranData['xendit_payment_url'] ?? route('order.success', $pemesanan->id_pemesanan),
+        'payment_url' => $pembayaranData['xendit_qr_url'] ?? route('order.success', $pemesanan->id_pemesanan),
         'pembayaran_data' => $pembayaranData
     ];
+
 }
 
     /**
