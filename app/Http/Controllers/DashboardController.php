@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Produk;
+use App\Models\Customer;
+use App\Models\Pemesanan;
 
 class DashboardController extends Controller
 {
@@ -13,88 +16,74 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        // Statistik utama
-        $totalProducts = DB::table('produk')->count();
-        $totalCustomers = DB::table('customers')->count();
-        $totalOrders = DB::table('pemesanan')->count();
+        // Total Statistics
+        $totalProduk = Produk::count();
+        $totalCustomer = Customer::count();
+        $totalPemesanan = Pemesanan::count();
+        $totalPendapatan = Pemesanan::where('status', 'selesai')->sum('total_harga');
         
-        // Total pendapatan (hanya pemesanan dengan status selesai)
-        $totalRevenue = DB::table('pemesanan')
-            ->where('status', 'selesai')
-            ->sum('total_harga');
-
-        // Data pemesanan terbaru
-        $recentOrders = DB::table('pemesanan as p')
-            ->join('customers as c', 'p.id_customer', '=', 'c.id_customer')
-            ->select('p.*', 'c.nama as customer_name')
-            ->orderBy('p.tanggal_pemesanan', 'desc')
-            ->limit(10)
-            ->get();
-
-        // Status pemesanan
-        $orderStatus = DB::table('pemesanan')
-            ->select('status', DB::raw('COUNT(*) as total'))
-            ->groupBy('status')
-            ->get();
-
-        // Produk terlaris
-        $bestSellingProducts = DB::table('detail_pemesanan as dp')
-            ->join('detail_ukuran as du', 'dp.id_ukuran', '=', 'du.id_ukuran')
-            ->join('produk as p', 'du.id_produk', '=', 'p.id_produk')
-            ->select(
-                'p.nama_produk',
-                DB::raw('SUM(dp.jumlah) as total_terjual'),
-                DB::raw('SUM(dp.subtotal) as total_pendapatan')
-            )
-            ->groupBy('p.id_produk', 'p.nama_produk')
-            ->orderBy('total_terjual', 'desc')
-            ->limit(5)
-            ->get();
-
-        // Data untuk chart
-        $monthlyOrders = DB::table('pemesanan')
-            ->select(
-                DB::raw('YEAR(tanggal_pemesanan) as year'),
-                DB::raw('MONTH(tanggal_pemesanan) as month'),
-                DB::raw('COUNT(*) as total_orders'),
-                DB::raw('SUM(total_harga) as total_revenue')
-            )
-            ->where('status', 'selesai')
-            ->where('tanggal_pemesanan', '>=', now()->subMonths(12))
-            ->groupBy('year', 'month')
-            ->orderBy('year', 'asc')
-            ->orderBy('month', 'asc')
-            ->get();
-
-        // Stok produk rendah
-        $lowStockProducts = DB::table('produk')
-            ->where('total_stok', '<=', 10)
+        // Pemesanan Status
+        $pemesananPending = Pemesanan::where('status', 'pending')->count();
+        $pemesananSelesai = Pemesanan::where('status', 'selesai')->count();
+        
+        // Monthly Statistics
+        $startOfMonth = now()->startOfMonth();
+        $endOfMonth = now()->endOfMonth();
+        
+        $produkBaruBulanIni = Produk::whereBetween('created_at', [$startOfMonth, $endOfMonth])->count();
+        $customerBaruBulanIni = Customer::whereBetween('created_at', [$startOfMonth, $endOfMonth])->count();
+        
+        // Low Stock Products
+        $stokRendah = Produk::where('total_stok', '<', 10)->count();
+        $lowStockProducts = Produk::where('total_stok', '<', 10)
             ->orderBy('total_stok', 'asc')
             ->limit(5)
             ->get();
-
-        // Pembayaran pending
-        $pendingPayments = DB::table('pembayaran as pay')
-            ->join('pemesanan as p', 'pay.id_pemesanan', '=', 'p.id_pemesanan')
-            ->join('customers as c', 'p.id_customer', '=', 'c.id_customer')
-            ->where('pay.status_pembayaran', 'menunggu')
-            ->select('pay.*', 'p.total_harga', 'c.nama as customer_name')
-            ->orderBy('pay.created_at', 'desc')
+        
+        // Recent Data
+        $recentProducts = Produk::with(['detailUkuran' => function($query) {
+            $query->orderBy('harga', 'asc');
+        }])
+        ->orderBy('created_at', 'desc')
+        ->limit(5)
+        ->get();
+        
+        $recentOrders = Pemesanan::with('customer')
+            ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
+        
+        // Chart Data - Products by Category
+        $chartData = Produk::select('kategori', DB::raw('count(*) as total'))
+            ->groupBy('kategori')
+            ->get();
+        
+        $chartLabels = $chartData->pluck('kategori')->toArray();
+        $chartValues = $chartData->pluck('total')->toArray();
+        
+        return view('admin.pages.dashboard', array_merge(
+    compact(
+        'totalProduk',
+        'totalCustomer',
+        'totalPemesanan',
+        'totalPendapatan',
+        'pemesananPending',
+        'pemesananSelesai',
+        'produkBaruBulanIni',
+        'customerBaruBulanIni',
+        'stokRendah',
+        'lowStockProducts',
+        'recentProducts',
+        'recentOrders',
+    ),
+    [
+        'chartData' => [
+            'labels' => $chartLabels,
+            'data' => $chartValues
+        ]
+    ]
+));
 
-        return view('admin.pages.dashboard', compact(
-            'totalProducts',
-            'totalCustomers',
-            'totalOrders',
-            'totalRevenue',
-            'recentOrders',
-            'orderStatus',
-            'bestSellingProducts',
-            'monthlyOrders',
-            'lowStockProducts',
-            'pendingPayments'
-        ));
     }
 
     /**
