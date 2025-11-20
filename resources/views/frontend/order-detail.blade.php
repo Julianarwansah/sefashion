@@ -29,6 +29,7 @@
         </div>
         <div>
           @php
+            // STATUS ORDER
             $statusConfig = [
               'pending' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-800', 'label' => 'Pending Payment'],
               'diproses' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'label' => 'Processing'],
@@ -37,6 +38,28 @@
               'batal' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'label' => 'Cancelled'],
             ];
             $status = $statusConfig[$order->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => ucfirst($order->status)];
+
+            // STATUS PEMBAYARAN
+            $paymentStatus = $order->pembayaran->status_pembayaran ?? null;
+            $normalizedPaymentStatus = $paymentStatus ? strtolower($paymentStatus) : null;
+
+            $paidStatuses    = ['sudah bayar', 'sudah_bayar', 'paid', 'completed'];
+            $failedStatuses  = ['gagal', 'failed', 'expired'];
+            $pendingStatuses = ['belum bayar', 'belum_bayar', 'menunggu', 'pending'];
+
+            if ($normalizedPaymentStatus && in_array($normalizedPaymentStatus, $paidStatuses)) {
+                $paymentColor = 'bg-green-500';
+                $paymentLabel = 'Paid';
+                $isPaid = true;
+            } elseif ($normalizedPaymentStatus && in_array($normalizedPaymentStatus, $failedStatuses)) {
+                $paymentColor = 'bg-red-500';
+                $paymentLabel = 'Failed';
+                $isPaid = false;
+            } else {
+                $paymentColor = 'bg-yellow-500';
+                $paymentLabel = 'Pending';
+                $isPaid = false;
+            }
           @endphp
           <span class="inline-block px-6 py-3 rounded-xl text-base font-semibold {{ $status['bg'] }} {{ $status['text'] }}">
             {{ $status['label'] }}
@@ -66,17 +89,17 @@
             {{-- Payment Status --}}
             @if($order->pembayaran)
             <div class="relative flex items-start gap-4">
-              <div class="w-8 h-8 rounded-full {{ $order->pembayaran->status === 'paid' ? 'bg-green-500' : 'bg-yellow-500' }} flex items-center justify-center flex-shrink-0 relative z-10">
-                @if($order->pembayaran->status === 'paid')
-                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                </svg>
+              <div class="w-8 h-8 rounded-full {{ $paymentColor }} flex items-center justify-center flex-shrink-0 relative z-10">
+                @if($isPaid)
+                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
                 @else
-                <div class="w-3 h-3 rounded-full bg-white"></div>
+                  <div class="w-3 h-3 rounded-full bg-white"></div>
                 @endif
               </div>
               <div class="flex-1">
-                <p class="font-semibold text-gray-900">Payment {{ ucfirst($order->pembayaran->status) }}</p>
+                <p class="font-semibold text-gray-900">Payment {{ $paymentLabel }}</p>
                 <p class="text-sm text-gray-600">
                   Method: {{ ucfirst($order->pembayaran->metode_pembayaran) }}
                   @if($order->pembayaran->channel)
@@ -282,8 +305,8 @@
         {{-- Actions --}}
         @if($order->status === 'pending')
         <div class="space-y-3">
-          {{-- Pay Now Button - Show only if payment not completed --}}
-          @if($order->pembayaran && $order->pembayaran->status_pembayaran !== 'sudah bayar')
+          {{-- Pay Now Button - hanya tampil jika BELUM dibayar --}}
+          @if($order->pembayaran && !$isPaid)
           <a href="{{ route('order.success', $order->id_pemesanan) }}"
              class="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition font-bold shadow-lg hover:shadow-xl">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,7 +316,8 @@
           </a>
           @endif
 
-          {{-- Cancel Order Button --}}
+          {{-- Cancel Order Button - opsional disembunyikan jika sudah bayar --}}
+          @if(!$isPaid)
           <form action="{{ route('order.cancel', $order->id_pemesanan) }}" method="POST"
                 onsubmit="return confirm('Are you sure you want to cancel this order?')">
             @csrf
@@ -305,6 +329,7 @@
               Cancel This Order
             </button>
           </form>
+          @endif
         </div>
         @endif
       </div>
