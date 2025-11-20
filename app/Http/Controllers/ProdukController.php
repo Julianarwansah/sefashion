@@ -22,9 +22,10 @@ class ProdukController extends Controller
         try {
             Log::debug('Memulai proses mengambil data produk');
             
+            // PERBAIKAN: Hapus 'warna' dari eager loading karena relationship tidak ada
             $produk = Produk::with([
                 'detailWarna',
-                'detailUkuran.warna',
+                'detailUkuran', // Cukup sampai di sini saja
                 'gambarProduk'
             ])->latest()->get();
 
@@ -215,7 +216,7 @@ class ProdukController extends Controller
                                 ProdukGambar::create([
                                     'id_produk' => $produk->id_produk,
                                     'id_warna' => $idWarna,
-                                    'id_ukuran' => null, // Bisa disesuaikan jika perlu
+                                    'id_ukuran' => null,
                                     'gambar' => basename($gambarPath),
                                     'is_primary' => $isPrimary
                                 ]);
@@ -236,7 +237,8 @@ class ProdukController extends Controller
             DB::commit();
             Log::debug('Semua transaksi berhasil disimpan');
 
-            return redirect()->route('produk.index')
+            // PERBAIKAN: Pastikan route menggunakan namespace admin
+            return redirect()->route('admin.produk.index')
                 ->with('success', 'Produk berhasil ditambahkan');
 
         } catch (\Exception $e) {
@@ -262,9 +264,10 @@ class ProdukController extends Controller
         try {
             Log::debug('Memulai proses show produk', ['id_produk' => $id]);
             
+            // PERBAIKAN: Hapus 'warna' dari eager loading
             $produk = Produk::with([
                 'detailWarna.detailUkuran',
-                'detailUkuran.warna',
+                'detailUkuran', // Cukup sampai di sini
                 'gambarProduk'
             ])->findOrFail($id);
 
@@ -291,9 +294,10 @@ class ProdukController extends Controller
         try {
             Log::debug('Memulai proses edit produk', ['id_produk' => $id]);
             
+            // PERBAIKAN: Hapus 'warna' dari eager loading
             $produk = Produk::with([
                 'detailWarna.detailUkuran',
-                'detailUkuran.warna',
+                'detailUkuran', // Cukup sampai di sini
                 'gambarProduk'
             ])->findOrFail($id);
 
@@ -481,7 +485,7 @@ class ProdukController extends Controller
                                     'id_warna' => $idWarna,
                                     'id_ukuran' => null,
                                     'gambar' => basename($gambarPath),
-                                    'is_primary' => false // Set primary melalui method terpisah
+                                    'is_primary' => false
                                 ]);
                                 
                                 Log::debug('Gambar produk berhasil ditambahkan', [
@@ -499,7 +503,8 @@ class ProdukController extends Controller
             DB::commit();
             Log::debug('Semua transaksi update berhasil');
 
-            return redirect()->route('produk.index')
+            // PERBAIKAN: Pastikan route menggunakan namespace admin
+            return redirect()->route('admin.produk.index')
                 ->with('success', 'Produk berhasil diperbarui');
 
         } catch (\Exception $e) {
@@ -554,7 +559,8 @@ class ProdukController extends Controller
             DB::commit();
             Log::debug('Semua transaksi delete berhasil');
 
-            return redirect()->route('produk.index')
+            // PERBAIKAN: Pastikan route menggunakan namespace admin
+            return redirect()->route('admin.produk.index')
                 ->with('success', 'Produk berhasil dihapus');
 
         } catch (\Exception $e) {

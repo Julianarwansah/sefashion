@@ -1,162 +1,140 @@
 <!DOCTYPE html>
-<html
-  lang="en"
-  class="light-style layout-menu-fixed"
-  dir="ltr"
-  data-theme="theme-default"
-  data-assets-path="{{ asset('assets/') }}"
-  data-template="vertical-menu-template-free"
->
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
-    />
-
-    <title>@yield('title', 'Dashboard Konveksi')</title>
-
-    <meta name="description" content="" />
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}" />
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-    <!-- Icons. Uncomment required icon fonts -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/boxicons.css') }}" />
-
-    <!-- Core CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/css/core.css') }}" class="template-customizer-core-css" />
-    <link rel="stylesheet" href="{{ asset('assets/vendor/css/theme-default.css') }}" class="template-customizer-theme-css" />
-    <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
-
-    <!-- Vendors CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/apex-charts/apex-charts.css') }}" />
-
-    <!-- Helpers -->
-    <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
-
-    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
-    <script src="{{ asset('assets/js/config.js') }}"></script>
-
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title', 'Admin Dashboard')</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'purple-custom': '#52307c',
+                        'yellow-custom': '#ffd400',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-      .badge-notifications {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        font-size: 10px;
-        padding: 3px 6px;
-      }
-
-      .dropdown-notifications .dropdown-menu {
-        width: 300px;
-        max-height: 400px;
-        overflow-y: auto;
-      }
-      .article-content {
-          font-family: Arial, sans-serif;
-          line-height: 1.6;
-      }
-
-      .article-content h1, 
-      .article-content h2, 
-      .article-content h3, 
-      .article-content h4, 
-      .article-content h5, 
-      .article-content h6 {
-          margin-top: 1.5em;
-          margin-bottom: 0.5em;
-          font-weight: bold;
-      }
-
-      .article-content p {
-          margin-bottom: 1em;
-      }
-
-      .article-content ul, 
-      .article-content ol {
-          margin-bottom: 1em;
-          padding-left: 2em;
-      }
-
-      .article-content table {
-          border-collapse: collapse;
-          width: 100%;
-          margin-bottom: 1em;
-      }
-
-      .article-content table, 
-      .article-content th, 
-      .article-content td {
-          border: 1px solid #ddd;
-          padding: 8px;
-      }
-
-      .article-content th {
-          background-color: #f8f9fa;
-      }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass { backdrop-filter: blur(10px); }
+        
+        /* Custom styles for sidebar menu */
+        .active-menu {
+            background: linear-gradient(to right, #ec4899, #eab308);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: scale(1.05);
+            color: white !important;
+        }
+        
+        .active-menu svg {
+            color: white !important;
+        }
+        
+        .inactive-menu {
+            color: rgb(216 180 254);
+            transition: all 0.3s ease;
+        }
+        
+        .inactive-menu:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .inactive-menu:hover svg {
+            color: white;
+        }
     </style>
-  </head>
-
-  <body>
-    <!-- Layout wrapper -->
-    <div class="layout-wrapper layout-content-navbar">
-      <div class="layout-container">
-        <!-- Sidebar -->
+    @stack('styles')
+</head>
+<body class="bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50">
+    <div class="flex h-screen overflow-hidden">
         @include('layouts.sidebar')
-
-        <!-- Layout container -->
-        <div class="layout-page">
-          <!-- Navbar -->
-          @include('layouts.navbar')
-
-          <!-- Content wrapper -->
-          <div class="content-wrapper">
-            <!-- Content -->
-            <div class="container-xxl flex-grow-1 container-p-y">
-              @yield('content')
-            </div>
-
-            <!-- Footer -->
-            @include('layouts.footer')
-          </div>
-          <!-- Content wrapper -->
+        
+        <div class="flex-1 flex flex-col overflow-hidden">
+            @include('layouts.navbar')
+            
+            <main class="flex-1 overflow-y-auto p-4 lg:p-8">
+                @yield('content')
+            </main>
         </div>
-        <!-- / Layout page -->
-      </div>
-
-      <!-- Overlay -->
-      <div class="layout-overlay layout-menu-toggle"></div>
     </div>
-    <!-- / Layout wrapper -->
 
-    <!-- Core JS -->
-    <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
-    <script src="{{ asset('assets/vendor/libs/popper/popper.js') }}"></script>
-    <script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
-    <script src="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js') }}"></script>
-    <script src="{{ asset('assets/vendor/js/menu.js') }}"></script>
+    @include('layouts.footer')
+    
+    <!-- Scripts -->
+    <script>
+        // Toggle sidebar function
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const navTexts = document.querySelectorAll('.nav-text');
+            const logoSection = document.getElementById('logo-section');
+            
+            if (sidebar.classList.contains('w-72')) {
+                sidebar.classList.remove('w-72');
+                sidebar.classList.add('w-20');
+                navTexts.forEach(el => el.style.display = 'none');
+                if (logoSection) logoSection.style.display = 'none';
+            } else {
+                sidebar.classList.remove('w-20');
+                sidebar.classList.add('w-72');
+                setTimeout(() => {
+                    navTexts.forEach(el => el.style.display = 'block');
+                    if (logoSection) logoSection.style.display = 'flex';
+                }, 150);
+            }
+        }
 
-    <!-- Vendors JS -->
-    <script src="{{ asset('assets/vendor/libs/apex-charts/apexcharts.js') }}"></script>
+        // Set active menu based on current URL
+        function setActiveMenu() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                // Reset semua item ke state inactive
+                item.classList.remove('active-menu');
+                item.classList.add('inactive-menu');
+                
+                // Hapus kelas Tailwind yang mungkin tertinggal
+                item.classList.remove('bg-gradient-to-r', 'from-pink-500', 'to-yellow-400', 'shadow-lg', 'transform', 'scale-105', 'text-white');
+                item.classList.add('text-purple-200', 'hover:bg-white/10', 'hover:text-white');
+                
+                // Cek href dari item
+                const href = item.getAttribute('href');
+                if (href) {
+                    // Normalisasi path untuk perbandingan
+                    const itemPath = href.replace(/^https?:\/\/[^\/]+/, ''); // Hapus domain jika ada
+                    
+                    // Untuk route yang lebih spesifik, gunakan exact match
+                    if (currentPath === itemPath) {
+                        item.classList.remove('inactive-menu');
+                        item.classList.add('active-menu');
+                    }
+                    // Untuk parent routes, gunakan startsWith
+                    else if (currentPath.startsWith(itemPath) && itemPath !== '/') {
+                        item.classList.remove('inactive-menu');
+                        item.classList.add('active-menu');
+                    }
+                }
+            });
+        }
 
-    <!-- Main JS -->
-    <script src="{{ asset('assets/js/main.js') }}"></script>
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setActiveMenu();
+        });
 
-    <!-- Page JS -->
-    <script src="{{ asset('assets/js/dashboards-analytics.js') }}"></script>
-
-    <!-- Place this tag in your head or just before your close body tag. -->
-    <script async defer src="https://buttons.github.io/buttons.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  </body>
+        // Re-run when navigating (untuk SPA-like behavior)
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.nav-item')) {
+                setTimeout(setActiveMenu, 100);
+            }
+        });
+    </script>
+    
+    @stack('scripts')
+</body>
 </html>
