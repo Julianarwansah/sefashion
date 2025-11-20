@@ -15,6 +15,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PembayaranController;
 
 
 // Public Routes
@@ -154,6 +155,20 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     // Order Management
     Route::resource('pesanan', PesananController::class);
     
+    Route::resource('pembayaran', PembayaranController::class);
+
+    // Tambahan untuk mark as paid
+    Route::post('/pembayaran/{id}/mark-paid', 
+        [PembayaranController::class, 'markAsPaid']
+    )->name('pembayaran.mark-paid');
+
+    // Tambahan untuk mark as expired jika perlu
+    Route::post('/pembayaran/{id}/mark-expired', 
+        [PembayaranController::class, 'markAsExpired']
+    )->name('pembayaran.mark-expired');
+    // Tambahkan ini (UPDATE STATUS PEMBAYARAN)
+        Route::post('/pembayaran/{id}/update-status', [PembayaranController::class, 'updateStatus'])
+            ->name('pembayaran.update-status');
     // Shipping Management
     Route::resource('pengiriman', PengirimanController::class);
     Route::get('pengiriman/{id}/track', [PengirimanController::class, 'track'])->name('pengiriman.track');

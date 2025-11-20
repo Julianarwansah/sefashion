@@ -28,17 +28,16 @@ class PembayaranController extends Controller
     {
         $pemesanan = Pemesanan::whereDoesntHave('pembayaran')
             ->orWhereHas('pembayaran', function($query) {
-                $query->whereIn('status_pembayaran', [Pembayaran::STATUS_GAGAL, Pembayaran::STATUS_EXPIRED]);
+                $query->whereIn('status_pembayaran', [Pembayaran::STATUS_GAGAL, Pembayaran::STATUS_KADALUARSA]);
             })
             ->with('customer')
             ->get();
 
         $metodePembayaran = [
-            Pembayaran::METHOD_TRANSFER => 'Transfer Bank',
-            Pembayaran::METHOD_COD => 'Cash on Delivery',
-            Pembayaran::METHOD_EWALLET => 'E-Wallet',
             Pembayaran::METHOD_VA => 'Virtual Account',
-            Pembayaran::METHOD_CREDIT_CARD => 'Kartu Kredit',
+            Pembayaran::METHOD_EWALLET => 'E-Wallet',
+            Pembayaran::METHOD_RETAIL => 'Retail Outlet',
+            Pembayaran::METHOD_COD => 'Cash on Delivery',
         ];
 
         return view('admin.pembayaran.create', compact('pemesanan', 'metodePembayaran'));
@@ -51,11 +50,10 @@ class PembayaranController extends Controller
     {
         $request->validate([
             'id_pemesanan' => 'required|exists:pemesanan,id_pemesanan',
-            'metode_pembayaran' => 'required|in:transfer,cod,ewallet,va,credit_card',
+            'metode_pembayaran' => 'required|in:va,ewallet,retail,cod',
             'channel' => 'nullable|string|max:255',
             'jumlah_bayar' => 'required|numeric|min:0',
-            'status_pembayaran' => 'required|in:belum_bayar,menunggu,sudah_bayar,gagal,expired,refund',
-            'tanggal_pembayaran' => 'nullable|date',
+            'status_pembayaran' => 'required|in:belum_bayar,menunggu,sudah_bayar,gagal,kadaluarsa',
         ]);
 
         DB::beginTransaction();
@@ -63,7 +61,7 @@ class PembayaranController extends Controller
         try {
             // Cek apakah pemesanan sudah memiliki pembayaran yang aktif
             $existingPembayaran = Pembayaran::where('id_pemesanan', $request->id_pemesanan)
-                ->whereNotIn('status_pembayaran', [Pembayaran::STATUS_GAGAL, Pembayaran::STATUS_EXPIRED])
+                ->whereNotIn('status_pembayaran', [Pembayaran::STATUS_GAGAL, Pembayaran::STATUS_KADALUARSA])
                 ->first();
 
             if ($existingPembayaran) {
@@ -78,8 +76,7 @@ class PembayaranController extends Controller
                 'channel' => $request->channel,
                 'jumlah_bayar' => $request->jumlah_bayar,
                 'status_pembayaran' => $request->status_pembayaran,
-                'tanggal_pembayaran' => $request->tanggal_pembayaran,
-                'external_id' => 'INV-' . time() . '-' . rand(1000, 9999),
+                // external_id akan di-generate otomatis oleh model boot method
             ]);
 
             // Update status pemesanan jika pembayaran sudah berhasil
@@ -124,11 +121,10 @@ class PembayaranController extends Controller
         $pembayaran = Pembayaran::with('pemesanan')->findOrFail($id);
         
         $metodePembayaran = [
-            Pembayaran::METHOD_TRANSFER => 'Transfer Bank',
-            Pembayaran::METHOD_COD => 'Cash on Delivery',
-            Pembayaran::METHOD_EWALLET => 'E-Wallet',
             Pembayaran::METHOD_VA => 'Virtual Account',
-            Pembayaran::METHOD_CREDIT_CARD => 'Kartu Kredit',
+            Pembayaran::METHOD_EWALLET => 'E-Wallet',
+            Pembayaran::METHOD_RETAIL => 'Retail Outlet',
+            Pembayaran::METHOD_COD => 'Cash on Delivery',
         ];
 
         $statusPembayaran = [
@@ -136,8 +132,7 @@ class PembayaranController extends Controller
             Pembayaran::STATUS_MENUNGGU => 'Menunggu Konfirmasi',
             Pembayaran::STATUS_SUDAH_BAYAR => 'Sudah Bayar',
             Pembayaran::STATUS_GAGAL => 'Gagal',
-            Pembayaran::STATUS_EXPIRED => 'Kadaluarsa',
-            Pembayaran::STATUS_REFUND => 'Refund',
+            Pembayaran::STATUS_KADALUARSA => 'Kadaluarsa',
         ];
 
         return view('admin.pembayaran.edit', compact('pembayaran', 'metodePembayaran', 'statusPembayaran'));
@@ -149,11 +144,10 @@ class PembayaranController extends Controller
     public function update(Request $request, string $id)
     {
         $request->validate([
-            'metode_pembayaran' => 'required|in:transfer,cod,ewallet,va,credit_card',
+            'metode_pembayaran' => 'required|in:va,ewallet,retail,cod',
             'channel' => 'nullable|string|max:255',
             'jumlah_bayar' => 'required|numeric|min:0',
-            'status_pembayaran' => 'required|in:belum_bayar,menunggu,sudah_bayar,gagal,expired,refund',
-            'tanggal_pembayaran' => 'nullable|date',
+            'status_pembayaran' => 'required|in:belum_bayar,menunggu,sudah_bayar,gagal,kadaluarsa',
         ]);
 
         DB::beginTransaction();
@@ -167,7 +161,6 @@ class PembayaranController extends Controller
                 'channel' => $request->channel,
                 'jumlah_bayar' => $request->jumlah_bayar,
                 'status_pembayaran' => $request->status_pembayaran,
-                'tanggal_pembayaran' => $request->tanggal_pembayaran,
             ]);
 
             // Update status pemesanan jika status pembayaran berubah
@@ -217,7 +210,7 @@ class PembayaranController extends Controller
     public function updateStatus(Request $request, string $id)
     {
         $request->validate([
-            'status_pembayaran' => 'required|in:belum_bayar,menunggu,sudah_bayar,gagal,expired,refund'
+            'status_pembayaran' => 'required|in:belum_bayar,menunggu,sudah_bayar,gagal,kadaluarsa'
         ]);
 
         DB::beginTransaction();
@@ -228,7 +221,6 @@ class PembayaranController extends Controller
 
             $pembayaran->update([
                 'status_pembayaran' => $request->status_pembayaran,
-                'tanggal_pembayaran' => $request->status_pembayaran === Pembayaran::STATUS_SUDAH_BAYAR ? now() : $pembayaran->tanggal_pembayaran,
             ]);
 
             // Update status pemesanan
@@ -237,7 +229,7 @@ class PembayaranController extends Controller
             DB::commit();
 
             return redirect()->back()
-                ->with('success', 'Status pembayaran berhasil diubah dari ' . $oldStatus . ' menjadi ' . $request->status_pembayaran);
+                ->with('success', 'Status pembayaran berhasil diubah.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -256,7 +248,7 @@ class PembayaranController extends Controller
         try {
             $pembayaran = Pembayaran::with('pemesanan')->findOrFail($id);
             
-            $pembayaran->markAsPaid();
+            $pembayaran->updateStatus(Pembayaran::STATUS_SUDAH_BAYAR);
 
             DB::commit();
 
@@ -280,7 +272,7 @@ class PembayaranController extends Controller
         try {
             $pembayaran = Pembayaran::findOrFail($id);
             
-            $pembayaran->markAsExpired();
+            $pembayaran->updateStatus(Pembayaran::STATUS_KADALUARSA);
 
             DB::commit();
 
@@ -315,13 +307,72 @@ class PembayaranController extends Controller
                 return response()->json(['error' => 'Pembayaran tidak ditemukan'], 404);
             }
 
-            $pembayaran->processWebhook($request->all());
+            // Process webhook data
+            $this->processWebhookData($pembayaran, $request->all());
 
             return response()->json(['message' => 'Webhook processed successfully']);
 
         } catch (\Exception $e) {
             \Log::error('Webhook error: ' . $e->getMessage());
             return response()->json(['error' => 'Internal server error'], 500);
+        }
+    }
+
+    /**
+     * Process webhook data dari payment gateway
+     */
+    private function processWebhookData(Pembayaran $pembayaran, array $data)
+    {
+        DB::beginTransaction();
+
+        try {
+            $status = $data['status'] ?? null;
+            $xenditId = $data['id'] ?? null;
+            
+            // Update data pembayaran dari webhook
+            $updateData = [
+                'xendit_id' => $xenditId,
+            ];
+
+            // Map status dari payment gateway ke status internal
+            $statusMapping = [
+                'PENDING' => Pembayaran::STATUS_MENUNGGU,
+                'PAID' => Pembayaran::STATUS_SUDAH_BAYAR,
+                'EXPIRED' => Pembayaran::STATUS_KADALUARSA,
+                'FAILED' => Pembayaran::STATUS_GAGAL,
+            ];
+
+            if ($status && array_key_exists($status, $statusMapping)) {
+                $updateData['status_pembayaran'] = $statusMapping[$status];
+            }
+
+            // Update additional fields jika tersedia
+            $additionalFields = [
+                'xendit_external_id',
+                'xendit_payment_url', 
+                'xendit_expiry_date',
+                'xendit_merchant_name',
+                'xendit_account_number',
+            ];
+
+            foreach ($additionalFields as $field) {
+                if (isset($data[$field])) {
+                    $updateData[$field] = $data[$field];
+                }
+            }
+
+            $pembayaran->update($updateData);
+
+            // Update status pemesanan jika pembayaran berhasil
+            if ($status === 'PAID' && $pembayaran->pemesanan) {
+                $pembayaran->pemesanan->update(['status' => Pemesanan::STATUS_DIPROSES]);
+            }
+
+            DB::commit();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
     }
 
@@ -344,7 +395,7 @@ class PembayaranController extends Controller
                 break;
                 
             case Pembayaran::STATUS_GAGAL:
-            case Pembayaran::STATUS_EXPIRED:
+            case Pembayaran::STATUS_KADALUARSA:
                 if ($pemesanan->status === Pemesanan::STATUS_DIPROSES) {
                     $pemesanan->update(['status' => Pemesanan::STATUS_PENDING]);
                 }
@@ -359,7 +410,7 @@ class PembayaranController extends Controller
     {
         $pemesanan = Pemesanan::whereDoesntHave('pembayaran')
             ->orWhereHas('pembayaran', function($query) {
-                $query->whereIn('status_pembayaran', [Pembayaran::STATUS_GAGAL, Pembayaran::STATUS_EXPIRED]);
+                $query->whereIn('status_pembayaran', [Pembayaran::STATUS_GAGAL, Pembayaran::STATUS_KADALUARSA]);
             })
             ->with('customer')
             ->get()
