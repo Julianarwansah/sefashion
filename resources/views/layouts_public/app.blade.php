@@ -9,7 +9,7 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Custom Styles -->
+
     <style>
         .hero-bg {
             background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
