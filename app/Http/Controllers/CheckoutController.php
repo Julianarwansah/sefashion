@@ -378,43 +378,50 @@ public function process(Request $request)
     {
         try {
             $pembayaran = Pembayaran::where('id_pemesanan', $orderId)->first();
-            
-            if (!$pembayaran || !$pembayaran->xendit_id) {
+
+            if (!$pembayaran) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Pembayaran tidak ditemukan'
                 ]);
             }
 
-            $result = $this->xenditService->getPaymentStatus(
-                $pembayaran->xendit_id, 
-                $pembayaran->metode_pembayaran
-            );
+            // If xendit_id exists, check with Xendit API
+            if ($pembayaran->xendit_id) {
+                $result = $this->xenditService->getPaymentStatus(
+                    $pembayaran->xendit_id,
+                    $pembayaran->metode_pembayaran
+                );
 
-            if ($result['success']) {
-                // Update status based on Xendit response
-                $status = $result['data']['status'] ?? null;
-                
-                if (in_array($status, ['COMPLETED', 'SUCCEEDED'])) {
-                    $pembayaran->update(['status_pembayaran' => Pembayaran::STATUS_SUDAH_BAYAR]);
-                    $pembayaran->pemesanan->update(['status' => Pemesanan::STATUS_DIPROSES]);
-                } elseif (in_array($status, ['FAILED', 'EXPIRED'])) {
-                    $pembayaran->update(['status_pembayaran' => Pembayaran::STATUS_GAGAL]);
+                if ($result['success']) {
+                    // Update status based on Xendit response
+                    $xenditStatus = $result['data']['status'] ?? null;
+
+                    if (in_array($xenditStatus, ['COMPLETED', 'SUCCEEDED', 'PAID'])) {
+                        $pembayaran->update(['status_pembayaran' => Pembayaran::STATUS_SUDAH_BAYAR]);
+                        $pembayaran->pemesanan->update(['status' => Pemesanan::STATUS_DIPROSES]);
+                    } elseif (in_array($xenditStatus, ['FAILED', 'EXPIRED'])) {
+                        $pembayaran->update(['status_pembayaran' => Pembayaran::STATUS_GAGAL]);
+                    }
                 }
-
-                return response()->json([
-                    'success' => true,
-                    'status' => $pembayaran->status_pembayaran,
-                    'xendit_status' => $status
-                ]);
             }
 
+            // Map status to frontend format
+            $statusMapping = [
+                Pembayaran::STATUS_SUDAH_BAYAR => 'paid',
+                Pembayaran::STATUS_GAGAL => 'failed',
+                Pembayaran::STATUS_BELUM_BAYAR => 'pending'
+            ];
+
             return response()->json([
-                'success' => false,
-                'message' => $result['error']
+                'success' => true,
+                'status' => $statusMapping[$pembayaran->status_pembayaran] ?? 'pending',
+                'internal_status' => $pembayaran->status_pembayaran
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('Payment Status Check Error:', ['error' => $e->getMessage(), 'order_id' => $orderId]);
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -461,8 +468,13 @@ public function process(Request $request)
      */
     public function paymentSuccess($orderId)
     {
-        $pemesanan = Pemesanan::with(['pembayaran', 'customer'])->find($orderId);
-        
+        $pemesanan = Pemesanan::with([
+            'pembayaran',
+            'customer',
+            'detailPemesanan.detailUkuran.produk.gambarProduk',
+            'detailPemesanan.detailUkuran.detailWarna'
+        ])->find($orderId);
+
         if (!$pemesanan) {
             return redirect()->route('home')->with('error', 'Pesanan tidak ditemukan');
         }

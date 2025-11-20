@@ -84,9 +84,29 @@ Route::middleware(['auth:customer'])->group(function () {
     Route::get('/payment/success/{orderId}', [CheckoutController::class, 'paymentSuccess'])->name('payment.success');
     Route::get('/payment/failed/{orderId}', [CheckoutController::class, 'paymentFailed'])->name('payment.failed');
     
-    // Order Success Route
+    // Order Success Route - Redirect to waiting payment
     Route::get('/order/success/{id}', function ($id) {
-        return view('frontend.order-success', ['orderId' => $id]);
+        $pemesanan = \App\Models\Pemesanan::with('pembayaran')->find($id);
+
+        if (!$pemesanan) {
+            return redirect()->route('home')->with('error', 'Order not found');
+        }
+
+        // If already paid, redirect to payment success
+        if ($pemesanan->pembayaran && $pemesanan->pembayaran->status_pembayaran === \App\Models\Pembayaran::STATUS_SUDAH_BAYAR) {
+            return redirect()->route('payment.success', $id);
+        }
+
+        // If payment failed, redirect to payment failed
+        if ($pemesanan->pembayaran && $pemesanan->pembayaran->status_pembayaran === \App\Models\Pembayaran::STATUS_GAGAL) {
+            return redirect()->route('payment.failed', $id);
+        }
+
+        // Otherwise show waiting payment page
+        return view('frontend.waiting-payment', [
+            'orderId' => $id,
+            'pemesanan' => $pemesanan
+        ]);
     })->name('order.success');
 
     // My Orders Routes
@@ -134,6 +154,8 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::resource('pengiriman', PengirimanController::class);
     Route::get('pengiriman/{id}/track', [PengirimanController::class, 'track'])->name('pengiriman.track');
 });
+Route::get('/dev/fake-pay/{orderId}', [CheckoutController::class, 'devMarkAsPaid'])
+    ->name('dev.fake-pay');
 
 // routes/web.php
 Route::get('/test-xendit', function() {
