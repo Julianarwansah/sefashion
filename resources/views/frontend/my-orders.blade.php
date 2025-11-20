@@ -45,11 +45,14 @@
                 <div class="h-10 w-px bg-gray-300 hidden sm:block"></div>
                 <div>
                   <p class="text-sm text-gray-600">Order Date</p>
-                  <p class="text-sm font-semibold text-gray-900">{{ \Carbon\Carbon::parse($order->tanggal_pemesanan)->format('d M Y, H:i') }}</p>
+                  <p class="text-sm font-semibold text-gray-900">
+                    {{ \Carbon\Carbon::parse($order->tanggal_pemesanan)->format('d M Y, H:i') }}
+                  </p>
                 </div>
               </div>
-              <div class="flex items-center gap-3">
+              <div class="flex flex-col items-start sm:items-end gap-2">
                 @php
+                  // STATUS ORDER
                   $statusConfig = [
                     'pending' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-800', 'label' => 'Pending Payment'],
                     'diproses' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'label' => 'Processing'],
@@ -58,10 +61,47 @@
                     'batal' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'label' => 'Cancelled'],
                   ];
                   $status = $statusConfig[$order->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => ucfirst($order->status)];
+
+                  // STATUS PEMBAYARAN
+                  $paymentStatus = $order->pembayaran->status_pembayaran ?? null;
+                  $normalizedPaymentStatus = $paymentStatus ? strtolower($paymentStatus) : null;
+
+                  $paidStatuses    = ['sudah bayar', 'sudah_bayar', 'paid', 'completed'];
+                  $failedStatuses  = ['gagal', 'failed', 'expired'];
+                  $pendingStatuses = ['belum bayar', 'belum_bayar', 'menunggu', 'pending'];
+
+                  if ($normalizedPaymentStatus && in_array($normalizedPaymentStatus, $paidStatuses)) {
+                      $paymentBadgeBg = 'bg-green-100';
+                      $paymentBadgeText = 'text-green-800';
+                      $paymentLabel = 'Paid';
+                      $isPaid = true;
+                  } elseif ($normalizedPaymentStatus && in_array($normalizedPaymentStatus, $failedStatuses)) {
+                      $paymentBadgeBg = 'bg-red-100';
+                      $paymentBadgeText = 'text-red-800';
+                      $paymentLabel = 'Failed';
+                      $isPaid = false;
+                  } else {
+                      // default pending
+                      $paymentBadgeBg = 'bg-yellow-100';
+                      $paymentBadgeText = 'text-yellow-800';
+                      $paymentLabel = 'Pending';
+                      $isPaid = false;
+                  }
                 @endphp
-                <span class="px-4 py-2 rounded-full text-sm font-semibold {{ $status['bg'] }} {{ $status['text'] }}">
-                  {{ $status['label'] }}
-                </span>
+                <div class="flex flex-wrap gap-2 justify-end">
+                  <span class="px-4 py-2 rounded-full text-sm font-semibold {{ $status['bg'] }} {{ $status['text'] }}">
+                    {{ $status['label'] }}
+                  </span>
+
+                  @if($order->pembayaran)
+                  <span class="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 {{ $paymentBadgeBg }} {{ $paymentBadgeText }}">
+                    <span class="inline-block w-2 h-2 rounded-full
+                      {{ $isPaid ? 'bg-green-500' : ($paymentLabel === 'Failed' ? 'bg-red-500' : 'bg-yellow-500') }}">
+                    </span>
+                    Payment: {{ $paymentLabel }}
+                  </span>
+                  @endif
+                </div>
               </div>
             </div>
           </div>
@@ -89,7 +129,9 @@
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="font-semibold text-gray-900 truncate">{{ $item->detailUkuran->produk->nama_produk }}</p>
-                  <p class="text-sm text-gray-600">Size: {{ $item->detailUkuran->ukuran }} • Qty: {{ $item->jumlah }}</p>
+                  <p class="text-sm text-gray-600">
+                    Size: {{ $item->detailUkuran->ukuran }} • Qty: {{ $item->jumlah }}
+                  </p>
                 </div>
                 <div class="text-right">
                   <p class="font-bold text-gray-900">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</p>
@@ -110,11 +152,13 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <p class="text-sm text-gray-600 mb-1">Total Amount</p>
-                <p class="text-xl font-bold text-gray-900">Rp {{ number_format($order->total_harga, 0, ',', '.') }}</p>
+                <p class="text-xl font-bold text-gray-900">
+                  Rp {{ number_format($order->total_harga, 0, ',', '.') }}
+                </p>
               </div>
               <div class="flex flex-wrap gap-2">
-                {{-- Pay Now Button - Show if pending and not paid --}}
-                @if($order->status === 'pending' && $order->pembayaran && $order->pembayaran->status_pembayaran !== 'sudah bayar')
+                {{-- Pay Now Button - Show if pending and NOT paid --}}
+                @if($order->status === 'pending' && $order->pembayaran && !$isPaid)
                 <a href="{{ route('order.success', $order->id_pemesanan) }}"
                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition font-bold shadow-md">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,7 +177,7 @@
                   View Details
                 </a>
 
-                @if($order->status === 'pending')
+                @if($order->status === 'pending' && !$isPaid)
                 <form action="{{ route('order.cancel', $order->id_pemesanan) }}" method="POST"
                       onsubmit="return confirm('Are you sure you want to cancel this order?')">
                   @csrf
@@ -167,7 +211,7 @@
 @if(session('success'))
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    alert('{{ session('success') }}');
+    alert(@json(session('success')));
   });
 </script>
 @endif
@@ -175,7 +219,7 @@
 @if(session('error'))
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    alert('{{ session('error') }}');
+    alert(@json(session('error')));
   });
 </script>
 @endif
