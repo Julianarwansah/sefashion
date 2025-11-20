@@ -112,7 +112,18 @@
                 <p class="text-sm text-gray-600 mb-1">Total Amount</p>
                 <p class="text-xl font-bold text-gray-900">Rp {{ number_format($order->total_harga, 0, ',', '.') }}</p>
               </div>
-              <div class="flex gap-2">
+              <div class="flex flex-wrap gap-2">
+                {{-- Pay Now Button - Show if pending and not paid --}}
+                @if($order->status === 'pending' && $order->pembayaran && $order->pembayaran->status_pembayaran !== 'sudah bayar')
+                <a href="{{ route('order.success', $order->id_pemesanan) }}"
+                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition font-bold shadow-md">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  </svg>
+                  Pay Now
+                </a>
+                @endif
+
                 <a href="{{ route('order.detail', $order->id_pemesanan) }}"
                    class="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-black transition font-semibold">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,7 +142,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
-                    Cancel Order
+                    Cancel
                   </button>
                 </form>
                 @endif

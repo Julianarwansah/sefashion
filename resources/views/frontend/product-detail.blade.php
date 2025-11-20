@@ -419,10 +419,18 @@ function addToCart() {
     })
     .then(data => {
         if (data.success) {
-            showToast(data.message, 'success');
-            
+            // Show beautiful modal instead of toast
+            showCartNotification({
+                product_name: data.cart_item.product_name,
+                size: data.cart_item.size,
+                color: data.cart_item.color,
+                quantity: data.cart_item.quantity,
+                image: data.cart_item.image,
+                cart_count: data.cart_count
+            });
+
             updateCartCount(data.cart_count);
-            
+
         } else {
             throw new Error(data.message || 'Failed to add to cart');
         }

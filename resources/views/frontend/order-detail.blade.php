@@ -281,17 +281,31 @@
 
         {{-- Actions --}}
         @if($order->status === 'pending')
-        <form action="{{ route('order.cancel', $order->id_pemesanan) }}" method="POST"
-              onsubmit="return confirm('Are you sure you want to cancel this order?')">
-          @csrf
-          <button type="submit"
-                  class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-red-300 text-red-700 rounded-xl hover:bg-red-50 transition font-semibold">
+        <div class="space-y-3">
+          {{-- Pay Now Button - Show only if payment not completed --}}
+          @if($order->pembayaran && $order->pembayaran->status_pembayaran !== 'sudah bayar')
+          <a href="{{ route('order.success', $order->id_pemesanan) }}"
+             class="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition font-bold shadow-lg hover:shadow-xl">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
             </svg>
-            Cancel This Order
-          </button>
-        </form>
+            Complete Payment Now
+          </a>
+          @endif
+
+          {{-- Cancel Order Button --}}
+          <form action="{{ route('order.cancel', $order->id_pemesanan) }}" method="POST"
+                onsubmit="return confirm('Are you sure you want to cancel this order?')">
+            @csrf
+            <button type="submit"
+                    class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-red-300 text-red-700 rounded-xl hover:bg-red-50 transition font-semibold">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              Cancel This Order
+            </button>
+          </form>
+        </div>
         @endif
       </div>
     </div>
