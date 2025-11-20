@@ -124,7 +124,11 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     
     // Dashboard Routes
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // AJAX Routes untuk dashboard
+    Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart');
+    Route::get('/dashboard/real-time-stats', [DashboardController::class, 'getRealTimeStats'])->name('dashboard.stats');
     
     // AJAX Routes untuk dashboard
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart');
