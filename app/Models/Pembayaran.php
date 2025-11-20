@@ -222,4 +222,16 @@ class Pembayaran extends Model
               ->orWhere('xendit_expiry_date', '>', now());
         });
     }
+
+public function isFailed()
+{
+    return $this->status_pembayaran === self::STATUS_GAGAL;
+}
+
+
+public function isUnpaid()
+{
+    return $this->status_pembayaran === self::STATUS_BELUM_BAYAR;
+}
+
 }
