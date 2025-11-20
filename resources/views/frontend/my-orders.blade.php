@@ -107,7 +107,7 @@
           </div>
 
           {{-- Order Items --}}
-          <div class="px-6 py-4">
+          <div class="px-6 py-4 border-b border-gray-200">
             <div class="space-y-3">
               @foreach($order->detailPemesanan->take(2) as $item)
               <div class="flex items-center gap-4">
@@ -146,6 +146,109 @@
               @endif
             </div>
           </div>
+
+          {{-- Shipment Tracking Status --}}
+          @if($isPaid)
+          <div class="px-6 py-4 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200">
+            <h4 class="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+              </svg>
+              Shipment Tracking
+            </h4>
+
+            @php
+              // Define tracking stages
+              $trackingStages = [
+                ['key' => 'pending', 'label' => 'Payment Confirmed', 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
+                ['key' => 'diproses', 'label' => 'Processing', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
+                ['key' => 'dikirim', 'label' => 'Shipped', 'icon' => 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4'],
+                ['key' => 'selesai', 'label' => 'Delivered', 'icon' => 'M5 13l4 4L19 7']
+              ];
+
+              // Determine current stage index based on order status
+              $trackingIndex = 0;
+              if($order->status === 'pending' && $isPaid) {
+                $trackingIndex = 0; // Payment confirmed
+              } elseif($order->status === 'diproses') {
+                $trackingIndex = 1; // Processing
+              } elseif($order->status === 'dikirim') {
+                $trackingIndex = 2; // Shipped
+              } elseif($order->status === 'selesai') {
+                $trackingIndex = 3; // Delivered
+              }
+            @endphp
+
+            <div class="relative">
+              <div class="grid grid-cols-4 gap-2">
+                @foreach($trackingStages as $index => $stage)
+                  @php
+                    $isCompleted = $index <= $trackingIndex;
+                    $isCurrent = $index === $trackingIndex;
+                  @endphp
+                  <div class="flex flex-col items-center relative">
+                    {{-- Circle --}}
+                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-2 transition-all
+                      {{ $isCompleted ? 'bg-gray-900 text-white shadow-md' : 'bg-gray-300 text-gray-500' }}
+                      {{ $isCurrent ? 'ring-4 ring-gray-400 scale-110' : '' }}">
+                      <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="{{ $stage['icon'] }}"/>
+                      </svg>
+                    </div>
+
+                    {{-- Label --}}
+                    <p class="text-xs text-center font-semibold leading-tight {{ $isCompleted ? 'text-gray-900' : 'text-gray-500' }}">
+                      {{ $stage['label'] }}
+                    </p>
+
+                    {{-- Connecting Line --}}
+                    @if($index < count($trackingStages) - 1)
+                    <div class="absolute top-5 md:top-6 left-1/2 w-full h-1 -z-10 transition-all
+                      {{ $index < $trackingIndex ? 'bg-gray-900' : 'bg-gray-300' }}"
+                      style="transform: translateX(50%);"></div>
+                    @endif
+                  </div>
+                @endforeach
+              </div>
+
+              {{-- Status Message --}}
+              <div class="mt-4 text-center">
+                <p class="text-xs text-gray-600">
+                  @if($order->status === 'pending' && $isPaid)
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-800 rounded-full font-semibold">
+                      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                      </svg>
+                      Payment received - Your order is being prepared
+                    </span>
+                  @elseif($order->status === 'diproses')
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full font-semibold">
+                      <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Order is being processed
+                    </span>
+                  @elseif($order->status === 'dikirim')
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-800 rounded-full font-semibold">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                      </svg>
+                      Package is on the way
+                    </span>
+                  @elseif($order->status === 'selesai')
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-800 rounded-full font-semibold">
+                      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                      </svg>
+                      Order has been delivered
+                    </span>
+                  @endif
+                </p>
+              </div>
+            </div>
+          </div>
+          @endif
 
           {{-- Order Footer --}}
           <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">

@@ -17,15 +17,15 @@
         </button>
 
         {{-- Success Icon with particles --}}
-        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 px-6 pt-8 pb-6 relative overflow-hidden">
+        <div class="bg-gradient-to-br from-gray-50 to-gray-100 px-6 pt-8 pb-6 relative overflow-hidden">
           {{-- Decorative circles --}}
-          <div class="absolute top-0 right-0 w-32 h-32 bg-blue-200 rounded-full opacity-20 blur-3xl animate-pulse"></div>
-          <div class="absolute bottom-0 left-0 w-40 h-40 bg-indigo-200 rounded-full opacity-20 blur-3xl animate-pulse animation-delay-300"></div>
+          <div class="absolute top-0 right-0 w-32 h-32 bg-gray-300 rounded-full opacity-20 blur-3xl animate-pulse"></div>
+          <div class="absolute bottom-0 left-0 w-40 h-40 bg-gray-400 rounded-full opacity-20 blur-3xl animate-pulse animation-delay-300"></div>
 
           <div class="flex flex-col items-center relative z-10">
             {{-- Animated Shopping Bag Icon --}}
             <div class="relative mb-6 animate-bounce-in">
-              <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg animate-scale-in">
+              <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-gray-700 to-gray-900 shadow-lg animate-scale-in">
                 <svg class="h-12 w-12 text-white animate-wiggle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                 </svg>
@@ -56,23 +56,23 @@
                 </div>
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-2">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" id="modalProductSize">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800" id="modalProductSize">
                       <!-- Size -->
                     </span>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800" id="modalProductColor">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800" id="modalProductColor">
                       <!-- Color -->
                     </span>
                   </div>
                   <div class="flex items-center gap-2">
                     <span class="text-sm text-gray-500">Qty:</span>
-                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold text-sm shadow-sm" id="modalProductQty">1</span>
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-gray-700 to-gray-900 text-white font-bold text-sm shadow-sm" id="modalProductQty">1</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {{-- Cart Summary --}}
-            <div class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl px-6 py-4 mb-6 animate-fade-in-up animation-delay-300 shadow-lg">
+            <div class="w-full bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl px-6 py-4 mb-6 animate-fade-in-up animation-delay-300 shadow-lg">
               <div class="flex items-center justify-center gap-3 text-white">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -95,7 +95,7 @@
                 Continue Shopping
               </button>
               <a href="{{ route('cart.index') }}"
-                 class="flex-1 inline-flex justify-center items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3.5 text-sm font-bold text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl">
+                 class="flex-1 inline-flex justify-center items-center gap-2 rounded-xl bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-3.5 text-sm font-bold text-white hover:from-gray-900 hover:to-black transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                 </svg>
