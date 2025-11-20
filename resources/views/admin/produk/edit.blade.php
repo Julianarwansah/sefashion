@@ -1,434 +1,469 @@
 @extends('layouts.app')
 
+@section('title', 'Edit Produk - ' . $produk->nama_produk)
+
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Edit Produk - {{ $produk->nama_produk }}</h3>
-                    <div class="card-tools">
-                        <a href="{{ route('admin.produk.show', $produk->id_produk) }}" class="btn btn-sm btn-info">
-                            <i class="fas fa-eye"></i> Detail
-                        </a>
-                        <a href="{{ route('admin.produk.index') }}" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Kembali
-                        </a>
-                    </div>
+<div class="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-4 lg:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">Edit Produk</h1>
+                    <p class="text-gray-600">{{ $produk->nama_produk }}</p>
                 </div>
-                <form action="{{ route('admin.produk.update', $produk->id_produk) }}" method="POST" enctype="multipart/form-data" id="produkForm">
-                    @csrf
-                    @method('PUT')
-                    <div class="card-body">
-                        <!-- Alert -->
-                        @if($errors->any())
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <strong>Terjadi kesalahan!</strong> Silakan periksa form di bawah.
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                        @endif
-
-                        <!-- Informasi Produk -->
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="form-group">
-                                    <label for="nama_produk">Nama Produk <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('nama_produk') is-invalid @enderror" 
-                                           id="nama_produk" name="nama_produk" 
-                                           value="{{ old('nama_produk', $produk->nama_produk) }}" 
-                                           placeholder="Masukkan nama produk" required maxlength="100">
-                                    @error('nama_produk')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="deskripsi">Deskripsi</label>
-                                    <textarea class="form-control @error('deskripsi') is-invalid @enderror" 
-                                              id="deskripsi" name="deskripsi" rows="4" 
-                                              placeholder="Masukkan deskripsi produk">{{ old('deskripsi', $produk->deskripsi) }}</textarea>
-                                    @error('deskripsi')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="kategori">Kategori</label>
-                                    <input type="text" class="form-control @error('kategori') is-invalid @enderror" 
-                                           id="kategori" name="kategori" 
-                                           value="{{ old('kategori', $produk->kategori) }}" 
-                                           placeholder="Masukkan kategori produk" maxlength="50">
-                                    @error('kategori')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="gambar">Gambar Utama</label>
-                                    <div class="custom-file">
-                                        <input type="file" class="custom-file-input @error('gambar') is-invalid @enderror" 
-                                               id="gambar" name="gambar" accept="image/*">
-                                        <label class="custom-file-label" for="gambar">Pilih gambar baru...</label>
-                                    </div>
-                                    @error('gambar')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
-                                    <small class="form-text text-muted">Format: JPEG, PNG, JPG, GIF, WEBP. Maksimal 2MB</small>
-                                    
-                                    @if($produk->gambar)
-                                        <div class="mt-2" id="previewGambar">
-                                            <div class="preview-container">
-                                                <img src="{{ $produk->gambar_url }}" class="preview-gambar" alt="Gambar Utama">
-                                            </div>
-                                            <small class="form-text text-info">
-                                                <i class="fas fa-info-circle"></i> Gambar saat ini
-                                            </small>
-                                        </div>
-                                    @else
-                                        <div class="mt-2" id="previewGambar"></div>
-                                    @endif
-                                </div>
-
-                                <!-- Info Stok -->
-                                <div class="card bg-light">
-                                    <div class="card-body">
-                                        <h6 class="card-title">Informasi Stok</h6>
-                                        <p class="mb-1">Total Stok: <strong>{{ $produk->total_stok }}</strong></p>
-                                        <p class="mb-1">Varian Warna: <strong>{{ $produk->detailWarna->count() }}</strong></p>
-                                        <p class="mb-0">Varian Ukuran: <strong>{{ $produk->detailUkuran->count() }}</strong></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Warna Produk -->
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5>Warna Produk <span class="text-danger">*</span></h5>
-                                    <button type="button" class="btn btn-sm btn-primary" id="tambahWarna">
-                                        <i class="fas fa-plus"></i> Tambah Warna
-                                    </button>
-                                </div>
-                                
-                                <div id="warnaContainer">
-                                    @php
-                                        $warnaData = old('warna', $produk->detailWarna->map(function($warna) {
-                                            return [
-                                                'id_warna' => $warna->id_warna,
-                                                'nama_warna' => $warna->nama_warna,
-                                                'kode_warna' => $warna->kode_warna
-                                            ];
-                                        })->toArray());
-                                    @endphp
-
-                                    @foreach($warnaData as $index => $warna)
-                                        <div class="card mb-3 warna-item">
-                                            <div class="card-body">
-                                                <div class="row">
-                                                    <div class="col-md-5">
-                                                        <div class="form-group">
-                                                            <label>Nama Warna</label>
-                                                            <input type="text" class="form-control @error('warna.'.$index.'.nama_warna') is-invalid @enderror" 
-                                                                   name="warna[{{ $index }}][nama_warna]" 
-                                                                   value="{{ $warna['nama_warna'] }}" 
-                                                                   placeholder="Contoh: Merah, Biru, Hitam" required maxlength="100">
-                                                            @if(isset($warna['id_warna']))
-                                                                <input type="hidden" name="warna[{{ $index }}][id_warna]" value="{{ $warna['id_warna'] }}">
-                                                            @endif
-                                                            @error('warna.'.$index.'.nama_warna')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-5">
-                                                        <div class="form-group">
-                                                            <label>Kode Warna</label>
-                                                            <input type="text" class="form-control @error('warna.'.$index.'.kode_warna') is-invalid @enderror" 
-                                                                   name="warna[{{ $index }}][kode_warna]" 
-                                                                   value="{{ $warna['kode_warna'] }}" 
-                                                                   placeholder="Contoh: #FF0000 atau red" maxlength="50">
-                                                            @error('warna.'.$index.'.kode_warna')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <div class="form-group">
-                                                            <label>&nbsp;</label>
-                                                            <button type="button" class="btn btn-danger btn-block hapus-warna" {{ $loop->first && $produk->detailWarna->count() <= 1 ? 'disabled' : '' }}>
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Ukuran dan Harga -->
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5>Ukuran dan Harga <span class="text-danger">*</span></h5>
-                                    <button type="button" class="btn btn-sm btn-primary" id="tambahUkuran">
-                                        <i class="fas fa-plus"></i> Tambah Ukuran
-                                    </button>
-                                </div>
-                                
-                                <div id="ukuranContainer">
-                                    @php
-                                        $ukuranData = old('ukuran', $produk->detailUkuran->map(function($ukuran) {
-                                            return [
-                                                'id_ukuran' => $ukuran->id_ukuran,
-                                                'id_warna' => $ukuran->id_warna,
-                                                'ukuran' => $ukuran->ukuran,
-                                                'harga' => $ukuran->harga,
-                                                'stok' => $ukuran->stok,
-                                                'tambahan' => $ukuran->tambahan
-                                            ];
-                                        })->toArray());
-                                    @endphp
-
-                                    @foreach($ukuranData as $index => $ukuran)
-                                        <div class="card mb-3 ukuran-item">
-                                            <div class="card-body">
-                                                <div class="row">
-                                                    <div class="col-md-3">
-                                                        <div class="form-group">
-                                                            <label>Warna <span class="text-danger">*</span></label>
-                                                            <select class="form-control @error('ukuran.'.$index.'.id_warna') is-invalid @enderror" 
-                                                                    name="ukuran[{{ $index }}][id_warna]" required>
-                                                                <option value="">Pilih Warna</option>
-                                                                @foreach($produk->detailWarna as $warna)
-                                                                    <option value="{{ $warna->id_warna }}" 
-                                                                            {{ ($ukuran['id_warna'] == $warna->id_warna) ? 'selected' : '' }}>
-                                                                        {{ $warna->nama_warna }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
-                                                            @if(isset($ukuran['id_ukuran']))
-                                                                <input type="hidden" name="ukuran[{{ $index }}][id_ukuran]" value="{{ $ukuran['id_ukuran'] }}">
-                                                            @endif
-                                                            @error('ukuran.'.$index.'.id_warna')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <div class="form-group">
-                                                            <label>Ukuran <span class="text-danger">*</span></label>
-                                                            <input type="text" class="form-control @error('ukuran.'.$index.'.ukuran') is-invalid @enderror" 
-                                                                   name="ukuran[{{ $index }}][ukuran]" 
-                                                                   value="{{ $ukuran['ukuran'] }}" 
-                                                                   placeholder="S, M, L, XL" required maxlength="50">
-                                                            @error('ukuran.'.$index.'.ukuran')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <div class="form-group">
-                                                            <label>Harga (Rp) <span class="text-danger">*</span></label>
-                                                            <input type="number" class="form-control @error('ukuran.'.$index.'.harga') is-invalid @enderror" 
-                                                                   name="ukuran[{{ $index }}][harga]" 
-                                                                   value="{{ $ukuran['harga'] }}" 
-                                                                   min="0" step="1000" placeholder="0" required>
-                                                            @error('ukuran.'.$index.'.harga')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <div class="form-group">
-                                                            <label>Stok <span class="text-danger">*</span></label>
-                                                            <input type="number" class="form-control @error('ukuran.'.$index.'.stok') is-invalid @enderror" 
-                                                                   name="ukuran[{{ $index }}][stok]" 
-                                                                   value="{{ $ukuran['stok'] }}" 
-                                                                   min="0" placeholder="0" required>
-                                                            @error('ukuran.'.$index.'.stok')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <div class="form-group">
-                                                            <label>Keterangan</label>
-                                                            <input type="text" class="form-control @error('ukuran.'.$index.'.tambahan') is-invalid @enderror" 
-                                                                   name="ukuran[{{ $index }}][tambahan]" 
-                                                                   value="{{ $ukuran['tambahan'] }}" 
-                                                                   placeholder="Opsional" maxlength="255">
-                                                            @error('ukuran.'.$index.'.tambahan')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-1">
-                                                        <div class="form-group">
-                                                            <label>&nbsp;</label>
-                                                            <button type="button" class="btn btn-danger btn-block hapus-ukuran" {{ $loop->first && $produk->detailUkuran->count() <= 1 ? 'disabled' : '' }}>
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Gambar Produk Tambahan -->
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5>Gambar Produk Tambahan</h5>
-                                    <div>
-                                        <a href="{{ route('admin.produk.show', $produk->id_produk) }}#gambar" class="btn btn-sm btn-info mr-2">
-                                            <i class="fas fa-images"></i> Kelola Gambar
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-primary" id="tambahGambarGroup">
-                                            <i class="fas fa-plus"></i> Tambah Gambar
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle"></i>
-                                    Untuk mengatur gambar utama atau menghapus gambar, silakan gunakan menu "Kelola Gambar" atau pergi ke halaman detail produk.
-                                </div>
-                                
-                                <div id="gambarContainer">
-                                    @php
-                                        $gambarData = old('gambar_produk', []);
-                                    @endphp
-
-                                    @if(count($gambarData) > 0)
-                                        @foreach($gambarData as $index => $gambarGroup)
-                                            <div class="card mb-3 gambar-group-item">
-                                                <div class="card-header">
-                                                    <h6 class="card-title mb-0">Gambar Baru {{ $index + 1 }}</h6>
-                                                </div>
-                                                <div class="card-body">
-                                                    <div class="row">
-                                                        <div class="col-md-4">
-                                                            <div class="form-group">
-                                                                <label>Pilih Warna (Opsional)</label>
-                                                                <select class="form-control" name="gambar_produk[{{ $index }}][id_warna]">
-                                                                    <option value="">Pilih Warna</option>
-                                                                    @foreach($produk->detailWarna as $warna)
-                                                                        <option value="{{ $warna->id_warna }}" 
-                                                                                {{ (isset($gambarGroup['id_warna']) && $gambarGroup['id_warna'] == $warna->id_warna) ? 'selected' : '' }}>
-                                                                            {{ $warna->nama_warna }}
-                                                                        </option>
-                                                                    @endforeach
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <div class="form-group">
-                                                                <label>Upload Gambar</label>
-                                                                <div class="custom-file">
-                                                                    <input type="file" class="custom-file-input @error('gambar_produk.'.$index.'.gambar') is-invalid @enderror" 
-                                                                           name="gambar_produk[{{ $index }}][gambar][]" 
-                                                                           multiple accept="image/*">
-                                                                    <label class="custom-file-label">Pilih beberapa gambar...</label>
-                                                                </div>
-                                                                @error('gambar_produk.'.$index.'.gambar')
-                                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                                @enderror
-                                                                <small class="form-text text-muted">Format: JPEG, PNG, JPG, GIF, WEBP. Maksimal 2MB per gambar</small>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-2">
-                                                            <div class="form-group">
-                                                                <label>&nbsp;</label>
-                                                                <button type="button" class="btn btn-danger btn-block hapus-gambar-group">
-                                                                    <i class="fas fa-trash"></i>
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="mt-2 preview-gambar-group" id="previewGambarGroup{{ $index }}"></div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    @else
-                                        <!-- Default empty state -->
-                                        <div class="text-center py-4 border rounded bg-light">
-                                            <i class="fas fa-images fa-2x text-muted mb-3"></i>
-                                            <p class="text-muted mb-0">Tidak ada gambar baru yang akan ditambahkan.</p>
-                                            <small class="text-muted">Klik "Tambah Gambar" untuk menambahkan gambar baru.</small>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Update Produk
-                        </button>
-                        <a href="{{ route('admin.produk.show', $produk->id_produk) }}" class="btn btn-info">
-                            <i class="fas fa-eye"></i> Lihat Detail
-                        </a>
-                        <a href="{{ route('admin.produk.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Batal
-                        </a>
-                    </div>
-                </form>
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ route('admin.produk.show', $produk->id_produk) }}" 
+                       class="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        Lihat Detail
+                    </a>
+                    <a href="{{ route('admin.produk.index') }}" 
+                       class="inline-flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        Kembali
+                    </a>
+                </div>
             </div>
         </div>
+
+        <!-- Alert Messages -->
+        <div class="mb-6 space-y-3">
+            @if($errors->any())
+                <div id="error-alert" class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm">
+                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="flex-1">Terjadi kesalahan! Silakan periksa form di bawah.</span>
+                    <button type="button" onclick="dismissAlert('error-alert')" class="text-red-500 hover:text-red-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            @endif
+
+            @if(session('success'))
+                <div id="success-alert" class="flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl shadow-sm">
+                    <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="flex-1">{{ session('success') }}</span>
+                    <button type="button" onclick="dismissAlert('success-alert')" class="text-green-500 hover:text-green-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            @endif
+        </div>
+
+        <!-- Form Section -->
+        <form action="{{ route('admin.produk.update', $produk->id_produk) }}" method="POST" enctype="multipart/form-data" id="produkForm">
+            @csrf
+            @method('PUT')
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Main Form -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Basic Information Card -->
+                    <div class="bg-white/80 glass rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+                        <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                            <h2 class="text-xl font-bold">Informasi Dasar Produk</h2>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <!-- Nama Produk -->
+                            <div>
+                                <label for="nama_produk" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Nama Produk <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" 
+                                       id="nama_produk" 
+                                       name="nama_produk" 
+                                       value="{{ old('nama_produk', $produk->nama_produk) }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 @error('nama_produk') border-red-500 @enderror"
+                                       placeholder="Masukkan nama produk"
+                                       required
+                                       maxlength="100">
+                                @error('nama_produk')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Deskripsi -->
+                            <div>
+                                <label for="deskripsi" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Deskripsi
+                                </label>
+                                <textarea 
+                                    id="deskripsi" 
+                                    name="deskripsi" 
+                                    rows="4"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 @error('deskripsi') border-red-500 @enderror"
+                                    placeholder="Masukkan deskripsi produk">{{ old('deskripsi', $produk->deskripsi) }}</textarea>
+                                @error('deskripsi')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Kategori -->
+                            <div>
+                                <label for="kategori" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Kategori
+                                </label>
+                                <input type="text" 
+                                       id="kategori" 
+                                       name="kategori" 
+                                       value="{{ old('kategori', $produk->kategori) }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 @error('kategori') border-red-500 @enderror"
+                                       placeholder="Masukkan kategori produk"
+                                       maxlength="50">
+                                @error('kategori')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Warna Produk Card -->
+                    <div class="bg-white/80 glass rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+                        <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white flex justify-between items-center">
+                            <h2 class="text-xl font-bold">Varian Warna</h2>
+                            <button type="button" 
+                                    id="tambahWarna"
+                                    class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Tambah Warna
+                            </button>
+                        </div>
+                        <div class="p-6">
+                            <div id="warnaContainer" class="space-y-4">
+                                @php
+                                    $warnaData = old('warna', $produk->detailWarna->map(function($warna) {
+                                        return [
+                                            'id_warna' => $warna->id_warna,
+                                            'nama_warna' => $warna->nama_warna,
+                                            'kode_warna' => $warna->kode_warna
+                                        ];
+                                    })->toArray());
+                                @endphp
+
+                                @foreach($warnaData as $index => $warna)
+                                    <div class="warna-item bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-200">
+                                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                                            <div class="lg:col-span-5">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Nama Warna <span class="text-red-500">*</span>
+                                                </label>
+                                                <input type="text" 
+                                                       name="warna[{{ $index }}][nama_warna]" 
+                                                       value="{{ $warna['nama_warna'] }}"
+                                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('warna.'.$index.'.nama_warna') border-red-500 @enderror"
+                                                       placeholder="Contoh: Merah, Biru, Hitam"
+                                                       required
+                                                       maxlength="100">
+                                                @if(isset($warna['id_warna']))
+                                                    <input type="hidden" name="warna[{{ $index }}][id_warna]" value="{{ $warna['id_warna'] }}">
+                                                @endif
+                                                @error('warna.'.$index.'.nama_warna')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div class="lg:col-span-5">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Kode Warna
+                                                </label>
+                                                <input type="text" 
+                                                       name="warna[{{ $index }}][kode_warna]" 
+                                                       value="{{ $warna['kode_warna'] }}"
+                                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('warna.'.$index.'.kode_warna') border-red-500 @enderror"
+                                                       placeholder="Contoh: #FF0000 atau red"
+                                                       maxlength="50">
+                                                @error('warna.'.$index.'.kode_warna')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div class="lg:col-span-2">
+                                                <button type="button" 
+                                                        class="hapus-warna w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                                        {{ $loop->first && $produk->detailWarna->count() <= 1 ? 'disabled' : '' }}>
+                                                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ukuran dan Harga Card -->
+                    <div class="bg-white/80 glass rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+                        <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white flex justify-between items-center">
+                            <h2 class="text-xl font-bold">Varian Ukuran & Harga</h2>
+                            <button type="button" 
+                                    id="tambahUkuran"
+                                    class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Tambah Ukuran
+                            </button>
+                        </div>
+                        <div class="p-6">
+                            <div id="ukuranContainer" class="space-y-4">
+                                @php
+                                    $ukuranData = old('ukuran', $produk->detailUkuran->map(function($ukuran) {
+                                        return [
+                                            'id_ukuran' => $ukuran->id_ukuran,
+                                            'id_warna' => $ukuran->id_warna,
+                                            'ukuran' => $ukuran->ukuran,
+                                            'harga' => $ukuran->harga,
+                                            'stok' => $ukuran->stok,
+                                            'tambahan' => $ukuran->tambahan
+                                        ];
+                                    })->toArray());
+                                @endphp
+
+                                @foreach($ukuranData as $index => $ukuran)
+                                    <div class="ukuran-item bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 border border-green-200">
+                                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                                            <div class="lg:col-span-3">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Warna <span class="text-red-500">*</span>
+                                                </label>
+                                                <select name="ukuran[{{ $index }}][id_warna]" 
+                                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 @error('ukuran.'.$index.'.id_warna') border-red-500 @enderror"
+                                                        required>
+                                                    <option value="">Pilih Warna</option>
+                                                    @foreach($produk->detailWarna as $warna)
+                                                        <option value="{{ $warna->id_warna }}" 
+                                                                {{ ($ukuran['id_warna'] == $warna->id_warna) ? 'selected' : '' }}>
+                                                            {{ $warna->nama_warna }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @if(isset($ukuran['id_ukuran']))
+                                                    <input type="hidden" name="ukuran[{{ $index }}][id_ukuran]" value="{{ $ukuran['id_ukuran'] }}">
+                                                @endif
+                                                @error('ukuran.'.$index.'.id_warna')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div class="lg:col-span-2">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Ukuran <span class="text-red-500">*</span>
+                                                </label>
+                                                <input type="text" 
+                                                       name="ukuran[{{ $index }}][ukuran]" 
+                                                       value="{{ $ukuran['ukuran'] }}"
+                                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 @error('ukuran.'.$index.'.ukuran') border-red-500 @enderror"
+                                                       placeholder="S, M, L, XL"
+                                                       required
+                                                       maxlength="50">
+                                                @error('ukuran.'.$index.'.ukuran')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div class="lg:col-span-2">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Harga (Rp) <span class="text-red-500">*</span>
+                                                </label>
+                                                <input type="number" 
+                                                       name="ukuran[{{ $index }}][harga]" 
+                                                       value="{{ $ukuran['harga'] }}"
+                                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 @error('ukuran.'.$index.'.harga') border-red-500 @enderror"
+                                                       min="0" 
+                                                       step="1000" 
+                                                       placeholder="0"
+                                                       required>
+                                                @error('ukuran.'.$index.'.harga')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div class="lg:col-span-2">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Stok <span class="text-red-500">*</span>
+                                                </label>
+                                                <input type="number" 
+                                                       name="ukuran[{{ $index }}][stok]" 
+                                                       value="{{ $ukuran['stok'] }}"
+                                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 @error('ukuran.'.$index.'.stok') border-red-500 @enderror"
+                                                       min="0" 
+                                                       placeholder="0"
+                                                       required>
+                                                @error('ukuran.'.$index.'.stok')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div class="lg:col-span-2">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Keterangan
+                                                </label>
+                                                <input type="text" 
+                                                       name="ukuran[{{ $index }}][tambahan]" 
+                                                       value="{{ $ukuran['tambahan'] }}"
+                                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 @error('ukuran.'.$index.'.tambahan') border-red-500 @enderror"
+                                                       placeholder="Opsional"
+                                                       maxlength="255">
+                                                @error('ukuran.'.$index.'.tambahan')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div class="lg:col-span-1">
+                                                <button type="button" 
+                                                        class="hapus-ukuran w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                                        {{ $loop->first && $produk->detailUkuran->count() <= 1 ? 'disabled' : '' }}>
+                                                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="space-y-6">
+                    <!-- Gambar Utama Card -->
+                    <div class="bg-white/80 glass rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+                        <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                            <h2 class="text-xl font-bold">Gambar Utama</h2>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <!-- Current Image -->
+                            @if($produk->gambar)
+                                <div class="text-center">
+                                    <div class="w-32 h-32 mx-auto bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl overflow-hidden shadow-lg">
+                                        <img src="{{ $produk->gambar_url }}" 
+                                             class="w-full h-full object-cover"
+                                             alt="{{ $produk->nama_produk }}">
+                                    </div>
+                                    <p class="text-sm text-green-600 mt-2 font-medium">Gambar saat ini</p>
+                                </div>
+                            @endif
+
+                            <!-- File Input -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Ganti Gambar Utama
+                                </label>
+                                <div class="relative">
+                                    <input type="file" 
+                                           id="gambar" 
+                                           name="gambar" 
+                                           accept="image/*"
+                                           class="hidden">
+                                    <label for="gambar" 
+                                           class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all duration-200">
+                                        <svg class="w-6 h-6 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        <span class="text-xs text-gray-600">Klik untuk ganti gambar</span>
+                                    </label>
+                                </div>
+                                @error('gambar')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Preview New Image -->
+                            <div id="previewGambar" class="text-center hidden">
+                                <div class="w-24 h-24 mx-auto bg-gradient-to-br from-green-500 to-blue-500 rounded-xl overflow-hidden shadow-lg">
+                                    <!-- Preview image will be inserted here -->
+                                </div>
+                                <p class="text-sm text-blue-600 mt-1">Preview gambar baru</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Card -->
+                    <div class="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-6 border border-green-200">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-semibold text-gray-900">Statistik Produk</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Total Stok</span>
+                                <span class="font-semibold text-green-600">{{ $produk->total_stok }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Varian Warna</span>
+                                <span class="font-semibold text-blue-600">{{ $produk->detailWarna->count() }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Varian Ukuran</span>
+                                <span class="font-semibold text-purple-600">{{ $produk->detailUkuran->count() }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Total Gambar</span>
+                                <span class="font-semibold text-pink-600">{{ $produk->gambarProduk->count() }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Card -->
+                    <div class="bg-white/80 glass rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+                        <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                            <h2 class="text-xl font-bold">Aksi</h2>
+                        </div>
+                        <div class="p-6 space-y-3">
+                            <button type="submit" 
+                                    class="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Update Produk
+                            </button>
+                            
+                            <a href="{{ route('admin.produk.show', $produk->id_produk) }}" 
+                               class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Lihat Detail
+                            </a>
+
+                            <a href="{{ route('admin.produk.index') }}" 
+                               class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                                Batal
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
+@endsection
 
-<style>
-    .warna-item, .ukuran-item, .gambar-group-item {
-        border-left: 4px solid #007bff;
-    }
-    
-    .preview-gambar {
-        max-width: 150px;
-        max-height: 150px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        padding: 5px;
-        margin: 5px;
-        object-fit: cover;
-    }
-    
-    .preview-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 10px;
-    }
-    
-    .gambar-group-item .card-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
-    }
-    
-    .card.bg-light {
-        border-left: 4px solid #28a745;
-    }
-</style>
-
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Counter untuk warna, ukuran, dan gambar
+        // Counter untuk warna dan ukuran
         let warnaCounter = {{ count($warnaData) }};
         let ukuranCounter = {{ count($ukuranData) }};
-        let gambarCounter = {{ count($gambarData) }};
         
         // Preview gambar utama
         const gambarInput = document.getElementById('gambar');
@@ -439,99 +474,55 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    if (!previewGambar.querySelector('.preview-container')) {
-                        previewGambar.innerHTML = '<div class="preview-container"></div>';
-                    }
-                    const container = previewGambar.querySelector('.preview-container');
-                    container.innerHTML = `<img src="${e.target.result}" class="preview-gambar" alt="Preview Gambar">`;
+                    const previewImg = previewGambar.querySelector('img') || document.createElement('img');
+                    previewImg.src = e.target.result;
+                    previewImg.className = 'w-full h-full object-cover';
                     
-                    // Hapus info gambar lama jika ada
-                    const infoText = previewGambar.querySelector('.text-info');
-                    if (infoText) {
-                        infoText.remove();
+                    if (!previewGambar.querySelector('img')) {
+                        previewGambar.querySelector('div').appendChild(previewImg);
                     }
+                    
+                    previewGambar.classList.remove('hidden');
                 };
                 reader.readAsDataURL(file);
             }
-        });
-        
-        // Update label file input
-        document.querySelectorAll('.custom-file-input').forEach(function(input) {
-            input.addEventListener('change', function(e) {
-                const files = e.target.files;
-                let fileName = 'Pilih file...';
-                
-                if (files.length > 0) {
-                    if (files.length === 1) {
-                        fileName = files[0].name;
-                    } else {
-                        fileName = `${files.length} file dipilih`;
-                    }
-                }
-                
-                const label = e.target.nextElementSibling;
-                label.textContent = fileName;
-                
-                // Handle preview untuk gambar group
-                if (e.target.name && e.target.name.includes('gambar_produk') && e.target.name.includes('[gambar]')) {
-                    const groupIndex = e.target.name.match(/\[(\d+)\]/)[1];
-                    const previewContainer = document.getElementById(`previewGambarGroup${groupIndex}`);
-                    previewContainer.innerHTML = '';
-                    
-                    if (files.length > 0) {
-                        const container = document.createElement('div');
-                        container.className = 'preview-container';
-                        
-                        for (let file of files) {
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                const img = document.createElement('img');
-                                img.src = e.target.result;
-                                img.className = 'preview-gambar';
-                                img.alt = 'Preview Gambar';
-                                container.appendChild(img);
-                            };
-                            reader.readAsDataURL(file);
-                        }
-                        
-                        previewContainer.appendChild(container);
-                    }
-                }
-            });
         });
         
         // Tambah Warna
         document.getElementById('tambahWarna').addEventListener('click', function() {
             const container = document.getElementById('warnaContainer');
             const newItem = document.createElement('div');
-            newItem.className = 'card mb-3 warna-item';
+            newItem.className = 'warna-item bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-200';
             newItem.innerHTML = `
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-5">
-                            <div class="form-group">
-                                <label>Nama Warna</label>
-                                <input type="text" class="form-control" 
-                                       name="warna[${warnaCounter}][nama_warna]" 
-                                       placeholder="Contoh: Merah, Biru, Hitam" required maxlength="100">
-                            </div>
-                        </div>
-                        <div class="col-md-5">
-                            <div class="form-group">
-                                <label>Kode Warna</label>
-                                <input type="text" class="form-control" 
-                                       name="warna[${warnaCounter}][kode_warna]" 
-                                       placeholder="Contoh: #FF0000 atau red" maxlength="50">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label>&nbsp;</label>
-                                <button type="button" class="btn btn-danger btn-block hapus-warna">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                    <div class="lg:col-span-5">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Nama Warna <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" 
+                               name="warna[${warnaCounter}][nama_warna]" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                               placeholder="Contoh: Merah, Biru, Hitam"
+                               required
+                               maxlength="100">
+                    </div>
+                    <div class="lg:col-span-5">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Kode Warna
+                        </label>
+                        <input type="text" 
+                               name="warna[${warnaCounter}][kode_warna]" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                               placeholder="Contoh: #FF0000 atau red"
+                               maxlength="50">
+                    </div>
+                    <div class="lg:col-span-2">
+                        <button type="button" 
+                                class="hapus-warna w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105">
+                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             `;
@@ -546,61 +537,73 @@
         document.getElementById('tambahUkuran').addEventListener('click', function() {
             const container = document.getElementById('ukuranContainer');
             const newItem = document.createElement('div');
-            newItem.className = 'card mb-3 ukuran-item';
+            newItem.className = 'ukuran-item bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 border border-green-200';
             newItem.innerHTML = `
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Warna</label>
-                                <select class="form-control" name="ukuran[${ukuranCounter}][id_warna]" required>
-                                    <option value="">Pilih Warna</option>
-                                    @foreach($produk->detailWarna as $warna)
-                                        <option value="{{ $warna->id_warna }}">{{ $warna->nama_warna }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label>Ukuran</label>
-                                <input type="text" class="form-control" 
-                                       name="ukuran[${ukuranCounter}][ukuran]" 
-                                       placeholder="S, M, L, XL" required maxlength="50">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label>Harga (Rp)</label>
-                                <input type="number" class="form-control" 
-                                       name="ukuran[${ukuranCounter}][harga]" 
-                                       min="0" step="1000" placeholder="0" required>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label>Stok</label>
-                                <input type="number" class="form-control" 
-                                       name="ukuran[${ukuranCounter}][stok]" 
-                                       min="0" placeholder="0" required>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label>Keterangan</label>
-                                <input type="text" class="form-control" 
-                                       name="ukuran[${ukuranCounter}][tambahan]" 
-                                       placeholder="Opsional" maxlength="255">
-                            </div>
-                        </div>
-                        <div class="col-md-1">
-                            <div class="form-group">
-                                <label>&nbsp;</label>
-                                <button type="button" class="btn btn-danger btn-block hapus-ukuran">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                    <div class="lg:col-span-3">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Warna <span class="text-red-500">*</span>
+                        </label>
+                        <select name="ukuran[${ukuranCounter}][id_warna]" 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                                required>
+                            <option value="">Pilih Warna</option>
+                            @foreach($produk->detailWarna as $warna)
+                                <option value="{{ $warna->id_warna }}">{{ $warna->nama_warna }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Ukuran <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" 
+                               name="ukuran[${ukuranCounter}][ukuran]" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                               placeholder="S, M, L, XL"
+                               required
+                               maxlength="50">
+                    </div>
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Harga (Rp) <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" 
+                               name="ukuran[${ukuranCounter}][harga]" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                               min="0" 
+                               step="1000" 
+                               placeholder="0"
+                               required>
+                    </div>
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Stok <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" 
+                               name="ukuran[${ukuranCounter}][stok]" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                               min="0" 
+                               placeholder="0"
+                               required>
+                    </div>
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Keterangan
+                        </label>
+                        <input type="text" 
+                               name="ukuran[${ukuranCounter}][tambahan]" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                               placeholder="Opsional"
+                               maxlength="255">
+                    </div>
+                    <div class="lg:col-span-1">
+                        <button type="button" 
+                                class="hapus-ukuran w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105">
+                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             `;
@@ -610,136 +613,30 @@
             updateHapusButtons();
         });
         
-        // Tambah Group Gambar
-        document.getElementById('tambahGambarGroup').addEventListener('click', function() {
-            const container = document.getElementById('gambarContainer');
-            
-            // Hapus empty state jika ada
-            if (container.querySelector('.text-center')) {
-                container.innerHTML = '';
-            }
-            
-            const newItem = document.createElement('div');
-            newItem.className = 'card mb-3 gambar-group-item';
-            newItem.innerHTML = `
-                <div class="card-header">
-                    <h6 class="card-title mb-0">Gambar Baru ${gambarCounter + 1}</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>Pilih Warna (Opsional)</label>
-                                <select class="form-control" name="gambar_produk[${gambarCounter}][id_warna]">
-                                    <option value="">Pilih Warna</option>
-                                    @foreach($produk->detailWarna as $warna)
-                                        <option value="{{ $warna->id_warna }}">{{ $warna->nama_warna }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Upload Gambar</label>
-                                <div class="custom-file">
-                                    <input type="file" class="custom-file-input" 
-                                           name="gambar_produk[${gambarCounter}][gambar][]" 
-                                           multiple accept="image/*">
-                                    <label class="custom-file-label">Pilih beberapa gambar...</label>
-                                </div>
-                                <small class="form-text text-muted">Format: JPEG, PNG, JPG, GIF, WEBP. Maksimal 2MB per gambar</small>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label>&nbsp;</label>
-                                <button type="button" class="btn btn-danger btn-block hapus-gambar-group">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-2 preview-gambar-group" id="previewGambarGroup${gambarCounter}"></div>
-                </div>
-            `;
-            container.appendChild(newItem);
-            gambarCounter++;
-            
-            // Re-attach event listeners untuk file input baru
-            const newFileInput = newItem.querySelector('.custom-file-input');
-            newFileInput.addEventListener('change', function(e) {
-                const files = e.target.files;
-                let fileName = 'Pilih file...';
-                
-                if (files.length > 0) {
-                    fileName = files.length === 1 ? files[0].name : `${files.length} file dipilih`;
-                }
-                
-                const label = e.target.nextElementSibling;
-                label.textContent = fileName;
-                
-                // Preview gambar
-                const groupIndex = e.target.name.match(/\[(\d+)\]/)[1];
-                const previewContainer = document.getElementById(`previewGambarGroup${groupIndex}`);
-                previewContainer.innerHTML = '';
-                
-                if (files.length > 0) {
-                    const container = document.createElement('div');
-                    container.className = 'preview-container';
-                    
-                    for (let file of files) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const img = document.createElement('img');
-                            img.src = e.target.result;
-                            img.className = 'preview-gambar';
-                            img.alt = 'Preview Gambar';
-                            container.appendChild(img);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                    
-                    previewContainer.appendChild(container);
-                }
-            });
-            
-            updateHapusButtons();
-        });
-        
         // Hapus items
         document.addEventListener('click', function(e) {
             if (e.target.closest('.hapus-warna')) {
                 const item = e.target.closest('.warna-item');
                 if (document.querySelectorAll('.warna-item').length > 1) {
-                    item.remove();
-                    updateHapusButtons();
-                    updateUkuranWarnaOptions();
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        item.remove();
+                        updateHapusButtons();
+                        updateUkuranWarnaOptions();
+                    }, 300);
                 }
             }
             
             if (e.target.closest('.hapus-ukuran')) {
                 const item = e.target.closest('.ukuran-item');
                 if (document.querySelectorAll('.ukuran-item').length > 1) {
-                    item.remove();
-                    updateHapusButtons();
-                }
-            }
-            
-            if (e.target.closest('.hapus-gambar-group')) {
-                const item = e.target.closest('.gambar-group-item');
-                item.remove();
-                updateHapusButtons();
-                
-                // Tampilkan empty state jika tidak ada gambar group
-                const container = document.getElementById('gambarContainer');
-                if (container.children.length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center py-4 border rounded bg-light">
-                            <i class="fas fa-images fa-2x text-muted mb-3"></i>
-                            <p class="text-muted mb-0">Tidak ada gambar baru yang akan ditambahkan.</p>
-                            <small class="text-muted">Klik "Tambah Gambar" untuk menambahkan gambar baru.</small>
-                        </div>
-                    `;
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        item.remove();
+                        updateHapusButtons();
+                    }, 300);
                 }
             }
         });
@@ -748,7 +645,6 @@
         function updateHapusButtons() {
             const warnaItems = document.querySelectorAll('.warna-item');
             const ukuranItems = document.querySelectorAll('.ukuran-item');
-            const gambarItems = document.querySelectorAll('.gambar-group-item');
             
             document.querySelectorAll('.hapus-warna').forEach(btn => {
                 btn.disabled = warnaItems.length <= 1;
@@ -759,7 +655,7 @@
             });
         }
         
-        // Update opsi warna di ukuran ketika warna ditambah/dihapus
+        // Update opsi warna di ukuran ketika warna baru ditambahkan
         function updateUkuranWarnaOptions() {
             // Untuk form edit, kita menggunakan ID warna yang sebenarnya
             // Fungsi ini akan diimplementasikan jika perlu menambah warna baru secara dinamis
@@ -767,6 +663,52 @@
         
         // Initialize
         updateHapusButtons();
+        
+        // Add animation to new items
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1 && (node.classList.contains('warna-item') || node.classList.contains('ukuran-item'))) {
+                        node.style.opacity = '0';
+                        node.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            node.style.transition = 'all 0.3s ease';
+                            node.style.opacity = '1';
+                            node.style.transform = 'translateY(0)';
+                        }, 10);
+                    }
+                });
+            });
+        });
+        
+        observer.observe(document.getElementById('warnaContainer'), { childList: true });
+        observer.observe(document.getElementById('ukuranContainer'), { childList: true });
     });
+
+    // Dismiss alert function
+    function dismissAlert(alertId) {
+        const alert = document.getElementById(alertId);
+        if (alert) {
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateX(100%)';
+            setTimeout(() => alert.remove(), 300);
+        }
+    }
 </script>
-@endsection
+
+<style>
+    .glass {
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+    }
+    
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+    }
+    
+    .warna-item, .ukuran-item {
+        transition: all 0.3s ease;
+    }
+</style>
+@endpush

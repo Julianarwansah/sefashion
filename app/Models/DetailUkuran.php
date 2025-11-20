@@ -115,4 +115,12 @@ class DetailUkuran extends Model
             $this->produk->updateTotalStok();
         }
     }
+
+    /**
+     * Relationship dengan model DetailWarna
+     */
+    public function warna()
+    {
+        return $this->belongsTo(DetailWarna::class, 'id_warna', 'id_warna');
+    }
 }

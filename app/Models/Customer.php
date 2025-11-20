@@ -70,6 +70,11 @@ class Customer extends Authenticatable
         return $this->hasMany(Pemesanan::class, 'id_customer', 'id_customer');
     }
 
+    public function cart()
+    {
+        return $this->hasMany(Cart::class, 'id_customer', 'id_customer');
+    }
+
     /**
      * Accessor untuk alamat lengkap
      */
