@@ -14,6 +14,7 @@ use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\OrderController;
 
 
 // Public Routes
@@ -87,6 +88,11 @@ Route::middleware(['auth:customer'])->group(function () {
     Route::get('/order/success/{id}', function ($id) {
         return view('frontend.order-success', ['orderId' => $id]);
     })->name('order.success');
+
+    // My Orders Routes
+    Route::get('/my-orders', [OrderController::class, 'index'])->name('my-orders');
+    Route::get('/order/{id}', [OrderController::class, 'show'])->name('order.detail');
+    Route::post('/order/{id}/cancel', [OrderController::class, 'cancel'])->name('order.cancel');
 });
 
 /*
