@@ -131,7 +131,7 @@
                                             </svg>
                                             My Account
                                         </a>
-                                        <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg">
+                                        <a href="{{ route('my-orders') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                                             </svg>
@@ -214,7 +214,7 @@
                                 <a href="{{ route('profile') }}" class="block px-4 py-2.5 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors">
                                     My Account
                                 </a>
-                                <a href="#" class="block px-4 py-2.5 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors">
+                                <a href="{{ route('my-orders') }}" class="block px-4 py-2.5 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors">
                                     My Orders
                                 </a>
                                 <form method="POST" action="{{ route('logout') }}">
@@ -360,6 +360,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
         </svg>
     </button>
+
+    <!-- Cart Notification Modal -->
+    @include('partials.cart-notification-modal')
 
     <!-- Scripts -->
     <script>

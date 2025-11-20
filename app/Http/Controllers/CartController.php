@@ -53,7 +53,7 @@ class CartController extends Controller
 
         $customerId = Auth::guard('customer')->id();
 
-        $detailUkuran = DetailUkuran::find($request->id_ukuran);
+        $detailUkuran = DetailUkuran::with(['produk.gambarProduk', 'detailWarna'])->find($request->id_ukuran);
         
         if (!$detailUkuran) {
             return response()->json([
@@ -94,6 +94,15 @@ class CartController extends Controller
             ]);
         }
 
+        // Get product image
+        $productImage = null;
+        if ($detailUkuran->produk && $detailUkuran->produk->gambarProduk) {
+            $primaryImage = $detailUkuran->produk->gambarProduk->where('is_primary', 1)->first();
+            if ($primaryImage) {
+                $productImage = asset('storage/produk/images/' . $primaryImage->gambar);
+            }
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Product successfully added to cart',
@@ -102,8 +111,9 @@ class CartController extends Controller
                 'id' => $cartItem->id_cart,
                 'quantity' => $cartItem->jumlah,
                 'product_name' => $detailUkuran->produk->nama_produk ?? 'Unknown Product',
-                'size' => $detailUkuran->ukuran,
-                'color' => $detailUkuran->detailWarna->nama_warna ?? 'Unknown Color'
+                'size' => $detailUkuran->ukuran ?? 'N/A',
+                'color' => $detailUkuran->detailWarna->nama_warna ?? 'N/A',
+                'image' => $productImage
             ]
         ]);
     }
