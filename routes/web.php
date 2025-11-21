@@ -16,6 +16,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PembayaranController;
+use App\Http\Controllers\XenditTestController;
 
 
 // Public Routes
@@ -53,6 +54,7 @@ Route::post('/password/email', [LoginController::class, 'sendResetLinkEmail'])->
 // XENDIT WEBHOOK ROUTES (HARUS PUBLIC KARENA DIAKSES OLEH XENDIT SERVER)
 // =========================================================================
 Route::post('/webhook/xendit', [CheckoutController::class, 'handleWebhook'])->name('webhook.xendit');
+Route::post('/xendit/callback', [CheckoutController::class, 'handleWebhook'])->name('xendit.callback'); 
 
 /*
 |--------------------------------------------------------------------------
@@ -175,3 +177,12 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
 });
 Route::get('/dev/fake-pay/{orderId}', [CheckoutController::class, 'devMarkAsPaid'])
     ->name('dev.fake-pay');
+
+    // Xendit Test Routes (bisa diakses tanpa auth untuk testing)
+Route::prefix('xendit/test')->group(function () {
+    Route::get('/connection', [XenditTestController::class, 'testConnection'])->name('xendit.test.connection');
+    Route::get('/webhook', [XenditTestController::class, 'testWebhook'])->name('xendit.test.webhook');
+    Route::get('/va', [XenditTestController::class, 'testVA'])->name('xendit.test.va');
+    Route::get('/balance', [XenditTestController::class, 'testBalance'])->name('xendit.test.balance');
+    Route::get('/page', [XenditTestController::class, 'testPage'])->name('xendit.test.page');
+});

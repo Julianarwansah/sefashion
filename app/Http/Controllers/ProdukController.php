@@ -68,193 +68,190 @@ class ProdukController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        Log::debug('Memulai proses store produk', ['request_data' => $request->except(['_token', 'gambar', 'gambar_produk'])]);
-        
-        DB::beginTransaction();
-        
-        try {
-            // Validasi dasar produk
-            $validated = $request->validate([
-                'nama_produk' => 'required|string|max:100',
-                'deskripsi' => 'nullable|string',
-                'kategori' => 'nullable|string|max:50',
-                'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            ]);
+{
+    Log::debug('Memulai proses store produk', ['request_data' => $request->except(['_token', 'gambar', 'gambar_produk'])]);
+    
+    DB::beginTransaction();
+    
+    try {
+        // Validasi dasar produk
+        $validated = $request->validate([
+            'nama_produk' => 'required|string|max:100',
+            'deskripsi' => 'nullable|string',
+            'kategori' => 'nullable|string|max:50',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
 
-            Log::debug('Validasi dasar produk berhasil', ['validated_data_keys' => array_keys($validated)]);
+        Log::debug('Validasi dasar produk berhasil', ['validated_data_keys' => array_keys($validated)]);
 
-            // Validasi warna
-            $warnaValidated = $request->validate([
-                'warna' => 'required|array|min:1',
-                'warna.*.nama_warna' => 'required|string|max:100',
-                'warna.*.kode_warna' => 'nullable|string|max:50',
-            ]);
+        // Validasi warna
+        $warnaValidated = $request->validate([
+            'warna' => 'required|array|min:1',
+            'warna.*.nama_warna' => 'required|string|max:100',
+            'warna.*.kode_warna' => 'nullable|string|max:50',
+        ]);
 
-            // Validasi ukuran
-            $ukuranValidated = $request->validate([
-                'ukuran' => 'required|array|min:1',
-                'ukuran.*.id_warna_index' => 'required|integer|min:0',
-                'ukuran.*.ukuran' => 'required|string|max:50',
-                'ukuran.*.harga' => 'required|numeric|min:0',
-                'ukuran.*.stok' => 'required|integer|min:0',
-                'ukuran.*.tambahan' => 'nullable|string',
-            ]);
+        // Validasi ukuran
+        $ukuranValidated = $request->validate([
+            'ukuran' => 'required|array|min:1',
+            'ukuran.*.id_warna_index' => 'required|integer|min:0',
+            'ukuran.*.ukuran' => 'required|string|max:50',
+            'ukuran.*.harga' => 'required|numeric|min:0',
+            'ukuran.*.stok' => 'required|integer|min:0',
+            'ukuran.*.tambahan' => 'nullable|string',
+        ]);
 
-            // Validasi gambar produk tambahan
-            if ($request->has('gambar_produk')) {
-                foreach ($request->gambar_produk as $index => $gambarGroup) {
-                    if (isset($gambarGroup['gambar']) && is_array($gambarGroup['gambar'])) {
-                        foreach ($gambarGroup['gambar'] as $fileIndex => $file) {
-                            if ($file) {
-                                $validator = Validator::make(
-                                    ['gambar' => $file],
-                                    ['gambar' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048']
-                                );
-                                
-                                if ($validator->fails()) {
-                                    throw new \Exception("File gambar tidak valid pada group {$index}, file {$fileIndex}: " . implode(', ', $validator->errors()->all()));
-                                }
-                            }
+        // Validasi gambar produk tambahan - PERBAIKAN: Tambah validasi untuk multiple gambar
+        $gambarRules = [];
+        if ($request->has('gambar_produk')) {
+            foreach ($request->gambar_produk as $index => $gambarGroup) {
+                if (isset($gambarGroup['gambar']) && is_array($gambarGroup['gambar'])) {
+                    foreach ($gambarGroup['gambar'] as $fileIndex => $file) {
+                        if ($file) {
+                            $gambarRules["gambar_produk.{$index}.gambar.{$fileIndex}"] = 'image|mimes:jpeg,png,jpg,gif,webp|max:2048';
                         }
                     }
                 }
             }
-
-            Log::debug('Semua validasi berhasil');
-
-            // 1. Create produk terlebih dahulu
-            $produkData = [
-                'nama_produk' => $validated['nama_produk'],
-                'deskripsi' => $validated['deskripsi'] ?? null,
-                'kategori' => $validated['kategori'] ?? null,
-                'total_stok' => 0
-            ];
-
-            // Handle gambar utama
-            if ($request->hasFile('gambar')) {
-                $gambarPath = $request->file('gambar')->store('produk', 'public');
-                $produkData['gambar'] = basename($gambarPath);
-                Log::debug('Gambar utama berhasil diupload', ['path' => $gambarPath]);
-            }
-
-            $produk = Produk::create($produkData);
-            Log::debug('Produk berhasil dibuat', ['id_produk' => $produk->id_produk]);
-
-            // 2. Create warna-warna untuk produk ini
-            $warnaIds = [];
-            foreach ($warnaValidated['warna'] as $index => $warnaData) {
-                $warna = DetailWarna::create([
-                    'id_produk' => $produk->id_produk,
-                    'nama_warna' => $warnaData['nama_warna'],
-                    'kode_warna' => $warnaData['kode_warna'] ?? null
-                ]);
-                $warnaIds[$index] = $warna->id_warna;
-                Log::debug('Warna berhasil dibuat', [
-                    'id_warna' => $warna->id_warna, 
-                    'nama_warna' => $warna->nama_warna,
-                    'index' => $index
-                ]);
-            }
-
-            // 3. Create ukuran-ukuran dengan mapping id_warna yang benar
-            $totalStok = 0;
-            foreach ($ukuranValidated['ukuran'] as $index => $ukuranData) {
-                $idWarnaIndex = $ukuranData['id_warna_index'];
-                
-                if (!isset($warnaIds[$idWarnaIndex])) {
-                    throw new \Exception("Index warna tidak valid: {$idWarnaIndex}");
-                }
-
-                $ukuran = DetailUkuran::create([
-                    'id_produk' => $produk->id_produk,
-                    'id_warna' => $warnaIds[$idWarnaIndex],
-                    'ukuran' => $ukuranData['ukuran'],
-                    'harga' => $ukuranData['harga'],
-                    'stok' => $ukuranData['stok'],
-                    'tambahan' => $ukuranData['tambahan'] ?? null
-                ]);
-                $totalStok += $ukuranData['stok'];
-                Log::debug('Ukuran berhasil dibuat', [
-                    'id_ukuran' => $ukuran->id_ukuran, 
-                    'ukuran' => $ukuran->ukuran,
-                    'id_warna' => $ukuran->id_warna,
-                    'stok' => $ukuran->stok
-                ]);
-            }
-
-            // 4. Update total stok produk
-            $produk->update(['total_stok' => $totalStok]);
-            Log::debug('Total stok diupdate', ['total_stok' => $totalStok]);
-
-            // 5. Handle gambar produk tambahan
-            if ($request->has('gambar_produk')) {
-                $hasPrimary = false;
-                
-                foreach ($request->gambar_produk as $groupIndex => $gambarGroup) {
-                    if (isset($gambarGroup['gambar']) && is_array($gambarGroup['gambar'])) {
-                        $idWarna = null;
-                        
-                        // Jika ada id_warna_index, dapatkan id_warna yang sebenarnya
-                        if (isset($gambarGroup['id_warna_index']) && $gambarGroup['id_warna_index'] !== '') {
-                            $warnaIndex = $gambarGroup['id_warna_index'];
-                            if (isset($warnaIds[$warnaIndex])) {
-                                $idWarna = $warnaIds[$warnaIndex];
-                            }
-                        }
-
-                        foreach ($gambarGroup['gambar'] as $fileIndex => $gambar) {
-                            if ($gambar && $gambar->isValid()) {
-                                $gambarPath = $gambar->store('produk/images', 'public');
-                                
-                                $isPrimary = false;
-                                if (!$hasPrimary) {
-                                    $isPrimary = true;
-                                    $hasPrimary = true;
-                                }
-                                
-                                ProdukGambar::create([
-                                    'id_produk' => $produk->id_produk,
-                                    'id_warna' => $idWarna,
-                                    'id_ukuran' => null,
-                                    'gambar' => basename($gambarPath),
-                                    'is_primary' => $isPrimary
-                                ]);
-                                
-                                Log::debug('Gambar produk berhasil diupload', [
-                                    'path' => $gambarPath, 
-                                    'group_index' => $groupIndex,
-                                    'file_index' => $fileIndex,
-                                    'id_warna' => $idWarna,
-                                    'is_primary' => $isPrimary
-                                ]);
-                            }
-                        }
-                    }
-                }
-            }
-
-            DB::commit();
-            Log::debug('Semua transaksi berhasil disimpan');
-
-            // PERBAIKAN: Pastikan route menggunakan namespace admin
-            return redirect()->route('admin.produk.index')
-                ->with('success', 'Produk berhasil ditambahkan');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            Log::error('Error pada store produk: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan saat menambah produk: ' . $e->getMessage())
-                ->withInput();
         }
+
+        if (!empty($gambarRules)) {
+            $request->validate($gambarRules);
+        }
+
+        Log::debug('Semua validasi berhasil');
+
+        // 1. Create produk terlebih dahulu
+        $produkData = [
+            'nama_produk' => $validated['nama_produk'],
+            'deskripsi' => $validated['deskripsi'] ?? null,
+            'kategori' => $validated['kategori'] ?? null,
+            'total_stok' => 0
+        ];
+
+        // Handle gambar utama
+        if ($request->hasFile('gambar')) {
+            $gambarPath = $request->file('gambar')->store('produk', 'public');
+            $produkData['gambar'] = basename($gambarPath);
+            Log::debug('Gambar utama berhasil diupload', ['path' => $gambarPath]);
+        }
+
+        $produk = Produk::create($produkData);
+        Log::debug('Produk berhasil dibuat', ['id_produk' => $produk->id_produk]);
+
+        // 2. Create warna-warna untuk produk ini
+        $warnaIds = [];
+        foreach ($warnaValidated['warna'] as $index => $warnaData) {
+            $warna = DetailWarna::create([
+                'id_produk' => $produk->id_produk,
+                'nama_warna' => $warnaData['nama_warna'],
+                'kode_warna' => $warnaData['kode_warna'] ?? null
+            ]);
+            $warnaIds[$index] = $warna->id_warna;
+            Log::debug('Warna berhasil dibuat', [
+                'id_warna' => $warna->id_warna, 
+                'nama_warna' => $warna->nama_warna,
+                'index' => $index
+            ]);
+        }
+
+        // 3. Create ukuran-ukuran dengan mapping id_warna yang benar
+        $totalStok = 0;
+        foreach ($ukuranValidated['ukuran'] as $index => $ukuranData) {
+            $idWarnaIndex = $ukuranData['id_warna_index'];
+            
+            if (!isset($warnaIds[$idWarnaIndex])) {
+                throw new \Exception("Index warna tidak valid: {$idWarnaIndex}");
+            }
+
+            $ukuran = DetailUkuran::create([
+                'id_produk' => $produk->id_produk,
+                'id_warna' => $warnaIds[$idWarnaIndex],
+                'ukuran' => $ukuranData['ukuran'],
+                'harga' => $ukuranData['harga'],
+                'stok' => $ukuranData['stok'],
+                'tambahan' => $ukuranData['tambahan'] ?? null
+            ]);
+            $totalStok += $ukuranData['stok'];
+            Log::debug('Ukuran berhasil dibuat', [
+                'id_ukuran' => $ukuran->id_ukuran, 
+                'ukuran' => $ukuran->ukuran,
+                'id_warna' => $ukuran->id_warna,
+                'stok' => $ukuran->stok
+            ]);
+        }
+
+        // 4. Update total stok produk
+        $produk->update(['total_stok' => $totalStok]);
+        Log::debug('Total stok diupdate', ['total_stok' => $totalStok]);
+
+        // 5. Handle gambar produk tambahan - PERBAIKAN: Tambah handling untuk multiple gambar
+        if ($request->has('gambar_produk')) {
+            $hasPrimary = false;
+            
+            foreach ($request->gambar_produk as $groupIndex => $gambarGroup) {
+                if (isset($gambarGroup['gambar']) && is_array($gambarGroup['gambar'])) {
+                    $idWarna = null;
+                    
+                    // Jika ada id_warna_index, dapatkan id_warna yang sebenarnya
+                    if (isset($gambarGroup['id_warna_index']) && $gambarGroup['id_warna_index'] !== '') {
+                        $warnaIndex = $gambarGroup['id_warna_index'];
+                        if (isset($warnaIds[$warnaIndex])) {
+                            $idWarna = $warnaIds[$warnaIndex];
+                        }
+                    }
+
+                    foreach ($gambarGroup['gambar'] as $fileIndex => $gambar) {
+                        if ($gambar && $gambar->isValid()) {
+                            $gambarPath = $gambar->store('produk/images', 'public');
+                            
+                            $isPrimary = false;
+                            if (!$hasPrimary) {
+                                $isPrimary = true;
+                                $hasPrimary = true;
+                            }
+                            
+                            ProdukGambar::create([
+                                'id_produk' => $produk->id_produk,
+                                'id_warna' => $idWarna,
+                                'id_ukuran' => null,
+                                'gambar' => basename($gambarPath),
+                                'is_primary' => $isPrimary
+                            ]);
+                            
+                            Log::debug('Gambar produk berhasil diupload', [
+                                'path' => $gambarPath, 
+                                'group_index' => $groupIndex,
+                                'file_index' => $fileIndex,
+                                'id_warna' => $idWarna,
+                                'is_primary' => $isPrimary
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+
+        DB::commit();
+        Log::debug('Semua transaksi berhasil disimpan');
+
+        return redirect()->route('admin.produk.index')
+            ->with('success', 'Produk berhasil ditambahkan');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        
+        Log::error('Error pada store produk: ' . $e->getMessage(), [
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return redirect()->back()
+            ->with('error', 'Terjadi kesalahan saat menambah produk: ' . $e->getMessage())
+            ->withInput();
     }
+}
 
     /**
      * Display the specified resource.
