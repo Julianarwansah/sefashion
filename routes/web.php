@@ -146,6 +146,10 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     // Product Management
     Route::resource('produk', ProdukController::class);
     
+    // =========================================================================
+    // ROUTES UNTUK MULTIPLE GAMBAR PRODUK
+    // =========================================================================
+    
     // Route untuk mengatur gambar utama
     Route::post('/produk/{produk}/set-primary-image/{gambar}', [ProdukController::class, 'setPrimaryImage'])
         ->name('produk.set-primary-image');
@@ -153,6 +157,14 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     // Route untuk menghapus gambar
     Route::delete('/produk/{produk}/delete-image/{gambar}', [ProdukController::class, 'deleteImage'])
         ->name('produk.delete-image');
+
+    // Route untuk menambah gambar baru ke produk yang sudah ada
+    Route::post('/produk/{produk}/tambah-gambar', [ProdukController::class, 'tambahGambar'])
+        ->name('produk.tambah-gambar');
+
+    // Route untuk mendapatkan semua gambar produk (API)
+    Route::get('/produk/{produk}/images', [ProdukController::class, 'getImages'])
+        ->name('produk.get-images');
     
     // Order Management
     Route::resource('pesanan', PesananController::class);
@@ -168,17 +180,20 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::post('/pembayaran/{id}/mark-expired', 
         [PembayaranController::class, 'markAsExpired']
     )->name('pembayaran.mark-expired');
+    
     // Tambahkan ini (UPDATE STATUS PEMBAYARAN)
-        Route::post('/pembayaran/{id}/update-status', [PembayaranController::class, 'updateStatus'])
-            ->name('pembayaran.update-status');
+    Route::post('/pembayaran/{id}/update-status', [PembayaranController::class, 'updateStatus'])
+        ->name('pembayaran.update-status');
+    
     // Shipping Management
     Route::resource('pengiriman', PengirimanController::class);
     Route::get('pengiriman/{id}/track', [PengirimanController::class, 'track'])->name('pengiriman.track');
 });
+
 Route::get('/dev/fake-pay/{orderId}', [CheckoutController::class, 'devMarkAsPaid'])
     ->name('dev.fake-pay');
 
-    // Xendit Test Routes (bisa diakses tanpa auth untuk testing)
+// Xendit Test Routes (bisa diakses tanpa auth untuk testing)
 Route::prefix('xendit/test')->group(function () {
     Route::get('/connection', [XenditTestController::class, 'testConnection'])->name('xendit.test.connection');
     Route::get('/webhook', [XenditTestController::class, 'testWebhook'])->name('xendit.test.webhook');

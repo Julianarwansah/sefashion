@@ -333,6 +333,118 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Gambar Tambahan Card -->
+                    <div class="bg-white/80 glass rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+                        <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white flex justify-between items-center">
+                            <h2 class="text-xl font-bold">Gambar Tambahan</h2>
+                            <button type="button" 
+                                    id="tambahGambarGroup"
+                                    class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Tambah Gambar
+                            </button>
+                        </div>
+                        <div class="p-6">
+                            <!-- Existing Images -->
+                            @if($produk->gambarProduk->count() > 0)
+                                <div class="mb-6">
+                                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Gambar Saat Ini</h3>
+                                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                        @foreach($produk->gambarProduk as $gambar)
+                                            <div class="relative group bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+                                                <img src="{{ $gambar->gambar_url }}" 
+                                                     alt="Gambar Produk" 
+                                                     class="w-full h-32 object-cover">
+                                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100">
+                                                    @if($gambar->is_primary)
+                                                        <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                                                            Primary
+                                                        </span>
+                                                    @else
+                                                        <form action="{{ route('admin.produk.set-primary-image', ['produk' => $produk->id_produk, 'gambar' => $gambar->id_gambar]) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            <button type="submit" 
+                                                                    class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded-full transition-colors"
+                                                                    title="Set sebagai primary">
+                                                                Set Primary
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                    <form action="{{ route('admin.produk.delete-image', ['produk' => $produk->id_produk, 'gambar' => $gambar->id_gambar]) }}" method="POST" class="inline">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" 
+                                                                class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded-full transition-colors"
+                                                                onclick="return confirm('Apakah Anda yakin ingin menghapus gambar ini?')"
+                                                                title="Hapus gambar">
+                                                            Hapus
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Add New Images -->
+                            <div id="gambarContainer" class="space-y-6">
+                                <!-- Default group gambar baru -->
+                                <div class="gambar-group bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-4 border border-orange-200">
+                                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                                        <div class="lg:col-span-3">
+                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                Warna (Opsional)
+                                            </label>
+                                            <select name="gambar_produk[0][id_warna]" 
+                                                    class="warna-select-group w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200">
+                                                <option value="">Pilih Warna</option>
+                                                @foreach($produk->detailWarna as $warna)
+                                                    <option value="{{ $warna->id_warna }}">{{ $warna->nama_warna }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="lg:col-span-8">
+                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                Upload Gambar Baru
+                                            </label>
+                                            <div class="space-y-3">
+                                                <div class="file-input-group">
+                                                    <input type="file" 
+                                                           name="gambar_produk[0][gambar][]" 
+                                                           accept="image/*"
+                                                           class="gambar-input hidden"
+                                                           multiple>
+                                                    <label class="upload-label flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-all duration-200">
+                                                        <svg class="w-6 h-6 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                        </svg>
+                                                        <span class="text-sm text-gray-600">Klik untuk upload gambar baru</span>
+                                                        <span class="text-xs text-gray-500">Bisa multiple (Maks. 2MB per gambar)</span>
+                                                    </label>
+                                                </div>
+                                                <div class="preview-container grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                                                    <!-- Preview akan muncul di sini -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="lg:col-span-1">
+                                            <button type="button" 
+                                                    class="hapus-gambar-group w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                                    disabled>
+                                                <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Sidebar -->
@@ -367,11 +479,12 @@
                                            accept="image/*"
                                            class="hidden">
                                     <label for="gambar" 
-                                           class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all duration-200">
+                                           class="upload-label-main flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all duration-200">
                                         <svg class="w-6 h-6 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                         </svg>
                                         <span class="text-xs text-gray-600">Klik untuk ganti gambar</span>
+                                        <span class="text-xs text-gray-500 mt-1">JPEG, PNG, JPG, GIF (Maks. 2MB)</span>
                                     </label>
                                 </div>
                                 @error('gambar')
@@ -381,7 +494,7 @@
 
                             <!-- Preview New Image -->
                             <div id="previewGambar" class="text-center hidden">
-                                <div class="w-24 h-24 mx-auto bg-gradient-to-br from-green-500 to-blue-500 rounded-xl overflow-hidden shadow-lg">
+                                <div class="w-24 h-24 mx-auto bg-gradient-to-br from-green-500 to-blue-500 rounded-xl overflow-hidden shadow-lg mb-2">
                                     <!-- Preview image will be inserted here -->
                                 </div>
                                 <p class="text-sm text-blue-600 mt-1">Preview gambar baru</p>
@@ -456,33 +569,48 @@
         </form>
     </div>
 </div>
-@endsection
 
-@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Counter untuk warna dan ukuran
+        // Counter untuk warna, ukuran, dan gambar group
         let warnaCounter = {{ count($warnaData) }};
         let ukuranCounter = {{ count($ukuranData) }};
+        let gambarGroupCounter = 1;
         
         // Preview gambar utama
         const gambarInput = document.getElementById('gambar');
         const previewGambar = document.getElementById('previewGambar');
+        const uploadLabelMain = document.querySelector('.upload-label-main');
+        
+        // Handle click untuk gambar utama
+        uploadLabelMain.addEventListener('click', function(e) {
+            e.preventDefault();
+            gambarInput.click();
+        });
         
         gambarInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const previewImg = previewGambar.querySelector('img') || document.createElement('img');
-                    previewImg.src = e.target.result;
-                    previewImg.className = 'w-full h-full object-cover';
-                    
-                    if (!previewGambar.querySelector('img')) {
+                    let previewImg = previewGambar.querySelector('img');
+                    if (!previewImg) {
+                        previewImg = document.createElement('img');
+                        previewImg.className = 'w-full h-full object-cover';
                         previewGambar.querySelector('div').appendChild(previewImg);
                     }
+                    previewImg.src = e.target.result;
                     
                     previewGambar.classList.remove('hidden');
+                    
+                    // Update label text
+                    uploadLabelMain.innerHTML = `
+                        <svg class="w-6 h-6 text-green-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span class="text-xs text-green-600">Gambar dipilih</span>
+                        <span class="text-xs text-gray-500 mt-1">${file.name}</span>
+                    `;
                 };
                 reader.readAsDataURL(file);
             }
@@ -612,6 +740,66 @@
             
             updateHapusButtons();
         });
+
+        // Tambah Group Gambar
+        document.getElementById('tambahGambarGroup').addEventListener('click', function() {
+            const container = document.getElementById('gambarContainer');
+            const newGroup = document.createElement('div');
+            newGroup.className = 'gambar-group bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-4 border border-orange-200';
+            newGroup.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                    <div class="lg:col-span-3">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Warna (Opsional)
+                        </label>
+                        <select name="gambar_produk[${gambarGroupCounter}][id_warna]" 
+                                class="warna-select-group w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200">
+                            <option value="">Pilih Warna</option>
+                            @foreach($produk->detailWarna as $warna)
+                                <option value="{{ $warna->id_warna }}">{{ $warna->nama_warna }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="lg:col-span-8">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Upload Gambar Baru
+                        </label>
+                        <div class="space-y-3">
+                            <div class="file-input-group">
+                                <input type="file" 
+                                       name="gambar_produk[${gambarGroupCounter}][gambar][]" 
+                                       accept="image/*"
+                                       class="gambar-input hidden"
+                                       multiple>
+                                <label class="upload-label flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-all duration-200">
+                                    <svg class="w-6 h-6 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span class="text-sm text-gray-600">Klik untuk upload gambar baru</span>
+                                    <span class="text-xs text-gray-500">Bisa multiple (Maks. 2MB per gambar)</span>
+                                </label>
+                            </div>
+                            <div class="preview-container grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                                <!-- Preview akan muncul di sini -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1">
+                        <button type="button" 
+                                class="hapus-gambar-group w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105">
+                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(newGroup);
+            gambarGroupCounter++;
+            
+            updateHapusButtons();
+            initGambarUpload();
+        });
         
         // Hapus items
         document.addEventListener('click', function(e) {
@@ -639,12 +827,25 @@
                     }, 300);
                 }
             }
+
+            if (e.target.closest('.hapus-gambar-group')) {
+                const group = e.target.closest('.gambar-group');
+                if (document.querySelectorAll('.gambar-group').length > 1) {
+                    group.style.opacity = '0';
+                    group.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        group.remove();
+                        updateHapusButtons();
+                    }, 300);
+                }
+            }
         });
         
         // Update tombol hapus
         function updateHapusButtons() {
             const warnaItems = document.querySelectorAll('.warna-item');
             const ukuranItems = document.querySelectorAll('.ukuran-item');
+            const gambarGroups = document.querySelectorAll('.gambar-group');
             
             document.querySelectorAll('.hapus-warna').forEach(btn => {
                 btn.disabled = warnaItems.length <= 1;
@@ -653,6 +854,10 @@
             document.querySelectorAll('.hapus-ukuran').forEach(btn => {
                 btn.disabled = ukuranItems.length <= 1;
             });
+
+            document.querySelectorAll('.hapus-gambar-group').forEach(btn => {
+                btn.disabled = gambarGroups.length <= 1;
+            });
         }
         
         // Update opsi warna di ukuran ketika warna baru ditambahkan
@@ -660,15 +865,76 @@
             // Untuk form edit, kita menggunakan ID warna yang sebenarnya
             // Fungsi ini akan diimplementasikan jika perlu menambah warna baru secara dinamis
         }
+
+        // Handle multiple image upload preview
+        function initGambarUpload() {
+            document.querySelectorAll('.file-input-group').forEach(group => {
+                const input = group.querySelector('.gambar-input');
+                const label = group.querySelector('.upload-label');
+                const previewContainer = group.nextElementSibling;
+                
+                // Reset event listener
+                const newInput = input.cloneNode(true);
+                input.parentNode.replaceChild(newInput, input);
+                
+                newInput.addEventListener('change', handleFileChange);
+                
+                function handleFileChange(e) {
+                    const files = e.target.files;
+                    previewContainer.innerHTML = '';
+                    
+                    if (files.length > 0) {
+                        Array.from(files).forEach(file => {
+                            if (file.type.startsWith('image/')) {
+                                const reader = new FileReader();
+                                reader.onload = function(e) {
+                                    const preview = document.createElement('div');
+                                    preview.className = 'relative group';
+                                    preview.innerHTML = `
+                                        <img src="${e.target.result}" 
+                                             class="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                                             alt="Preview">
+                                        <div class="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                            </svg>
+                                        </div>
+                                    `;
+                                    previewContainer.appendChild(preview);
+                                };
+                                reader.readAsDataURL(file);
+                            }
+                        });
+                        
+                        // Update label text
+                        const fileCount = files.length;
+                        label.innerHTML = `
+                            <svg class="w-6 h-6 text-green-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span class="text-sm text-green-600">${fileCount} gambar dipilih</span>
+                            <span class="text-xs text-gray-500">${fileCount} file selected</span>
+                        `;
+                    }
+                }
+                
+                // Click handler untuk label
+                label.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    newInput.click();
+                });
+            });
+        }
         
         // Initialize
         updateHapusButtons();
+        initGambarUpload();
         
         // Add animation to new items
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 mutation.addedNodes.forEach(function(node) {
-                    if (node.nodeType === 1 && (node.classList.contains('warna-item') || node.classList.contains('ukuran-item'))) {
+                    if (node.nodeType === 1 && (node.classList.contains('warna-item') || node.classList.contains('ukuran-item') || node.classList.contains('gambar-group'))) {
                         node.style.opacity = '0';
                         node.style.transform = 'translateY(20px)';
                         setTimeout(() => {
@@ -683,6 +949,7 @@
         
         observer.observe(document.getElementById('warnaContainer'), { childList: true });
         observer.observe(document.getElementById('ukuranContainer'), { childList: true });
+        observer.observe(document.getElementById('gambarContainer'), { childList: true });
     });
 
     // Dismiss alert function
@@ -707,8 +974,16 @@
         box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
     }
     
-    .warna-item, .ukuran-item {
+    .warna-item, .ukuran-item, .gambar-group {
         transition: all 0.3s ease;
     }
+
+    .preview-container img {
+        transition: transform 0.2s ease;
+    }
+
+    .preview-container img:hover {
+        transform: scale(1.05);
+    }
 </style>
-@endpush
+@endsection
