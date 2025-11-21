@@ -29,13 +29,39 @@
                 <span class="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center text-xs font-bold text-purple-900">5</span>
             </button>
             
-            <div class="flex items-center gap-3 pl-4 border-l-2 border-purple-200">
-                <div class="text-right hidden sm:block">
-                    <p class="font-bold text-sm text-purple-900">Admin User</p>
-                    <p class="text-xs text-pink-500">Super Admin</p>
+            <!-- User Profile Dropdown -->
+            <div class="relative group">
+                <div class="flex items-center gap-3 pl-4 border-l-2 border-purple-200 cursor-pointer">
+                    <div class="text-right hidden sm:block">
+                        <p class="font-bold text-sm text-purple-900">Admin User</p>
+                        <p class="text-xs text-pink-500">Super Admin</p>
+                    </div>
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-yellow-400 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                        AU
+                    </div>
+                    <svg class="w-4 h-4 text-purple-600 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
                 </div>
-                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-yellow-400 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                    AU
+                
+                <!-- Dropdown Menu -->
+                <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-2xl border border-purple-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 transform translate-y-2 group-hover:translate-y-0">
+                    <div class="p-2">
+                        
+                        <!-- Divider -->
+                        <div class="my-1 border-t border-purple-100"></div>
+                        
+                        <!-- Logout Button -->
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="flex items-center gap-3 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                </svg>
+                                Logout
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

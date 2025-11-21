@@ -47,6 +47,26 @@
         .inactive-menu:hover svg {
             color: white;
         }
+        /* Tambahkan di bagian style */
+.dropdown-enter {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.dropdown-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.3s ease;
+}
+
+/* Ensure dropdown appears above other content */
+.relative {
+    position: relative;
+}
+
+.z-50 {
+    z-index: 50;
+}
     </style>
     @stack('styles')
 </head>
