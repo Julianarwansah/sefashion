@@ -6,6 +6,7 @@ use App\Models\Pengiriman;
 use App\Models\Pemesanan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PengirimanController extends Controller
 {
@@ -14,11 +15,30 @@ class PengirimanController extends Controller
      */
     public function index()
     {
-        $pengiriman = Pengiriman::with('pemesanan.customer')
-            ->latest('created_at')
-            ->get();
+        try {
+            Log::debug('Memulai proses mengambil data pengiriman');
+            
+            $pengiriman = Pengiriman::with(['pemesanan'])
+                ->latest('created_at', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
 
-        return view('admin.pengiriman.index', compact('pengiriman'));
+            Log::debug('Berhasil mengambil data pengiriman', [
+                'jumlah' => $pengiriman->count(),
+                'total' => $pengiriman->total()
+            ]);
+            
+            return view('admin.pengiriman.index', compact('pengiriman'));
+            
+        } catch (\Exception $e) {
+            Log::error('Error pada index pengiriman: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengambil data pengiriman');
+        }
     }
 
     /**
@@ -406,6 +426,115 @@ class PengirimanController extends Controller
                     $pemesanan->update(['status' => Pemesanan::STATUS_BATAL]);
                 }
                 break;
+        }
+    }
+
+    /**
+     * Filter shipments
+     */
+    public function filter(Request $request)
+    {
+        try {
+            $status = $request->input('status', '');
+            $ekspedisi = $request->input('ekspedisi', '');
+            $sortBy = $request->input('sort_by', 'terbaru');
+            $minOngkir = $request->input('min_ongkir', '');
+            $maxOngkir = $request->input('max_ongkir', '');
+            
+            Log::debug('Memulai proses filter pengiriman', [
+                'status' => $status,
+                'ekspedisi' => $ekspedisi,
+                'sort_by' => $sortBy,
+                'min_ongkir' => $minOngkir,
+                'max_ongkir' => $maxOngkir
+            ]);
+
+            // Base query dengan eager loading
+            $query = Pengiriman::with(['pemesanan']);
+
+            // Filter by status
+            if (!empty($status) && $status !== 'semua') {
+                $query->where('status_pengiriman', $status);
+            }
+
+            // Filter by ekspedisi
+            if (!empty($ekspedisi) && $ekspedisi !== 'semua') {
+                $query->where('ekspedisi', $ekspedisi);
+            }
+
+            // Filter by ongkir range
+            if (!empty($minOngkir)) {
+                $query->where('biaya_ongkir', '>=', $minOngkir);
+            }
+            
+            if (!empty($maxOngkir)) {
+                $query->where('biaya_ongkir', '<=', $maxOngkir);
+            }
+
+            // Sorting
+            switch ($sortBy) {
+                case 'terlama':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+                case 'ongkir_tertinggi':
+                    $query->orderBy('biaya_ongkir', 'desc');
+                    break;
+                case 'ongkir_terendah':
+                    $query->orderBy('biaya_ongkir', 'asc');
+                    break;
+                case 'tanggal_dikirim_asc':
+                    $query->orderBy('tanggal_dikirim', 'asc');
+                    break;
+                case 'tanggal_dikirim_desc':
+                    $query->orderBy('tanggal_dikirim', 'desc');
+                    break;
+                case 'tanggal_diterima_asc':
+                    $query->orderBy('tanggal_diterima', 'asc');
+                    break;
+                case 'tanggal_diterima_desc':
+                    $query->orderBy('tanggal_diterima', 'desc');
+                    break;
+                case 'terbaru':
+                default:
+                    $query->orderBy('created_at', 'desc');
+                    break;
+            }
+
+            $pengiriman = $query->paginate(10);
+
+            Log::debug('Filter pengiriman berhasil', [
+                'jumlah_ditemukan' => $pengiriman->total(),
+                'status' => $status,
+                'ekspedisi' => $ekspedisi
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'html' => view('admin.pengiriman.partials.pengiriman-table', compact('pengiriman'))->render(),
+                    'pagination' => (string) $pengiriman->links(),
+                    'total' => $pengiriman->total()
+                ]);
+            }
+
+            return view('admin.pengiriman.index', compact('pengiriman', 'status', 'ekspedisi', 'sortBy', 'minOngkir', 'maxOngkir'));
+
+        } catch (\Exception $e) {
+            Log::error('Error pada filter pengiriman: ' . $e->getMessage(), [
+                'status' => $status ?? '',
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat memfilter pengiriman'
+                ], 500);
+            }
+
+            return redirect()->route('admin.pengiriman.index')
+                ->with('error', 'Terjadi kesalahan saat memfilter pengiriman: ' . $e->getMessage());
         }
     }
 }
