@@ -91,14 +91,29 @@
                                 <label for="kategori" class="block text-sm font-semibold text-gray-700 mb-2">
                                     Kategori <span class="text-red-500">*</span>
                                 </label>
-                                <input type="text" 
-                                       id="kategori" 
-                                       name="kategori" 
-                                       value="{{ old('kategori') }}"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 @error('kategori') border-red-500 @enderror"
-                                       placeholder="Masukkan kategori produk"
-                                       required
-                                       maxlength="50">
+                                <select id="kategori" 
+                                        name="kategori" 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 @error('kategori') border-red-500 @enderror"
+                                        required>
+                                    <option value="">Pilih Kategori</option>
+                                    <option value="Baju Pria" {{ old('kategori') == 'Baju Pria' ? 'selected' : '' }}>Baju Pria</option>
+                                    <option value="Baju Wanita" {{ old('kategori') == 'Baju Wanita' ? 'selected' : '' }}>Baju Wanita</option>
+                                    <option value="Baju Anak" {{ old('kategori') == 'Baju Anak' ? 'selected' : '' }}>Baju Anak</option>
+                                    <option value="Kaos" {{ old('kategori') == 'Kaos' ? 'selected' : '' }}>Kaos</option>
+                                    <option value="Kemeja" {{ old('kategori') == 'Kemeja' ? 'selected' : '' }}>Kemeja</option>
+                                    <option value="Blouse" {{ old('kategori') == 'Blouse' ? 'selected' : '' }}>Blouse</option>
+                                    <option value="Celana" {{ old('kategori') == 'Celana' ? 'selected' : '' }}>Celana</option>
+                                    <option value="Rok" {{ old('kategori') == 'Rok' ? 'selected' : '' }}>Rok</option>
+                                    <option value="Jaket" {{ old('kategori') == 'Jaket' ? 'selected' : '' }}>Jaket</option>
+                                    <option value="Hoodie" {{ old('kategori') == 'Hoodie' ? 'selected' : '' }}>Hoodie</option>
+                                    <option value="Sweater" {{ old('kategori') == 'Sweater' ? 'selected' : '' }}>Sweater</option>
+                                    <option value="Dress" {{ old('kategori') == 'Dress' ? 'selected' : '' }}>Dress</option>
+                                    <option value="Piyama" {{ old('kategori') == 'Piyama' ? 'selected' : '' }}>Piyama</option>
+                                    <option value="Olahraga" {{ old('kategori') == 'Olahraga' ? 'selected' : '' }}>Pakaian Olahraga</option>
+                                    <option value="Muslim" {{ old('kategori') == 'Muslim' ? 'selected' : '' }}>Pakaian Muslim</option>
+                                    <option value="Formal" {{ old('kategori') == 'Formal' ? 'selected' : '' }}>Pakaian Formal</option>
+                                    <option value="Kasual" {{ old('kategori') == 'Kasual' ? 'selected' : '' }}>Pakaian Kasual</option>
+                                </select>
                                 @error('kategori')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror

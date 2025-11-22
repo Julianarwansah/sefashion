@@ -17,31 +17,89 @@ class ProdukController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        try {
-            Log::debug('Memulai proses mengambil data produk');
-            
-            $produk = Produk::with([
-                'detailWarna',
-                'detailUkuran',
-                'gambarProduk'
-            ])->latest()->get();
+public function index()
+{
+    try {
+        Log::debug('Memulai proses mengambil data produk');
+        
+        $searchTerm = request()->input('search', '');
+        $kategori = request()->input('kategori', '');
+        $sortBy = request()->input('sort_by', 'terbaru');
+        
+        // Base query dengan eager loading
+        $query = Produk::with([
+            'detailWarna',
+            'detailUkuran', 
+            'gambarProduk'
+        ]);
 
-            Log::debug('Berhasil mengambil data produk', ['jumlah' => $produk->count()]);
-            
-            return view('admin.produk.index', compact('produk'));
-            
-        } catch (\Exception $e) {
-            Log::error('Error pada index produk: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengambil data produk');
+        // Search by product name, description, or category
+        if (!empty($searchTerm)) {
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('nama_produk', 'like', "%{$searchTerm}%")
+                  ->orWhere('deskripsi', 'like', "%{$searchTerm}%")
+                  ->orWhere('kategori', 'like', "%{$searchTerm}%");
+            });
         }
+
+        // Filter by category
+        if (!empty($kategori) && $kategori !== 'semua') {
+            $query->where('kategori', $kategori);
+        }
+
+        // Sorting
+        switch ($sortBy) {
+            case 'nama_asc':
+                $query->orderBy('nama_produk', 'asc');
+                break;
+            case 'nama_desc':
+                $query->orderBy('nama_produk', 'desc');
+                break;
+            case 'stok_terbanyak':
+                $query->orderBy('total_stok', 'desc');
+                break;
+            case 'stok_tersedikit':
+                $query->orderBy('total_stok', 'asc');
+                break;
+            case 'terlama':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'terbaru':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $produk = $query->paginate(10);
+
+        // Get unique categories for filter dropdown
+        $kategoriList = Produk::select('kategori')
+            ->whereNotNull('kategori')
+            ->where('kategori', '!=', '')
+            ->distinct()
+            ->pluck('kategori')
+            ->filter()
+            ->values();
+
+        Log::debug('Berhasil mengambil data produk', [
+            'jumlah' => $produk->count(),
+            'total' => $produk->total(),
+            'search_term' => $searchTerm,
+            'kategori' => $kategori
+        ]);
+        
+        return view('admin.produk.index', compact('produk', 'searchTerm', 'kategori', 'sortBy', 'kategoriList'));
+        
+    } catch (\Exception $e) {
+        Log::error('Error pada index produk: ' . $e->getMessage(), [
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return redirect()->back()->with('error', 'Terjadi kesalahan saat mengambil data produk');
     }
+}
 
     /**
      * Show the form for creating a new resource.
@@ -757,6 +815,110 @@ class ProdukController extends Controller
                 'success' => false,
                 'message' => 'Gagal mengambil data gambar'
             ], 500);
+        }
+    }
+
+    // app/Http/Controllers/ProdukController.php
+
+    /**
+     * Search products
+     */
+    public function search(Request $request)
+    {
+        try {
+            $searchTerm = $request->input('search', '');
+            $kategori = $request->input('kategori', '');
+            $sortBy = $request->input('sort_by', 'terbaru');
+            
+            Log::debug('Memulai proses search produk', [
+                'search_term' => $searchTerm,
+                'kategori' => $kategori,
+                'sort_by' => $sortBy
+            ]);
+
+            // Base query dengan eager loading
+            $query = Produk::with(['detailWarna', 'detailUkuran', 'gambarProduk']);
+
+            // Search by product name, description, or category
+            if (!empty($searchTerm)) {
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('nama_produk', 'like', "%{$searchTerm}%")
+                    ->orWhere('deskripsi', 'like', "%{$searchTerm}%")
+                    ->orWhere('kategori', 'like', "%{$searchTerm}%");
+                });
+            }
+
+            // Filter by category
+            if (!empty($kategori) && $kategori !== 'semua') {
+                $query->where('kategori', $kategori);
+            }
+
+            // Sorting
+            switch ($sortBy) {
+                case 'nama_asc':
+                    $query->orderBy('nama_produk', 'asc');
+                    break;
+                case 'nama_desc':
+                    $query->orderBy('nama_produk', 'desc');
+                    break;
+                case 'stok_terbanyak':
+                    $query->orderBy('total_stok', 'desc');
+                    break;
+                case 'stok_ter sedikit':
+                    $query->orderBy('total_stok', 'asc');
+                    break;
+                case 'terlama':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+                case 'terbaru':
+                default:
+                    $query->orderBy('created_at', 'desc');
+                    break;
+            }
+
+            $produk = $query->paginate(10)->withQueryString();
+
+            Log::debug('Search produk berhasil', [
+                'jumlah_ditemukan' => $produk->total(),
+                'search_term' => $searchTerm
+            ]);
+
+            // Get unique categories for filter dropdown
+            $kategoriList = Produk::select('kategori')
+                ->whereNotNull('kategori')
+                ->where('kategori', '!=', '')
+                ->distinct()
+                ->pluck('kategori')
+                ->filter()
+                ->values();
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'html' => view('admin.produk.partials.produk-table', compact('produk'))->render(),
+                    'pagination' => (string) $produk->links(),
+                    'total' => $produk->total()
+                ]);
+            }
+
+            return view('admin.produk.index', compact('produk', 'searchTerm', 'kategori', 'sortBy', 'kategoriList'));
+
+        } catch (\Exception $e) {
+            Log::error('Error pada search produk: ' . $e->getMessage(), [
+                'search_term' => $searchTerm ?? '',
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat mencari produk'
+                ], 500);
+            }
+
+            return redirect()->route('admin.produk.index')
+                ->with('error', 'Terjadi kesalahan saat mencari produk: ' . $e->getMessage());
         }
     }
 }
