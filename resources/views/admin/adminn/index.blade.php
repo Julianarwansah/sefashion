@@ -20,6 +20,104 @@
                     Tambah Admin
                 </a>
             </div>
+            <!-- Search and Filter Card -->
+            <div class="bg-white/80 glass rounded-2xl shadow-xl border border-white/20 overflow-hidden mb-6">
+                <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                    <h2 class="text-xl font-bold">Pencarian & Filter Admin</h2>
+                </div>
+                <div class="p-6">
+                    <form id="searchForm" action="{{ route('admin.adminn.search') }}" method="GET" class="space-y-4">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                            <!-- Search Input -->
+                            <div class="lg:col-span-5">
+                                <label for="search" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Cari Admin
+                                </label>
+                                <div class="relative">
+                                    <input type="text" 
+                                        id="search" 
+                                        name="search" 
+                                        value="{{ request('search') }}"
+                                        class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                                        placeholder="Cari berdasarkan nama, email, no HP, alamat..."
+                                        maxlength="100">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sort By -->
+                            <div class="lg:col-span-4">
+                                <label for="sort_by" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Urutkan Berdasarkan
+                                </label>
+                                <select id="sort_by" 
+                                        name="sort_by" 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                                    <option value="terbaru" {{ request('sort_by', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                                    <option value="terlama" {{ request('sort_by') == 'terlama' ? 'selected' : '' }}>Terlama</option>
+                                    <option value="nama_asc" {{ request('sort_by') == 'nama_asc' ? 'selected' : '' }}>Nama A-Z</option>
+                                    <option value="nama_desc" {{ request('sort_by') == 'nama_desc' ? 'selected' : '' }}>Nama Z-A</option>
+                                    <option value="email_asc" {{ request('sort_by') == 'email_asc' ? 'selected' : '' }}>Email A-Z</option>
+                                    <option value="email_desc" {{ request('sort_by') == 'email_desc' ? 'selected' : '' }}>Email Z-A</option>
+                                </select>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="lg:col-span-3 flex items-end space-x-2">
+                                <button type="submit" 
+                                        class="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    </svg>
+                                    Cari
+                                </button>
+                                
+                                <a href="{{ route('admin.adminn.index') }}" 
+                                class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+                                title="Reset pencarian">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results Info -->
+            @if(request()->has('search') || request()->has('sort_by'))
+                <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-blue-800 font-medium">
+                                Menampilkan 
+                                @if(request('search'))
+                                    hasil pencarian "<strong>{{ request('search') }}</strong>"
+                                @endif
+                                ({{ $admin->total() }} hasil ditemukan)
+                            </span>
+                        </div>
+                        <a href="{{ route('admin.adminn.index') }}" 
+                        class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            Tampilkan semua admin
+                        </a>
+                    </div>
+                </div>
+            @endif
+
+                <!-- Admin Table -->
+                <div id="adminTableContainer">
+                    @include('admin.adminn.partials.admin-table')
+                </div>
+            </div>
         </div>
 
         <!-- Alert Messages -->
@@ -55,7 +153,7 @@
 
         <!-- Content Card -->
         <div class="bg-white/80 glass rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-            @if($admins->isEmpty())
+            @if($admin->isEmpty())
                 <!-- Empty State -->
                 <div class="text-center py-16 px-4">
                     <div class="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
@@ -88,7 +186,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            @foreach($admins as $admin)
+                            @foreach($admin as $admin)
                             <tr class="hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition-colors duration-200">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {{ $loop->iteration }}
@@ -153,7 +251,7 @@
                 <!-- Table Info -->
                 <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
                     <p class="text-sm text-gray-600">
-                        Menampilkan <span class="font-semibold">{{ $admins->count() }}</span> data admin
+                        Menampilkan <span class="font-semibold">{{ $admin->count() }}</span> data admin
                     </p>
                 </div>
             @endif
@@ -229,6 +327,108 @@
 
 <!-- Include SweetAlert2 for beautiful confirm dialogs -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchForm = document.getElementById('searchForm');
+    const searchInput = document.getElementById('search');
+    const sortSelect = document.getElementById('sort_by');
+    const adminTableContainer = document.getElementById('adminTableContainer');
+    
+    let searchTimeout;
+    
+    // Real-time search dengan debounce
+    searchInput.addEventListener('input', function(e) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            performSearch();
+        }, 500);
+    });
+    
+    // Instant search untuk select changes
+    sortSelect.addEventListener('change', performSearch);
+    
+    function performSearch() {
+        const formData = new FormData(searchForm);
+        
+        // Show loading
+        adminTableContainer.innerHTML = `
+            <div class="flex justify-center items-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                <span class="ml-3 text-gray-600">Mencari admin...</span>
+            </div>
+        `;
+        
+        fetch(searchForm.action + '?' + new URLSearchParams(formData), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                adminTableContainer.innerHTML = data.html;
+                
+                // Update pagination jika ada
+                if (data.pagination) {
+                    const existingPagination = document.querySelector('.pagination');
+                    if (existingPagination) {
+                        existingPagination.innerHTML = data.pagination;
+                    }
+                }
+            } else {
+                adminTableContainer.innerHTML = `
+                    <div class="text-center py-8 text-red-600">
+                        <svg class="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                        <p>Terjadi kesalahan saat mencari admin.</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+            adminTableContainer.innerHTML = `
+                <div class="text-center py-8 text-red-600">
+                    <p>Terjadi kesalahan saat mencari admin.</p>
+                </div>
+            `;
+        });
+    }
+    
+    // Handle pagination clicks (untuk AJAX pagination)
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.pagination a')) {
+            e.preventDefault();
+            const url = e.target.closest('a').href;
+            
+            adminTableContainer.innerHTML = `
+                <div class="flex justify-center items-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                </div>
+            `;
+            
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    adminTableContainer.innerHTML = data.html;
+                }
+            })
+            .catch(error => {
+                console.error('Pagination error:', error);
+                window.location.href = url; // Fallback ke normal page load
+            });
+        }
+    });
+});
+</script>
+
 <style>
     .swal2-popup {
         font-family: 'Inter', sans-serif;

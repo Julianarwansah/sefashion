@@ -139,6 +139,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     
     // Admin Management
     Route::resource('adminn', AdminController::class);
+    Route::get('/cari-admin', [AdminController::class, 'search'])->name('adminn.search');
     
     // Customer Management
     Route::resource('customer', CustomerController::class);
@@ -165,6 +166,10 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     // Route untuk mendapatkan semua gambar produk (API)
     Route::get('/produk/{produk}/images', [ProdukController::class, 'getImages'])
         ->name('produk.get-images');
+    
+    // Route untuk mencari produk
+    Route::get('/cari-produk', [ProdukController::class, 'search'])->name('produk.search');
+    Route::resource('produk', ProdukController::class);
     
     // Order Management
     Route::resource('pesanan', PesananController::class);
