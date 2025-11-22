@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\DetailUkuran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PesananController extends Controller
 {
@@ -16,12 +17,32 @@ class PesananController extends Controller
      */
     public function index()
     {
-        $pesanan = Pemesanan::with(['customer', 'detailPemesanan.detailUkuran'])
-            ->latest('tanggal_pemesanan')
-            ->get();
+        try {
+            Log::debug('Memulai proses mengambil data pesanan');
+            
+            $pesanan = Pemesanan::with(['customer', 'detailPemesanan'])
+                ->latest('created_at', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
 
-        return view('admin.pesanan.index', compact('pesanan'));
+            Log::debug('Berhasil mengambil data pesanan', [
+                'jumlah' => $pesanan->count(),
+                'total' => $pesanan->total()
+            ]);
+            
+            return view('admin.pesanan.index', compact('pesanan'));
+            
+        } catch (\Exception $e) {
+            Log::error('Error pada index pesanan: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengambil data pesanan');
+        }
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -219,5 +240,122 @@ class PesananController extends Controller
 
         return redirect()->back()
             ->with('success', 'Status pesanan berhasil diubah dari ' . $oldStatus . ' menjadi ' . $request->status);
+    }
+
+    /**
+     * Filter orders
+     */
+    public function filter(Request $request)
+    {
+        try {
+            $status = $request->input('status', '');
+            $sortBy = $request->input('sort_by', 'terbaru');
+            $minTotal = $request->input('min_total', '');
+            $maxTotal = $request->input('max_total', '');
+            $minItems = $request->input('min_items', '');
+            $maxItems = $request->input('max_items', '');
+            
+            Log::debug('Memulai proses filter pesanan', [
+                'status' => $status,
+                'sort_by' => $sortBy,
+                'min_total' => $minTotal,
+                'max_total' => $maxTotal,
+                'min_items' => $minItems,
+                'max_items' => $maxItems
+            ]);
+
+            // Base query dengan eager loading
+            $query = Pemesanan::with(['customer', 'detailPemesanan']);
+
+            // Filter by status
+            if (!empty($status) && $status !== 'semua') {
+                $query->where('status', $status);
+            }
+
+            // Filter by total range
+            if (!empty($minTotal)) {
+                $query->where('total_harga', '>=', $minTotal);
+            }
+            
+            if (!empty($maxTotal)) {
+                $query->where('total_harga', '<=', $maxTotal);
+            }
+
+            // Filter by items count
+            if (!empty($minItems) || !empty($maxItems)) {
+                $query->whereHas('detailPemesanan', function($q) use ($minItems, $maxItems) {
+                    if (!empty($minItems)) {
+                        $q->havingRaw('COUNT(*) >= ?', [$minItems]);
+                    }
+                    if (!empty($maxItems)) {
+                        $q->havingRaw('COUNT(*) <= ?', [$maxItems]);
+                    }
+                });
+            }
+
+            // Sorting
+            switch ($sortBy) {
+                case 'terlama':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+                case 'total_tertinggi':
+                    $query->orderBy('total_harga', 'desc');
+                    break;
+                case 'total_terendah':
+                    $query->orderBy('total_harga', 'asc');
+                    break;
+                case 'items_terbanyak':
+                    $query->withCount('detailPemesanan')->orderBy('detail_pemesanan_count', 'desc');
+                    break;
+                case 'items_tersedikit':
+                    $query->withCount('detailPemesanan')->orderBy('detail_pemesanan_count', 'asc');
+                    break;
+                case 'tanggal_pemesanan_asc':
+                    $query->orderBy('tanggal_pemesanan', 'asc');
+                    break;
+                case 'tanggal_pemesanan_desc':
+                    $query->orderBy('tanggal_pemesanan', 'desc');
+                    break;
+                case 'terbaru':
+                default:
+                    $query->orderBy('created_at', 'desc');
+                    break;
+            }
+
+            $pesanan = $query->paginate(10);
+
+            Log::debug('Filter pesanan berhasil', [
+                'jumlah_ditemukan' => $pesanan->total(),
+                'status' => $status
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'html' => view('admin.pesanan.partials.pesanan-table', compact('pesanan'))->render(),
+                    'pagination' => (string) $pesanan->links(),
+                    'total' => $pesanan->total()
+                ]);
+            }
+
+            return view('admin.pesanan.index', compact('pesanan', 'status', 'sortBy', 'minTotal', 'maxTotal', 'minItems', 'maxItems'));
+
+        } catch (\Exception $e) {
+            Log::error('Error pada filter pesanan: ' . $e->getMessage(), [
+                'status' => $status ?? '',
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat memfilter pesanan'
+                ], 500);
+            }
+
+            return redirect()->route('admin.pesanan.index')
+                ->with('error', 'Terjadi kesalahan saat memfilter pesanan: ' . $e->getMessage());
+        }
     }
 }

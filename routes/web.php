@@ -174,6 +174,8 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     
     // Order Management
     Route::resource('pesanan', PesananController::class);
+    Route::get('/cari-pesanan', [PesananController::class, 'filter'])->name('pesanan.filter');
+    Route::post('/pesanan/{id}/cancel', [PesananController::class, 'cancel'])->name('pesanan.cancel');
     
     Route::resource('pembayaran', PembayaranController::class);
     Route::get('/cari-pembayaran', [PembayaranController::class, 'filter'])->name('pembayaran.filter');
