@@ -112,11 +112,6 @@
                     </div>
                 </div>
             @endif
-
-                <!-- Admin Table -->
-                <div id="adminTableContainer">
-                    @include('admin.adminn.partials.admin-table')
-                </div>
             </div>
         </div>
 

@@ -143,6 +143,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     
     // Customer Management
     Route::resource('customer', CustomerController::class);
+    Route::get('/cari-customer', [CustomerController::class, 'search'])->name('customer.search');
     
     // Product Management
     Route::resource('produk', ProdukController::class);
