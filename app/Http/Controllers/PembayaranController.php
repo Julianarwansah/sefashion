@@ -6,19 +6,39 @@ use App\Models\Pembayaran;
 use App\Models\Pemesanan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PembayaranController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+   public function index()
     {
-        $pembayaran = Pembayaran::with('pemesanan.customer')
-            ->latest('created_at')
-            ->get();
+        try {
+            Log::debug('Memulai proses mengambil data pembayaran');
+            
+            $pembayaran = Pembayaran::with(['pemesanan.customer'])
+                ->latest('created_at', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
 
-        return view('admin.pembayaran.index', compact('pembayaran'));
+            Log::debug('Berhasil mengambil data pembayaran', [
+                'jumlah' => $pembayaran->count(),
+                'total' => $pembayaran->total()
+            ]);
+            
+            return view('admin.pembayaran.index', compact('pembayaran'));
+            
+        } catch (\Exception $e) {
+            Log::error('Error pada index pembayaran: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengambil data pembayaran');
+        }
     }
 
     /**
@@ -291,7 +311,7 @@ class PembayaranController extends Controller
      */
     public function webhook(Request $request)
     {
-        \Log::info('Webhook received:', $request->all());
+        Log::info('Webhook received:', $request->all());
 
         try {
             $externalId = $request->input('external_id');
@@ -313,7 +333,7 @@ class PembayaranController extends Controller
             return response()->json(['message' => 'Webhook processed successfully']);
 
         } catch (\Exception $e) {
-            \Log::error('Webhook error: ' . $e->getMessage());
+            Log::error('Webhook error: ' . $e->getMessage());
             return response()->json(['error' => 'Internal server error'], 500);
         }
     }
@@ -423,5 +443,102 @@ class PembayaranController extends Controller
             });
 
         return response()->json($pemesanan);
+    }
+
+    /**
+     * Filter payments
+     */
+    public function filter(Request $request)
+    {
+        try {
+            $status = $request->input('status', '');
+            $metode = $request->input('metode', '');
+            $sortBy = $request->input('sort_by', 'terbaru');
+            $minAmount = $request->input('min_amount', '');
+            $maxAmount = $request->input('max_amount', '');
+            
+            Log::debug('Memulai proses filter pembayaran', [
+                'status' => $status,
+                'metode' => $metode,
+                'sort_by' => $sortBy,
+                'min_amount' => $minAmount,
+                'max_amount' => $maxAmount
+            ]);
+
+            // Base query dengan eager loading
+            $query = Pembayaran::with(['pemesanan.customer']);
+
+            // Filter by status
+            if (!empty($status) && $status !== 'semua') {
+                $query->where('status_pembayaran', $status);
+            }
+
+            // Filter by amount range
+            if (!empty($minAmount)) {
+                $query->where('jumlah_bayar', '>=', $minAmount);
+            }
+            
+            if (!empty($maxAmount)) {
+                $query->where('jumlah_bayar', '<=', $maxAmount);
+            }
+
+            // Sorting
+            switch ($sortBy) {
+                case 'terlama':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+                case 'jumlah_tertinggi':
+                    $query->orderBy('jumlah_bayar', 'desc');
+                    break;
+                case 'jumlah_terendah':
+                    $query->orderBy('jumlah_bayar', 'asc');
+                    break;
+                case 'tanggal_pembayaran_asc':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+                case 'tanggal_pembayaran_desc':
+                    $query->orderBy('created_at', 'desc');
+                    break;
+                case 'terbaru':
+                default:
+                    $query->orderBy('created_at', 'desc');
+                    break;
+            }
+
+            $pembayaran = $query->paginate(10);
+
+            Log::debug('Filter pembayaran berhasil', [
+                'jumlah_ditemukan' => $pembayaran->total(),
+                'status' => $status
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'html' => view('admin.pembayaran.partials.pembayaran-table', compact('pembayaran'))->render(),
+                    'pagination' => (string) $pembayaran->links(),
+                    'total' => $pembayaran->total()
+                ]);
+            }
+
+            return view('admin.pembayaran.index', compact('pembayaran', 'status', 'sortBy', 'minAmount', 'maxAmount'));
+
+        } catch (\Exception $e) {
+            Log::error('Error pada filter pembayaran: ' . $e->getMessage(), [
+                'status' => $status ?? '',
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat memfilter pembayaran'
+                ], 500);
+            }
+
+            return redirect()->route('admin.pembayaran.index')
+                ->with('error', 'Terjadi kesalahan saat memfilter pembayaran: ' . $e->getMessage());
+        }
     }
 }

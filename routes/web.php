@@ -176,6 +176,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::resource('pesanan', PesananController::class);
     
     Route::resource('pembayaran', PembayaranController::class);
+    Route::get('/cari-pembayaran', [PembayaranController::class, 'filter'])->name('pembayaran.filter');
 
     // Tambahan untuk mark as paid
     Route::post('/pembayaran/{id}/mark-paid', 

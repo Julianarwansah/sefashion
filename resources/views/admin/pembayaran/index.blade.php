@@ -22,6 +22,131 @@
                     Tambah Pembayaran
                 </a>
             </div>
+             <!-- Filter Card -->
+            <div class="bg-white/80 glass rounded-2xl shadow-xl border border-white/20 overflow-hidden mb-6">
+                <div class="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                    <h2 class="text-xl font-bold">Filter Pembayaran</h2>
+                </div>
+                <div class="p-6">
+                    <form id="filterForm" action="{{ route('admin.pembayaran.filter') }}" method="GET" class="space-y-4">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                            <!-- Status Filter -->
+                            <div class="lg:col-span-3">
+                                <label for="status" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Status Pembayaran
+                                </label>
+                                <select id="status" 
+                                        name="status" 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                                    <option value="semua">Semua Status</option>
+                                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
+                                    <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Expired</option>
+                                    <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Failed</option>
+                                </select>
+                            </div>
+
+                            <!-- Amount Range -->
+                            <div class="lg:col-span-4">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Rentang Jumlah
+                                </label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <input type="number" 
+                                            name="min_amount" 
+                                            value="{{ request('min_amount') }}"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                                            placeholder="Min. jumlah"
+                                            min="0">
+                                    </div>
+                                    <div>
+                                        <input type="number" 
+                                            name="max_amount" 
+                                            value="{{ request('max_amount') }}"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                                            placeholder="Max. jumlah"
+                                            min="0">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sort By -->
+                            <div class="lg:col-span-2">
+                                <label for="sort_by" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Urutkan
+                                </label>
+                                <select id="sort_by" 
+                                        name="sort_by" 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                                    <option value="terbaru" {{ request('sort_by', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                                    <option value="terlama" {{ request('sort_by') == 'terlama' ? 'selected' : '' }}>Terlama</option>
+                                    <option value="jumlah_tertinggi" {{ request('sort_by') == 'jumlah_tertinggi' ? 'selected' : '' }}>Jumlah Tertinggi</option>
+                                    <option value="jumlah_terendah" {{ request('sort_by') == 'jumlah_terendah' ? 'selected' : '' }}>Jumlah Terendah</option>
+                                    <option value="tanggal_pembayaran_asc" {{ request('sort_by') == 'tanggal_pembayaran_asc' ? 'selected' : '' }}>Tanggal (A-Z)</option>
+                                    <option value="tanggal_pembayaran_desc" {{ request('sort_by') == 'tanggal_pembayaran_desc' ? 'selected' : '' }}>Tanggal (Z-A)</option>
+                                </select>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="lg:col-span-2 flex items-end space-x-2">
+                                <button type="submit" 
+                                        class="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"/>
+                                    </svg>
+                                    Filter
+                                </button>
+                                
+                                <a href="{{ route('admin.pembayaran.index') }}" 
+                                class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+                                title="Reset filter">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results Info -->
+            @if(request()->hasAny(['status', 'sort_by', 'min_amount', 'max_amount']))
+                <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-blue-800 font-medium">
+                                Menampilkan hasil filter
+                                @if(request('status') && request('status') !== 'semua')
+                                    - Status: <strong>{{ ucfirst(request('status')) }}</strong>
+                                @endif
+                                @if(request('min_amount') || request('max_amount'))
+                                    - Jumlah: 
+                                    @if(request('min_amount'))
+                                        <strong>Rp {{ number_format(request('min_amount'), 0, ',', '.') }}</strong>
+                                    @endif
+                                    @if(request('min_amount') && request('max_amount'))
+                                        sampai
+                                    @endif
+                                    @if(request('max_amount'))
+                                        <strong>Rp {{ number_format(request('max_amount'), 0, ',', '.') }}</strong>
+                                    @endif
+                                @endif
+                                ({{ $pembayaran->total() }} hasil ditemukan)
+                            </span>
+                        </div>
+                        <a href="{{ route('admin.pembayaran.index') }}" 
+                        class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            Tampilkan semua pembayaran
+                        </a>
+                    </div>
+                </div>
+            @endif
+        </div>
         </div>
 
         <!-- Alert Messages -->
@@ -355,6 +480,114 @@
 
 <!-- Include SweetAlert2 for beautiful confirm dialogs -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('filterForm');
+    const statusSelect = document.getElementById('status');
+    const metodeSelect = document.getElementById('metode');
+    const sortSelect = document.getElementById('sort_by');
+    const minAmountInput = document.querySelector('input[name="min_amount"]');
+    const maxAmountInput = document.querySelector('input[name="max_amount"]');
+    const pembayaranTableContainer = document.getElementById('pembayaranTableContainer');
+    
+    // Real-time filter ketika select berubah
+    statusSelect.addEventListener('change', performFilter);
+    metodeSelect.addEventListener('change', performFilter);
+    sortSelect.addEventListener('change', performFilter);
+    
+    // Debounce untuk input amount
+    let amountTimeout;
+    minAmountInput.addEventListener('input', function() {
+        clearTimeout(amountTimeout);
+        amountTimeout = setTimeout(performFilter, 800);
+    });
+    
+    maxAmountInput.addEventListener('input', function() {
+        clearTimeout(amountTimeout);
+        amountTimeout = setTimeout(performFilter, 800);
+    });
+    
+    function performFilter() {
+        const formData = new FormData(filterForm);
+        
+        // Show loading
+        pembayaranTableContainer.innerHTML = `
+            <div class="flex justify-center items-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                <span class="ml-3 text-gray-600">Memfilter pembayaran...</span>
+            </div>
+        `;
+        
+        fetch(filterForm.action + '?' + new URLSearchParams(formData), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                pembayaranTableContainer.innerHTML = data.html;
+                
+                // Update pagination jika ada
+                if (data.pagination) {
+                    const existingPagination = document.querySelector('.pagination');
+                    if (existingPagination) {
+                        existingPagination.innerHTML = data.pagination;
+                    }
+                }
+            } else {
+                pembayaranTableContainer.innerHTML = `
+                    <div class="text-center py-8 text-red-600">
+                        <svg class="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                        <p>Terjadi kesalahan saat memfilter pembayaran.</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Filter error:', error);
+            pembayaranTableContainer.innerHTML = `
+                <div class="text-center py-8 text-red-600">
+                    <p>Terjadi kesalahan saat memfilter pembayaran.</p>
+                </div>
+            `;
+        });
+    }
+    
+    // Handle pagination clicks (untuk AJAX pagination)
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.pagination a')) {
+            e.preventDefault();
+            const url = e.target.closest('a').href;
+            
+            pembayaranTableContainer.innerHTML = `
+                <div class="flex justify-center items-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                </div>
+            `;
+            
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    pembayaranTableContainer.innerHTML = data.html;
+                }
+            })
+            .catch(error => {
+                console.error('Pagination error:', error);
+                window.location.href = url; // Fallback ke normal page load
+            });
+        }
+    });
+});
+</script>
 <style>
     .swal2-popup {
         font-family: 'Inter', sans-serif;
