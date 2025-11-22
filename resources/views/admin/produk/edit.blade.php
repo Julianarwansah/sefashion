@@ -122,20 +122,7 @@
                                     <option value="Baju Pria" {{ old('kategori', $produk->kategori) == 'Baju Pria' ? 'selected' : '' }}>Baju Pria</option>
                                     <option value="Baju Wanita" {{ old('kategori', $produk->kategori) == 'Baju Wanita' ? 'selected' : '' }}>Baju Wanita</option>
                                     <option value="Baju Anak" {{ old('kategori', $produk->kategori) == 'Baju Anak' ? 'selected' : '' }}>Baju Anak</option>
-                                    <option value="Kaos" {{ old('kategori', $produk->kategori) == 'Kaos' ? 'selected' : '' }}>Kaos</option>
-                                    <option value="Kemeja" {{ old('kategori', $produk->kategori) == 'Kemeja' ? 'selected' : '' }}>Kemeja</option>
-                                    <option value="Blouse" {{ old('kategori', $produk->kategori) == 'Blouse' ? 'selected' : '' }}>Blouse</option>
-                                    <option value="Celana" {{ old('kategori', $produk->kategori) == 'Celana' ? 'selected' : '' }}>Celana</option>
-                                    <option value="Rok" {{ old('kategori', $produk->kategori) == 'Rok' ? 'selected' : '' }}>Rok</option>
-                                    <option value="Jaket" {{ old('kategori', $produk->kategori) == 'Jaket' ? 'selected' : '' }}>Jaket</option>
-                                    <option value="Hoodie" {{ old('kategori', $produk->kategori) == 'Hoodie' ? 'selected' : '' }}>Hoodie</option>
-                                    <option value="Sweater" {{ old('kategori', $produk->kategori) == 'Sweater' ? 'selected' : '' }}>Sweater</option>
-                                    <option value="Dress" {{ old('kategori', $produk->kategori) == 'Dress' ? 'selected' : '' }}>Dress</option>
-                                    <option value="Piyama" {{ old('kategori', $produk->kategori) == 'Piyama' ? 'selected' : '' }}>Piyama</option>
-                                    <option value="Olahraga" {{ old('kategori', $produk->kategori) == 'Olahraga' ? 'selected' : '' }}>Pakaian Olahraga</option>
-                                    <option value="Muslim" {{ old('kategori', $produk->kategori) == 'Muslim' ? 'selected' : '' }}>Pakaian Muslim</option>
-                                    <option value="Formal" {{ old('kategori', $produk->kategori) == 'Formal' ? 'selected' : '' }}>Pakaian Formal</option>
-                                    <option value="Kasual" {{ old('kategori', $produk->kategori) == 'Kasual' ? 'selected' : '' }}>Pakaian Kasual</option>
+                                    <option value="Aksesoris" {{ old('kategori', $produk->kategori) == 'Aksesoris' ? 'selected' : '' }}>Aksesoris</option>
                                 </select>
                                 @error('kategori')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
