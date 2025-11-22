@@ -196,6 +196,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     
     // Shipping Management
     Route::resource('pengiriman', PengirimanController::class);
+    Route::get('/cari-pengiriman', [PengirimanController::class, 'filter'])->name('pengiriman.filter');
     Route::get('pengiriman/{id}/track', [PengirimanController::class, 'track'])->name('pengiriman.track');
 });
 
