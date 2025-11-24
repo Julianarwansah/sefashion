@@ -358,8 +358,8 @@
                                         @foreach($produk->gambarProduk as $gambar)
                                             <div class="relative group bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
                                                 <img src="{{ $gambar->gambar_url }}" 
-                                                     alt="Gambar Produk" 
-                                                     class="w-full h-32 object-cover">
+                                                    alt="Gambar Produk" 
+                                                    class="w-full h-32 object-cover">
                                                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100">
                                                     @if($gambar->is_primary)
                                                         <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
@@ -375,12 +375,16 @@
                                                             </button>
                                                         </form>
                                                     @endif
-                                                    <form action="{{ route('admin.produk.delete-image', ['produk' => $produk->id_produk, 'gambar' => $gambar->id_gambar]) }}" method="POST" class="inline">
+                                                    
+                                                    {{-- Form Delete dengan method DELETE yang benar --}}
+                                                    <form action="{{ route('admin.produk.delete-image', ['produk' => $produk->id_produk, 'gambar' => $gambar->id_gambar]) }}" 
+                                                        method="POST" 
+                                                        class="inline delete-image-form"
+                                                        data-gambar-id="{{ $gambar->id_gambar }}">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" 
-                                                                class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded-full transition-colors"
-                                                                onclick="return confirm('Apakah Anda yakin ingin menghapus gambar ini?')"
+                                                        <button type="button" 
+                                                                class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded-full transition-colors delete-image-btn"
                                                                 title="Hapus gambar">
                                                             Hapus
                                                         </button>
@@ -617,7 +621,14 @@
                 reader.readAsDataURL(file);
             }
         });
-        
+        // Pastikan semua form hapus gambar menggunakan route yang benar
+    document.querySelectorAll('form[action*="delete-image"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            console.log('URL yang akan dipanggil:', this.action);
+            // Verifikasi URL mengandung 'delete-image' bukan hanya 'produk/2'
+        });
+    });
+
         // Tambah Warna
         document.getElementById('tambahWarna').addEventListener('click', function() {
             const container = document.getElementById('warnaContainer');
@@ -963,6 +974,30 @@
             setTimeout(() => alert.remove(), 300);
         }
     }
+
+    // Konfirmasi delete gambar
+    document.querySelectorAll('.delete-image-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('form');
+            const gambarId = form.getAttribute('data-gambar-id');
+            
+            if (confirm('Apakah Anda yakin ingin menghapus gambar ini?')) {
+                console.log('Menghapus gambar ID:', gambarId);
+                console.log('URL:', form.action);
+                form.submit();
+            }
+        });
+    });
+    
+    // Debug: Log semua form delete
+    document.querySelectorAll('.delete-image-form').forEach(form => {
+        console.log('Form delete gambar:', {
+            action: form.action,
+            method: form.method,
+            gambarId: form.getAttribute('data-gambar-id')
+        });
+    });
 </script>
 
 <style>

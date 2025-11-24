@@ -664,40 +664,72 @@ public function index()
     }
 
     /**
-     * Delete gambar produk
-     */
-    public function deleteImage($idProduk, $idGambar)
-    {
-        DB::beginTransaction();
-        try {
-            $gambar = ProdukGambar::where('id_produk', $idProduk)
-                ->where('id_gambar', $idGambar)
-                ->firstOrFail();
+ * Delete gambar produk
+ */
+public function deleteImage($idProduk, $idGambar)
+{
+    DB::beginTransaction();
+    try {
+        Log::debug('Memulai proses hapus gambar', [
+            'id_produk' => $idProduk,
+            'id_gambar' => $idGambar
+        ]);
 
-            // Jika gambar yang dihapus adalah primary, set gambar lain sebagai primary
-            if ($gambar->is_primary) {
-                $otherImage = ProdukGambar::where('id_produk', $idProduk)
-                    ->where('id_gambar', '!=', $idGambar)
-                    ->first();
-                
-                if ($otherImage) {
-                    $otherImage->update(['is_primary' => true]);
-                }
+        // Cari gambar yang akan dihapus
+        $gambar = ProdukGambar::where('id_produk', $idProduk)
+            ->where('id_gambar', $idGambar)
+            ->firstOrFail();
+
+        Log::debug('Gambar ditemukan', [
+            'gambar' => $gambar->gambar,
+            'is_primary' => $gambar->is_primary
+        ]);
+
+        // Jika gambar yang dihapus adalah primary, set gambar lain sebagai primary
+        if ($gambar->is_primary) {
+            $otherImage = ProdukGambar::where('id_produk', $idProduk)
+                ->where('id_gambar', '!=', $idGambar)
+                ->first();
+            
+            if ($otherImage) {
+                $otherImage->update(['is_primary' => true]);
+                Log::debug('Set gambar lain sebagai primary', ['id_gambar' => $otherImage->id_gambar]);
+            } else {
+                Log::debug('Tidak ada gambar lain untuk dijadikan primary');
             }
-
-            // Delete file dari storage
-            Storage::disk('public')->delete('produk/images/' . $gambar->gambar);
-
-            $gambar->delete();
-
-            DB::commit();
-            return redirect()->back()->with('success', 'Gambar berhasil dihapus');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error delete image: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal menghapus gambar');
         }
+
+        // Delete file dari storage
+        $filePath = 'produk/images/' . $gambar->gambar;
+        if (Storage::disk('public')->exists($filePath)) {
+            Storage::disk('public')->delete($filePath);
+            Log::debug('File gambar dihapus dari storage', ['path' => $filePath]);
+        } else {
+            Log::warning('File gambar tidak ditemukan di storage', ['path' => $filePath]);
+        }
+
+        // Hapus record dari database
+        $gambar->delete();
+        Log::debug('Record gambar dihapus dari database');
+
+        DB::commit();
+        Log::debug('Hapus gambar berhasil');
+
+        return redirect()->back()->with('success', 'Gambar berhasil dihapus');
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error delete image: ' . $e->getMessage(), [
+            'id_produk' => $idProduk,
+            'id_gambar' => $idGambar,
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return redirect()->back()->with('error', 'Gagal menghapus gambar: ' . $e->getMessage());
     }
+}
 
     /**
      * Tambah gambar baru ke produk
