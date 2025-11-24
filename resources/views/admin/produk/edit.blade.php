@@ -170,7 +170,7 @@
                                                        placeholder="Contoh: Merah, Biru, Hitam"
                                                        required
                                                        maxlength="100">
-                                                @if(isset($warna['id_warna']))
+                                                @if(isset($warna['id_warna']) && $warna['id_warna'])
                                                     <input type="hidden" name="warna[{{ $index }}][id_warna]" value="{{ $warna['id_warna'] }}">
                                                 @endif
                                                 @error('warna.'.$index.'.nama_warna')
@@ -253,7 +253,7 @@
                                                         </option>
                                                     @endforeach
                                                 </select>
-                                                @if(isset($ukuran['id_ukuran']))
+                                                @if(isset($ukuran['id_ukuran']) && $ukuran['id_ukuran'])
                                                     <input type="hidden" name="ukuran[{{ $index }}][id_ukuran]" value="{{ $ukuran['id_ukuran'] }}">
                                                 @endif
                                                 @error('ukuran.'.$index.'.id_warna')
