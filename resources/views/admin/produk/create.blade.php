@@ -72,15 +72,14 @@
                             <!-- Deskripsi -->
                             <div>
                                 <label for="deskripsi" class="block text-sm font-semibold text-gray-700 mb-2">
-                                    Deskripsi <span class="text-red-500">*</span>
+                                    Deskripsi
                                 </label>
                                 <textarea 
                                     id="deskripsi" 
                                     name="deskripsi" 
                                     rows="4"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 @error('deskripsi') border-red-500 @enderror"
-                                    placeholder="Masukkan deskripsi produk"
-                                    required>{{ old('deskripsi') }}</textarea>
+                                    placeholder="Masukkan deskripsi produk">{{ old('deskripsi') }}</textarea>
                                 @error('deskripsi')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -89,13 +88,12 @@
                             <!-- Kategori -->
                             <div>
                                 <label for="kategori" class="block text-sm font-semibold text-gray-700 mb-2">
-                                    Kategori <span class="text-red-500">*</span>
+                                    Kategori
                                 </label>
                                 <select id="kategori" 
                                         name="kategori" 
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 @error('kategori') border-red-500 @enderror"
-                                        required>
-                                    <option value="">Pilih Kategori</option>
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 @error('kategori') border-red-500 @enderror">
+                                    <option value="">Pilih Kategori (Opsional)</option>
                                     <option value="Baju Pria" {{ old('kategori') == 'Baju Pria' ? 'selected' : '' }}>Baju Pria</option>
                                     <option value="Baju Wanita" {{ old('kategori') == 'Baju Wanita' ? 'selected' : '' }}>Baju Wanita</option>
                                     <option value="Baju Anak" {{ old('kategori') == 'Baju Anak' ? 'selected' : '' }}>Baju Anak</option>
@@ -144,14 +142,13 @@
                                                 </div>
                                                 <div class="lg:col-span-5">
                                                     <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                                        Kode Warna <span class="text-red-500">*</span>
+                                                        Kode Warna
                                                     </label>
                                                     <input type="text" 
                                                            name="warna[{{ $index }}][kode_warna]" 
                                                            value="{{ $warna['kode_warna'] ?? '' }}"
                                                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('warna.'.$index.'.kode_warna') border-red-500 @enderror"
                                                            placeholder="Contoh: #FF0000 atau red"
-                                                           required
                                                            maxlength="50">
                                                     @error('warna.'.$index.'.kode_warna')
                                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -179,6 +176,7 @@
                                                 </label>
                                                 <input type="text" 
                                                        name="warna[0][nama_warna]" 
+                                                       value="{{ old('warna.0.nama_warna', '') }}"
                                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                                        placeholder="Contoh: Merah, Biru, Hitam"
                                                        required
@@ -186,13 +184,13 @@
                                             </div>
                                             <div class="lg:col-span-5">
                                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                                    Kode Warna <span class="text-red-500">*</span>
+                                                    Kode Warna
                                                 </label>
                                                 <input type="text" 
                                                        name="warna[0][kode_warna]" 
+                                                       value="{{ old('warna.0.kode_warna', '') }}"
                                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                                        placeholder="Contoh: #FF0000 atau red"
-                                                       required
                                                        maxlength="50">
                                             </div>
                                             <div class="lg:col-span-2">
@@ -235,10 +233,9 @@
                                                         Warna <span class="text-red-500">*</span>
                                                     </label>
                                                     <select name="ukuran[{{ $index }}][id_warna_index]" 
-                                                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 @error('ukuran.'.$index.'.id_warna_index') border-red-500 @enderror"
+                                                            class="warna-select-ukuran w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 @error('ukuran.'.$index.'.id_warna_index') border-red-500 @enderror"
                                                             required>
                                                         <option value="">Pilih Warna</option>
-                                                        <!-- Options akan diisi oleh JavaScript -->
                                                     </select>
                                                     @error('ukuran.'.$index.'.id_warna_index')
                                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -322,7 +319,7 @@
                                                     Warna <span class="text-red-500">*</span>
                                                 </label>
                                                 <select name="ukuran[0][id_warna_index]" 
-                                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                                                        class="warna-select-ukuran w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                                                         required>
                                                     <option value="">Pilih Warna</option>
                                                 </select>
@@ -333,6 +330,7 @@
                                                 </label>
                                                 <input type="text" 
                                                        name="ukuran[0][ukuran]" 
+                                                       value="{{ old('ukuran.0.ukuran', '') }}"
                                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                                                        placeholder="S, M, L, XL"
                                                        required
@@ -344,6 +342,7 @@
                                                 </label>
                                                 <input type="number" 
                                                        name="ukuran[0][harga]" 
+                                                       value="{{ old('ukuran.0.harga', '') }}"
                                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                                                        min="0" 
                                                        step="1000" 
@@ -356,6 +355,7 @@
                                                 </label>
                                                 <input type="number" 
                                                        name="ukuran[0][stok]" 
+                                                       value="{{ old('ukuran.0.stok', '') }}"
                                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                                                        min="0" 
                                                        placeholder="0"
@@ -367,6 +367,7 @@
                                                 </label>
                                                 <input type="text" 
                                                        name="ukuran[0][tambahan]" 
+                                                       value="{{ old('ukuran.0.tambahan', '') }}"
                                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                                                        placeholder="Opsional"
                                                        maxlength="255">
@@ -410,7 +411,7 @@
                                                 Warna (Opsional)
                                             </label>
                                             <select name="gambar_produk[0][id_warna_index]" 
-                                                    class="warna-select-group w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200">
+                                                    class="warna-select-gambar w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200">
                                                 <option value="">Pilih Warna</option>
                                             </select>
                                         </div>
@@ -475,7 +476,7 @@
                                                accept="image/*"
                                                class="hidden">
                                         <label for="gambar" 
-                                               class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all duration-200">
+                                               class="upload-label-main flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all duration-200">
                                             <svg class="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                             </svg>
@@ -574,6 +575,13 @@
         // Preview gambar utama
         const gambarInput = document.getElementById('gambar');
         const previewGambar = document.getElementById('previewGambar');
+        const uploadLabelMain = document.querySelector('.upload-label-main');
+        
+        // Handle click untuk gambar utama
+        uploadLabelMain.addEventListener('click', function(e) {
+            e.preventDefault();
+            gambarInput.click();
+        });
         
         gambarInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -587,6 +595,15 @@
                                  alt="Preview Gambar">
                             <p class="text-sm text-green-600 mt-2">Gambar siap diupload</p>
                         </div>
+                    `;
+                    
+                    // Update label text
+                    uploadLabelMain.innerHTML = `
+                        <svg class="w-8 h-8 text-green-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span class="text-sm text-green-600">Gambar dipilih</span>
+                        <span class="text-xs text-gray-500">${file.name}</span>
                     `;
                 };
                 reader.readAsDataURL(file);
@@ -613,13 +630,12 @@
                     </div>
                     <div class="lg:col-span-5">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Kode Warna <span class="text-red-500">*</span>
+                            Kode Warna
                         </label>
                         <input type="text" 
                                name="warna[${warnaCounter}][kode_warna]" 
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                placeholder="Contoh: #FF0000 atau red"
-                               required
                                maxlength="50">
                     </div>
                     <div class="lg:col-span-2">
@@ -651,7 +667,7 @@
                             Warna <span class="text-red-500">*</span>
                         </label>
                         <select name="ukuran[${ukuranCounter}][id_warna_index]" 
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                                class="warna-select-ukuran w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                                 required>
                             <option value="">Pilih Warna</option>
                         </select>
@@ -729,7 +745,7 @@
                             Warna (Opsional)
                         </label>
                         <select name="gambar_produk[${gambarGroupCounter}][id_warna_index]" 
-                                class="warna-select-group w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200">
+                                class="warna-select-gambar w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200">
                             <option value="">Pilih Warna</option>
                         </select>
                     </div>
@@ -837,9 +853,26 @@
         // Update opsi warna di semua select
         function updateWarnaOptions() {
             const warnaInputs = document.querySelectorAll('input[name^="warna["][name$="[nama_warna]"]');
-            const semuaSelect = document.querySelectorAll('select[name^="ukuran["], .warna-select-group');
             
-            semuaSelect.forEach(select => {
+            // Update untuk ukuran
+            document.querySelectorAll('.warna-select-ukuran').forEach(select => {
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Pilih Warna</option>';
+                
+                warnaInputs.forEach((input, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = input.value || `Warna ${index + 1}`;
+                    select.appendChild(option);
+                });
+                
+                if (currentValue) {
+                    select.value = currentValue;
+                }
+            });
+            
+            // Update untuk gambar
+            document.querySelectorAll('.warna-select-gambar').forEach(select => {
                 const currentValue = select.value;
                 select.innerHTML = '<option value="">Pilih Warna</option>';
                 
@@ -864,8 +897,10 @@
                 const previewContainer = group.nextElementSibling;
                 
                 // Reset event listener
-                input.removeEventListener('change', handleFileChange);
-                input.addEventListener('change', handleFileChange);
+                const newInput = input.cloneNode(true);
+                input.parentNode.replaceChild(newInput, input);
+                
+                newInput.addEventListener('change', handleFileChange);
                 
                 function handleFileChange(e) {
                     const files = e.target.files;
@@ -896,18 +931,20 @@
                         
                         // Update label text
                         const fileCount = files.length;
-                        const labelText = label.querySelector('span:nth-child(2)');
-                        const subText = label.querySelector('span:nth-child(3)');
-                        
-                        labelText.textContent = `${fileCount} gambar dipilih`;
-                        subText.textContent = `${fileCount} file selected (Maks. 2MB per gambar)`;
+                        label.innerHTML = `
+                            <svg class="w-6 h-6 text-green-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span class="text-sm text-green-600">${fileCount} gambar dipilih</span>
+                            <span class="text-xs text-gray-500">${fileCount} file selected</span>
+                        `;
                     }
                 }
                 
                 // Click handler untuk label
                 label.addEventListener('click', function(e) {
                     e.preventDefault();
-                    input.click();
+                    newInput.click();
                 });
             });
         }
