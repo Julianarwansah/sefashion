@@ -22,39 +22,32 @@ use App\Http\Controllers\XenditTestController;
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [HomeController::class, 'shop'])->name('shop');
-Route::get('/about', function () { 
-    return view('frontend.about'); 
-})->name('about');
-Route::get('/contact', function () { 
-    return view('frontend.contact'); 
-})->name('contact');
+Route::get('/about', fn() => view('frontend.about'))->name('about');
+Route::get('/contact', fn() => view('frontend.contact'))->name('contact');
 Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show');
 
 // Authentication Routes
-Route::get('/login', function () { 
-    return view('auth.login'); 
-})->name('login')->middleware('guest');
-
-Route::get('/register', function () { 
-    return view('auth.register'); 
-})->name('register')->middleware('guest');
+Route::get('/login', fn() => view('auth.login'))->name('login')->middleware('guest');
+Route::get('/register', fn() => view('auth.register'))->name('register')->middleware('guest');
 
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/register', [RegisterController::class, 'register'])->name('register.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Password Reset
-Route::get('/password/reset', function () { 
-    return view('auth.passwords.email'); 
-})->name('password.request')->middleware('guest');
+Route::get('/password/reset', fn() => view('auth.passwords.email'))
+    ->name('password.request')
+    ->middleware('guest');
 
 Route::post('/password/email', [LoginController::class, 'sendResetLinkEmail'])->name('password.email');
 
-// =========================================================================
-// XENDIT WEBHOOK ROUTES (HARUS PUBLIC KARENA DIAKSES OLEH XENDIT SERVER)
-// =========================================================================
+
+// ========================================================================
+// XENDIT WEBHOOK ROUTES
+// ========================================================================
 Route::post('/webhook/xendit', [CheckoutController::class, 'handleWebhook'])->name('webhook.xendit');
 Route::post('/xendit/callback', [CheckoutController::class, 'handleWebhook'])->name('xendit.callback'); 
+
 
 /*
 |--------------------------------------------------------------------------
@@ -62,7 +55,6 @@ Route::post('/xendit/callback', [CheckoutController::class, 'handleWebhook'])->n
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:customer'])->group(function () {
-    // Product Detail - HANYA bisa diakses setelah login
     Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show');
 
     // Profile Routes
@@ -81,13 +73,13 @@ Route::middleware(['auth:customer'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
     Route::post('/checkout/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('checkout.shipping');
-    
+
     // Payment Status Routes
     Route::get('/payment/status/{orderId}', [CheckoutController::class, 'checkPaymentStatus'])->name('payment.status');
     Route::get('/payment/success/{orderId}', [CheckoutController::class, 'paymentSuccess'])->name('payment.success');
     Route::get('/payment/failed/{orderId}', [CheckoutController::class, 'paymentFailed'])->name('payment.failed');
-    
-    // Order Success Route - Redirect to waiting payment
+
+    // Waiting Payment
     Route::get('/order/success/{id}', function ($id) {
         $pemesanan = \App\Models\Pemesanan::with('pembayaran')->find($id);
 
@@ -95,17 +87,14 @@ Route::middleware(['auth:customer'])->group(function () {
             return redirect()->route('home')->with('error', 'Order not found');
         }
 
-        // If already paid, redirect to payment success
         if ($pemesanan->pembayaran && $pemesanan->pembayaran->status_pembayaran === \App\Models\Pembayaran::STATUS_SUDAH_BAYAR) {
             return redirect()->route('payment.success', $id);
         }
 
-        // If payment failed, redirect to payment failed
         if ($pemesanan->pembayaran && $pemesanan->pembayaran->status_pembayaran === \App\Models\Pembayaran::STATUS_GAGAL) {
             return redirect()->route('payment.failed', $id);
         }
 
-        // Otherwise show waiting payment page
         return view('frontend.waiting-payment', [
             'orderId' => $id,
             'pemesanan' => $pemesanan
@@ -118,92 +107,75 @@ Route::middleware(['auth:customer'])->group(function () {
     Route::post('/order/{id}/cancel', [OrderController::class, 'cancel'])->name('order.cancel');
 });
 
+
 /*
 |--------------------------------------------------------------------------
 | Admin Routes (Protected)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
-    
-    // Dashboard Routes
+
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
-    // AJAX Routes untuk dashboard
+
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart');
     Route::get('/dashboard/real-time-stats', [DashboardController::class, 'getRealTimeStats'])->name('dashboard.stats');
-    
-    // AJAX Routes untuk dashboard
-    Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart');
-    Route::get('/dashboard/real-time-stats', [DashboardController::class, 'getRealTimeStats'])->name('dashboard.stats');
-    
+
     // Admin Management
     Route::resource('adminn', AdminController::class);
     Route::get('/cari-admin', [AdminController::class, 'search'])->name('adminn.search');
-    
+
     // Customer Management
     Route::resource('customer', CustomerController::class);
     Route::get('/cari-customer', [CustomerController::class, 'search'])->name('customer.search');
-    
-    // Product Management
-    Route::resource('produk', ProdukController::class);
-    
-    // =========================================================================
-    // ROUTES UNTUK MULTIPLE GAMBAR PRODUK
-    // =========================================================================
-    
-    // Route untuk mengatur gambar utama
-    Route::post('/produk/{produk}/set-primary-image/{gambar}', [ProdukController::class, 'setPrimaryImage'])
-        ->name('produk.set-primary-image');
 
-    // Route untuk menghapus gambar
+
+    // =========================================================================
+    //  *** ROUTES PRODUK - PERBAIKI URUTAN YANG BENAR ***
+    // =========================================================================
+    
+    // 1. ROUTES KHUSUS GAMBAR HARUS DULUAN (LEBIH SPESIFIK)
     Route::delete('/produk/{produk}/delete-image/{gambar}', [ProdukController::class, 'deleteImage'])
         ->name('produk.delete-image');
 
-    // Route untuk menambah gambar baru ke produk yang sudah ada
+    Route::post('/produk/{produk}/set-primary-image/{gambar}', [ProdukController::class, 'setPrimaryImage'])
+        ->name('produk.set-primary-image');
+
     Route::post('/produk/{produk}/tambah-gambar', [ProdukController::class, 'tambahGambar'])
         ->name('produk.tambah-gambar');
 
-    // Route untuk mendapatkan semua gambar produk (API)
     Route::get('/produk/{produk}/images', [ProdukController::class, 'getImages'])
         ->name('produk.get-images');
-    
-    // Route untuk mencari produk
+
+    // Route search produk
     Route::get('/cari-produk', [ProdukController::class, 'search'])->name('produk.search');
+
+    // 2. ROUTE RESOURCE SETELAH ROUTE KHUSUS
     Route::resource('produk', ProdukController::class);
-    
+
+
     // Order Management
     Route::resource('pesanan', PesananController::class);
     Route::get('/cari-pesanan', [PesananController::class, 'filter'])->name('pesanan.filter');
     Route::post('/pesanan/{id}/cancel', [PesananController::class, 'cancel'])->name('pesanan.cancel');
-    
+
+    // Pembayaran
     Route::resource('pembayaran', PembayaranController::class);
     Route::get('/cari-pembayaran', [PembayaranController::class, 'filter'])->name('pembayaran.filter');
+    Route::post('/pembayaran/{id}/mark-paid', [PembayaranController::class, 'markAsPaid'])->name('pembayaran.mark-paid');
+    Route::post('/pembayaran/{id}/mark-expired', [PembayaranController::class, 'markAsExpired'])->name('pembayaran.mark-expired');
+    Route::post('/pembayaran/{id}/update-status', [PembayaranController::class, 'updateStatus'])->name('pembayaran.update-status');
 
-    // Tambahan untuk mark as paid
-    Route::post('/pembayaran/{id}/mark-paid', 
-        [PembayaranController::class, 'markAsPaid']
-    )->name('pembayaran.mark-paid');
-
-    // Tambahan untuk mark as expired jika perlu
-    Route::post('/pembayaran/{id}/mark-expired', 
-        [PembayaranController::class, 'markAsExpired']
-    )->name('pembayaran.mark-expired');
-    
-    // Tambahkan ini (UPDATE STATUS PEMBAYARAN)
-    Route::post('/pembayaran/{id}/update-status', [PembayaranController::class, 'updateStatus'])
-        ->name('pembayaran.update-status');
-    
     // Shipping Management
     Route::resource('pengiriman', PengirimanController::class);
     Route::get('/cari-pengiriman', [PengirimanController::class, 'filter'])->name('pengiriman.filter');
-    Route::get('pengiriman/{id}/track', [PengirimanController::class, 'track'])->name('pengiriman.track');
+    Route::get('/pengiriman/{id}/track', [PengirimanController::class, 'track'])->name('pengiriman.track');
 });
 
-Route::get('/dev/fake-pay/{orderId}', [CheckoutController::class, 'devMarkAsPaid'])
-    ->name('dev.fake-pay');
+// Fake Pay Dev
+Route::get('/dev/fake-pay/{orderId}', [CheckoutController::class, 'devMarkAsPaid'])->name('dev.fake-pay');
 
-// Xendit Test Routes (bisa diakses tanpa auth untuk testing)
+// Xendit Test
 Route::prefix('xendit/test')->group(function () {
     Route::get('/connection', [XenditTestController::class, 'testConnection'])->name('xendit.test.connection');
     Route::get('/webhook', [XenditTestController::class, 'testWebhook'])->name('xendit.test.webhook');
