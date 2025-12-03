@@ -27,6 +27,8 @@ class Customer extends Authenticatable
         'nama',
         'email',
         'password',
+        'google_id',
+        'avatar',
         'no_hp',
         'alamat',
         'province_id',
@@ -81,19 +83,19 @@ class Customer extends Authenticatable
     public function getAlamatLengkapAttribute()
     {
         $alamat = $this->alamat;
-        
+
         if ($this->city_name) {
             $alamat .= ', ' . $this->city_name;
         }
-        
+
         if ($this->province_name) {
             $alamat .= ', ' . $this->province_name;
         }
-        
+
         if ($this->kode_pos) {
             $alamat .= ' - ' . $this->kode_pos;
         }
-        
+
         return $alamat;
     }
 
@@ -102,11 +104,26 @@ class Customer extends Authenticatable
      */
     public function hasCompleteAddress()
     {
-        return !empty($this->alamat) && 
-               !empty($this->city_id) && 
-               !empty($this->province_id) &&
-               !empty($this->city_name) &&
-               !empty($this->province_name);
+        return !empty($this->alamat) &&
+            !empty($this->city_id) &&
+            !empty($this->province_id) &&
+            !empty($this->city_name) &&
+            !empty($this->province_name);
+    }
+
+    /**
+     * Check jika customer memiliki profile lengkap untuk checkout
+     */
+    public function hasCompleteProfile()
+    {
+        return !empty($this->nama) &&
+            !empty($this->email) &&
+            !empty($this->no_hp) &&
+            !empty($this->alamat) &&
+            !empty($this->city_id) &&
+            !empty($this->province_id) &&
+            !empty($this->city_name) &&
+            !empty($this->province_name);
     }
 
     /**
@@ -115,12 +132,12 @@ class Customer extends Authenticatable
     public function scopeWithCompleteAddress($query)
     {
         return $query->whereNotNull('alamat')
-                    ->whereNotNull('city_id')
-                    ->whereNotNull('province_id')
-                    ->whereNotNull('city_name')
-                    ->whereNotNull('province_name')
-                    ->where('alamat', '!=', '')
-                    ->where('city_name', '!=', '')
-                    ->where('province_name', '!=', '');
+            ->whereNotNull('city_id')
+            ->whereNotNull('province_id')
+            ->whereNotNull('city_name')
+            ->whereNotNull('province_name')
+            ->where('alamat', '!=', '')
+            ->where('city_name', '!=', '')
+            ->where('province_name', '!=', '');
     }
 }

@@ -14,10 +14,17 @@ return [
     |
     */
 
+
     'rajaongkir' => [
         'key' => env('RAJAONGKIR_API_KEY', ''),
-        'package' => env('RAJAONGKIR_PACKAGE', 'starter'), // starter, basic, pro
+        'origin_city_id' => env('RAJAONGKIR_ORIGIN_CITY_ID', '152'), // Jakarta Selatan
     ],
+
+    'binderbyte' => [
+        'key' => env('BINDERBYTE_API_KEY', ''),
+        'origin_city_id' => env('BINDERBYTE_ORIGIN_CITY_ID', '3171'), // Jakarta Pusat (for wilayah only)
+    ],
+
 
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
@@ -31,6 +38,12 @@ return [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+    ],
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
     'slack' => [

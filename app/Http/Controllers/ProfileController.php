@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Services\BinderbyteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -10,12 +11,20 @@ use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
 {
+    protected $binderbyteService;
+
+    public function __construct(BinderbyteService $binderbyteService)
+    {
+        $this->binderbyteService = $binderbyteService;
+    }
+
     /**
      * Show the profile page
      */
     public function show()
     {
-        return view('frontend.profile');
+        $provinces = $this->binderbyteService->getProvinces();
+        return view('frontend.profile', compact('provinces'));
     }
 
     /**
@@ -31,6 +40,10 @@ class ProfileController extends Controller
             'email' => 'required|string|email|max:255|unique:customers,email,' . $customer->id_customer . ',id_customer',
             'no_hp' => 'nullable|string|max:15',
             'alamat' => 'nullable|string|max:500',
+            'province_id' => 'nullable|string',
+            'city_id' => 'nullable|string',
+            'province_name' => 'nullable|string',
+            'city_name' => 'nullable|string',
             'current_password' => 'nullable|required_with:new_password',
             'new_password' => 'nullable|min:8|confirmed',
         ]);
@@ -47,6 +60,10 @@ class ProfileController extends Controller
             'email' => $request->email,
             'no_hp' => $request->no_hp,
             'alamat' => $request->alamat,
+            'province_id' => $request->province_id,
+            'city_id' => $request->city_id,
+            'province_name' => $request->province_name,
+            'city_name' => $request->city_name,
         ]);
 
         // Update password jika diisi

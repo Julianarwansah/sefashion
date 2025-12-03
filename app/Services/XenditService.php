@@ -175,7 +175,7 @@ class XenditService
     public function getPaymentStatus($paymentId, $type = 'va')
     {
         try {
-            $endpoint = match($type) {
+            $endpoint = match ($type) {
                 'va' => "/callback_virtual_accounts/{$paymentId}",
                 'ewallet' => "/ewallets/charges/{$paymentId}",
                 'retail' => "/fixed_payment_code/{$paymentId}",
@@ -210,58 +210,88 @@ class XenditService
             ];
         }
     }
-public function simulateVAPayment($externalId, $amount)
-{
-    try {
-        // ✅ ENDPOINT YANG BENAR untuk simulate VA payment
-        $url = $this->baseUrl . "/callback_virtual_accounts/external_id={$externalId}/simulate_payment";
-        
-        $payload = [
-            'amount' => $amount
-        ];
+    public function simulateVAPayment($externalId, $amount)
+    {
+        try {
+            // ✅ ENDPOINT YANG BENAR untuk simulate VA payment
+            $url = $this->baseUrl . "/callback_virtual_accounts/external_id={$externalId}/simulate_payment";
 
-        Log::info('Simulate VA Payment Request:', [
-            'url' => $url,
-            'payload' => $payload,
-            'external_id' => $externalId
-        ]);
-
-        $response = Http::withBasicAuth($this->secretKey, '')
-            ->timeout(30)
-            ->post($url, $payload);
-
-        $responseData = $response->json();
-        $statusCode = $response->status();
-
-        Log::info('Simulate VA Payment Response:', [
-            'status_code' => $statusCode,
-            'response' => $responseData
-        ]);
-
-        if ($response->successful()) {
-            return [
-                'success' => true,
-                'data' => $responseData
+            $payload = [
+                'amount' => $amount
             ];
-        } else {
+
+            Log::info('Simulate VA Payment Request:', [
+                'url' => $url,
+                'payload' => $payload,
+                'external_id' => $externalId
+            ]);
+
+            $response = Http::withBasicAuth($this->secretKey, '')
+                ->timeout(30)
+                ->post($url, $payload);
+
+            $responseData = $response->json();
+            $statusCode = $response->status();
+
+            Log::info('Simulate VA Payment Response:', [
+                'status_code' => $statusCode,
+                'response' => $responseData
+            ]);
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'data' => $responseData
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'error' => $responseData['message'] ?? 'Unknown error from Xendit',
+                    'details' => $responseData,
+                    'status_code' => $statusCode
+                ];
+            }
+
+        } catch (Exception $e) {
+            Log::error('Simulate VA Payment Exception:', [
+                'message' => $e->getMessage(),
+                'external_id' => $externalId
+            ]);
+
             return [
                 'success' => false,
-                'error' => $responseData['message'] ?? 'Unknown error from Xendit',
-                'details' => $responseData,
-                'status_code' => $statusCode
+                'error' => $e->getMessage()
             ];
         }
-
-    } catch (Exception $e) {
-        Log::error('Simulate VA Payment Exception:', [
-            'message' => $e->getMessage(),
-            'external_id' => $externalId
-        ]);
-
-        return [
-            'success' => false,
-            'error' => $e->getMessage()
-        ];
     }
-}
+
+    /**
+     * Create payment - Wrapper method
+     */
+    public function createPayment($orderId, $amount, $paymentMethod, $channel = null)
+    {
+        $externalId = 'ORDER-' . $orderId . '-' . time();
+        $customerName = auth('customer')->user()->nama ?? 'Customer';
+
+        if ($paymentMethod === 'va') {
+            $bankCode = strtoupper($channel ?? 'BCA');
+            $result = $this->createVirtualAccount([
+                'external_id' => $externalId,
+                'bank_code' => $bankCode,
+                'name' => $customerName,
+                'expected_amount' => $amount,
+            ]);
+            if ($result['success']) {
+                return [
+                    'success' => true,
+                    'external_id' => $externalId,
+                    'payment_url' => null,
+                    'data' => $result['data']
+                ];
+            }
+            return $result;
+        }
+
+        return ['success' => false, 'message' => 'Payment method not fully implemented yet. Use COD for now.'];
+    }
 }

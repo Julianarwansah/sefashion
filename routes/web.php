@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminController;
@@ -27,12 +28,16 @@ Route::get('/contact', fn() => view('frontend.contact'))->name('contact');
 Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show');
 
 // Authentication Routes
-Route::get('/login', fn() => view('auth.login'))->name('login')->middleware('guest');
-Route::get('/register', fn() => view('auth.register'))->name('register')->middleware('guest');
+Route::get('/login', fn() => view('auth.login'))->name('login')->middleware('guest:customer');
+Route::get('/register', fn() => view('auth.register'))->name('register')->middleware('guest:customer');
 
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/register', [RegisterController::class, 'register'])->name('register.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+// Google OAuth Routes
+Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
 // Password Reset
 Route::get('/password/reset', fn() => view('auth.passwords.email'))
@@ -46,7 +51,7 @@ Route::post('/password/email', [LoginController::class, 'sendResetLinkEmail'])->
 // XENDIT WEBHOOK ROUTES
 // ========================================================================
 Route::post('/webhook/xendit', [CheckoutController::class, 'handleWebhook'])->name('webhook.xendit');
-Route::post('/xendit/callback', [CheckoutController::class, 'handleWebhook'])->name('xendit.callback'); 
+Route::post('/xendit/callback', [CheckoutController::class, 'handleWebhook'])->name('xendit.callback');
 
 
 /*
@@ -68,11 +73,12 @@ Route::middleware(['auth:customer'])->group(function () {
     Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remove');
     Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
     Route::get('/cart/count', [CartController::class, 'getCount'])->name('cart.count');
-    
+
     // Checkout routes
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
     Route::post('/checkout/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('checkout.shipping');
+    Route::get('/checkout/cities', [CheckoutController::class, 'getCities'])->name('checkout.cities');
 
     // Payment Status Routes
     Route::get('/payment/status/{orderId}', [CheckoutController::class, 'checkPaymentStatus'])->name('payment.status');
@@ -95,7 +101,7 @@ Route::middleware(['auth:customer'])->group(function () {
             return redirect()->route('payment.failed', $id);
         }
 
-        return view('frontend.waiting-payment', [
+        return view('frontend.order-success', [
             'orderId' => $id,
             'pemesanan' => $pemesanan
         ]);
@@ -133,7 +139,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     // =========================================================================
     //  *** ROUTES PRODUK - PERBAIKI URUTAN YANG BENAR ***
     // =========================================================================
-    
+
     // 1. ROUTES KHUSUS GAMBAR HARUS DULUAN (LEBIH SPESIFIK)
     Route::delete('/produk/{produk}/delete-image/{gambar}', [ProdukController::class, 'deleteImage'])
         ->name('produk.delete-image');
@@ -182,4 +188,67 @@ Route::prefix('xendit/test')->group(function () {
     Route::get('/va', [XenditTestController::class, 'testVA'])->name('xendit.test.va');
     Route::get('/balance', [XenditTestController::class, 'testBalance'])->name('xendit.test.balance');
     Route::get('/page', [XenditTestController::class, 'testPage'])->name('xendit.test.page');
+});
+
+// Binderbyte Test
+Route::get('/test-binderbyte', function (App\Services\BinderbyteService $service) {
+    $provinces = $service->getProvinces();
+    return response()->json([
+        'api_key_configured' => !empty(config('services.binderbyte.key')),
+        'provinces_count' => count($provinces),
+        'sample_provinces' => array_slice($provinces, 0, 5)
+    ]);
+});
+
+Route::get('/test-cities', function (App\Services\BinderbyteService $service) {
+    // Test DKI Jakarta (31)
+    $cities = $service->getCities('31');
+    return response()->json([
+        'success' => !empty($cities),
+        'count' => count($cities),
+        'sample' => $cities // Show all to find Jakarta Pusat
+    ]);
+});
+
+// RajaOngkir Test
+Route::get('/test-rajaongkir', function () {
+    $apiKey = config('services.rajaongkir.key');
+    $baseUrl = 'https://api.rajaongkir.com/starter';
+
+    Log::info('Testing RajaOngkir API', [
+        'api_key' => substr($apiKey, 0, 10) . '...',
+        'base_url' => $baseUrl
+    ]);
+
+    // Test 1: Get Provinces
+    try {
+        $url = "{$baseUrl}/province";
+
+        $response = Http::withHeaders([
+            'key' => $apiKey
+        ])->get($url);
+
+        Log::info('Province Response', [
+            'status' => $response->status(),
+            'body' => $response->body()
+        ]);
+
+        $data = $response->json();
+
+        return response()->json([
+            'test' => 'Get Provinces',
+            'status' => $response->status(),
+            'success' => $response->successful(),
+            'data' => $data,
+            'provinces_count' => isset($data['rajaongkir']['results']) ? count($data['rajaongkir']['results']) : 0
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('Test Error', ['error' => $e->getMessage()]);
+
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
 });

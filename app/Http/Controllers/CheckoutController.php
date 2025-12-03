@@ -8,19 +8,28 @@ use App\Models\DetailPemesanan;
 use App\Models\Pembayaran;
 use App\Models\Pengiriman;
 use App\Services\XenditService;
+use App\Services\BinderbyteService;
+use App\Services\ManualShippingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 
 class CheckoutController extends Controller
 {
     protected $xenditService;
+    protected $binderbyteService;
+    protected $manualShippingService;
 
-    public function __construct()
-    {
+    public function __construct(
+        BinderbyteService $binderbyteService,
+        ManualShippingService $manualShippingService
+    ) {
         $this->xenditService = new XenditService();
+        $this->binderbyteService = $binderbyteService;
+        $this->manualShippingService = $manualShippingService;
     }
 
     /**
@@ -49,15 +58,45 @@ class CheckoutController extends Controller
             }
         }
 
+        // Calculate total weight (gram) from cart items
+        $totalWeight = 0;
+        foreach ($cartItems as $item) {
+            // Assuming detailUkuran has a 'berat' field (in gram)
+            $totalWeight += ($item->detailUkuran->berat ?? 0) * $item->jumlah;
+        }
+
+        // Pass weight to view
+        $weight = $totalWeight;
+
         $subtotal = Cart::getTotalPrice($customerId);
         $totalItems = Cart::getTotalItems($customerId);
 
         // Get customer data
         $customer = Auth::guard('customer')->user();
 
+        // Check if customer profile is complete
+        if (!$customer->hasCompleteProfile()) {
+            return redirect()->route('profile')
+                ->with('error', 'Please complete your profile (Name, Email, Phone, Address, Province, City) before checkout.');
+        }
+
         // Shipping cost estimation (simplified version, you can integrate with real shipping API)
-        $ongkir = 15000; // Fixed shipping cost for demo
+        $ongkir = 0; // Default 0 until calculated
         $grandTotal = $subtotal + $ongkir;
+
+        // Get Provinces for dropdown (BinderByte)
+        $provinces = $this->binderbyteService->getProvinces();
+
+        // Debug logging
+        Log::info('Checkout Index - Provinces loaded', [
+            'count' => count($provinces),
+            'sample' => count($provinces) > 0 ? $provinces[0] : null
+        ]);
+
+        // If provinces is empty, log error
+        if (empty($provinces)) {
+            Log::error('Checkout: No provinces loaded from BinderByte API');
+        }
 
         return view('frontend.checkout', compact(
             'cartItems',
@@ -65,402 +104,246 @@ class CheckoutController extends Controller
             'totalItems',
             'customer',
             'ongkir',
-            'grandTotal'
+            'grandTotal',
+            'provinces',
+            'weight'
         ));
     }
 
     /**
-     * Process checkout and create order with Xendit payment
+     * Process checkout and create order
      */
-    /**
- * Process checkout and create order with Xendit payment
- */
-public function process(Request $request)
-{
-    $request->validate([
-        'nama_penerima' => 'required|string|max:255',
-        'no_hp_penerima' => 'required|string|max:20',
-        'alamat_tujuan' => 'required|string',
-        'metode_pembayaran' => 'required|in:va,ewallet,retail,cod',
-        'channel' => 'nullable|string', // Ubah menjadi nullable
-        'ekspedisi' => 'nullable|string',
-        'layanan' => 'nullable|string',
-        'biaya_ongkir' => 'required|numeric',
-    ]);
+    public function process(Request $request)
+    {
+        try {
+            $customerId = Auth::guard('customer')->id();
 
-    $customerId = Auth::guard('customer')->id();
-    $customer = Auth::guard('customer')->user();
-
-    // Get cart items
-    $cartItems = Cart::where('id_customer', $customerId)
-        ->with(['detailUkuran.produk'])
-        ->get();
-
-    if ($cartItems->isEmpty()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Keranjang Anda kosong'
-        ], 400);
-    }
-
-    try {
-        DB::beginTransaction();
-
-        // Calculate totals
-        $subtotal = $cartItems->sum(function ($item) {
-            return $item->subtotal;
-        });
-
-        $ongkir = $request->biaya_ongkir;
-        $grandTotal = $subtotal + $ongkir;
-
-        // Create pemesanan
-        $pemesanan = Pemesanan::create([
-            'id_customer' => $customerId,
-            'tanggal_pemesanan' => now(),
-            'total_harga' => $grandTotal,
-            'status' => Pemesanan::STATUS_PENDING,
-        ]);
-
-        // Create detail pemesanan from cart items
-        foreach ($cartItems as $cartItem) {
-            if (!$cartItem->detailUkuran->stokMencukupi($cartItem->jumlah)) {
-                throw new \Exception("Stok untuk {$cartItem->detailUkuran->produk->nama_produk} tidak mencukupi");
-            }
-
-            DetailPemesanan::create([
-                'id_pemesanan' => $pemesanan->id_pemesanan,
-                'id_ukuran' => $cartItem->id_ukuran,
-                'jumlah' => $cartItem->jumlah,
-                'subtotal' => $cartItem->subtotal,
+            // Validate request
+            $validated = $request->validate([
+                'nama_penerima' => 'required|string',
+                'no_hp_penerima' => 'required|string',
+                'alamat_tujuan' => 'required|string',
+                'province_id' => 'required|string',
+                'destination' => 'required|string',
+                'ekspedisi' => 'required|string',
+                'layanan' => 'required|string',
+                'ongkir' => 'required|numeric',
+                'metode_pembayaran' => 'required|string',
+                'channel' => 'nullable|string',
             ]);
-        }
 
-        // Generate external_id untuk pembayaran
-        $externalId = 'ORDER-' . $pemesanan->id_pemesanan . '-' . Str::random(6);
-
-        // Handle channel untuk COD
-        $channel = $request->channel;
-        if ($request->metode_pembayaran === 'cod') {
-            $channel = 'COD';
-        }
-
-        // Create pembayaran record
-        $pembayaranData = [
-            'id_pemesanan' => $pemesanan->id_pemesanan,
-            'metode_pembayaran' => $request->metode_pembayaran,
-            'channel' => $channel,
-            'jumlah_bayar' => $grandTotal,
-            'status_pembayaran' => $request->metode_pembayaran === 'cod' 
-                ? Pembayaran::STATUS_BELUM_BAYAR 
-                : Pembayaran::STATUS_MENUNGGU,
-            'external_id' => $externalId,
-        ];
-
-        $pembayaran = Pembayaran::create($pembayaranData);
-
-        // Create pengiriman
-        $pengiriman = Pengiriman::create([
-            'id_pemesanan' => $pemesanan->id_pemesanan,
-            'nama_penerima' => $request->nama_penerima,
-            'no_hp_penerima' => $request->no_hp_penerima,
-            'alamat_tujuan' => $request->alamat_tujuan,
-            'ekspedisi' => $request->ekspedisi ?? 'JNE',
-            'layanan' => $request->layanan ?? 'REG',
-            'biaya_ongkir' => $ongkir,
-            'status_pengiriman' => Pengiriman::STATUS_MENUNGGU,
-        ]);
-
-        // Handle payment creation based on method (kecuali COD)
-        $paymentResult = [];
-        if ($request->metode_pembayaran !== 'cod') {
-            // Validasi channel untuk non-COD
-            if (empty($request->channel)) {
-                throw new \Exception('Channel pembayaran harus dipilih');
-            }
-
-            $paymentResult = $this->createXenditPayment($pembayaran, $pemesanan, $customer, $request);
-
-            if (!$paymentResult['success']) {
-                throw new \Exception($paymentResult['error']);
-            }
-
-            // Update pembayaran dengan Xendit data
-            $pembayaran->update($paymentResult['pembayaran_data']);
-        }
-
-        // Clear cart
-        Cart::clearCart($customerId);
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Pesanan berhasil dibuat',
-            'order_id' => $pemesanan->id_pemesanan,
-            'payment_url' => $paymentResult['payment_url'] ?? route('order.success', $pemesanan->id_pemesanan),
-            'redirect_url' => route('order.success', $pemesanan->id_pemesanan)
-        ]);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal membuat pesanan: ' . $e->getMessage()
-        ], 500);
-    }
-}
-
-    /**
-     * Create Xendit payment based on method
-     */
-    private function createXenditPayment($pembayaran, $pemesanan, $customer, $request)
-{
-    $externalId = $pembayaran->external_id;
-    $amount = (int) $pembayaran->jumlah_bayar;
-    $expirationDate = now()->addDays(1)->toISOString();
-
-    $baseData = [
-        'external_id' => $externalId,
-        'amount' => $amount,
-        'name' => $customer->nama,
-        'order_id' => $pemesanan->id_pemesanan,
-        'expiration_date' => $expirationDate,
-        'success_redirect_url' => route('payment.success', $pemesanan->id_pemesanan),
-        'failure_redirect_url' => route('payment.failed', $pemesanan->id_pemesanan),
-    ];
-
-    $pembayaranData = [
-        'xendit_external_id' => $externalId,
-        'xendit_expiry_date' => $expirationDate,
-    ];
-
-    switch ($request->metode_pembayaran) {
-        case 'va':
-            $result = $this->xenditService->createVirtualAccount(array_merge($baseData, [
-                'bank_code' => $request->channel,
-            ]));
-            
-            if ($result['success']) {
-                $responseData = $result['data'];
-                $pembayaranData['xendit_id'] = $responseData['id'] ?? null;
-                $pembayaranData['xendit_payment_url'] = $responseData['payment_url'] ?? null;
-                $pembayaranData['xendit_merchant_name'] = $responseData['merchant_name'] ?? null;
-                $pembayaranData['xendit_account_number'] = $responseData['account_number'] ?? null;
-            }
-            break;
-
-        case 'ewallet':
-            $result = $this->xenditService->createEWalletPayment(array_merge($baseData, [
-                'channel_code' => $request->channel,
-                'phone_number' => $customer->no_hp,
-
-                // WAJIB DITAMBAHKAN
-                'callback_url' => route('xendit.callback'),
-            ]));
-
-            
-            if ($result['success']) {
-                $responseData = $result['data'];
-                $pembayaranData['xendit_id'] = $responseData['id'] ?? null;
-                $pembayaranData['xendit_payment_url'] = $responseData['checkout_url'] ?? 
-                    $responseData['actions']['desktop_web_checkout_url'] ?? null;
-            }
-            break;
-
-        case 'retail':
-            $result = $this->xenditService->createRetailPayment(array_merge($baseData, [
-                'retail_outlet_name' => $request->channel,
-            ]));
-            
-            if ($result['success']) {
-                $responseData = $result['data'];
-                $pembayaranData['xendit_id'] = $responseData['id'] ?? null;
-                $pembayaranData['xendit_payment_url'] = $responseData['payment_url'] ?? null;
-            }
-            break;
-
-        default:
-            throw new \Exception('Metode pembayaran tidak didukung');
-    }
-
-    if (!$result['success']) {
-        throw new \Exception($result['error']);
-    }
-
-    return [
-        'success' => true,
-        'payment_url' => $pembayaranData['xendit_qr_url'] ?? route('order.success', $pemesanan->id_pemesanan),
-        'pembayaran_data' => $pembayaranData
-    ];
-
-}
-
-    /**
-     * Handle Xendit webhook for payment status updates
-     */
-    public function handleWebhook(Request $request)
-    {
-        \Log::info('Xendit Webhook Received:', $request->all());
-
-        try {
-            $event = $request->event;
-            $data = $request->data;
-
-            // Verify webhook (you might want to add signature verification)
-            if ($event === 'payment.captured' || $event === 'payment.succeeded') {
-                $this->handleSuccessfulPayment($data);
-            } elseif ($event === 'payment.failed' || $event === 'payment.expired') {
-                $this->handleFailedPayment($data);
-            }
-
-            return response()->json(['status' => 'success']);
-
-        } catch (\Exception $e) {
-            \Log::error('Webhook Error:', ['error' => $e->getMessage()]);
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
-        }
-    }
-
-    /**
-     * Handle successful payment
-     */
-    private function handleSuccessfulPayment($data)
-    {
-        DB::transaction(function () use ($data) {
-            $externalId = $data['external_id'] ?? $data['reference_id'];
-            
-            // Find pembayaran by external_id
-            $pembayaran = Pembayaran::where('external_id', $externalId)->first();
-            
-            if ($pembayaran) {
-                $pembayaran->update([
-                    'status_pembayaran' => Pembayaran::STATUS_SUDAH_BAYAR,
-                    'xendit_id' => $data['id'] ?? $pembayaran->xendit_id,
-                ]);
-
-                // Update pemesanan status
-                $pemesanan = $pembayaran->pemesanan;
-                if ($pemesanan) {
-                    $pemesanan->update(['status' => Pemesanan::STATUS_DIPROSES]);
-                }
-
-                \Log::info('Payment marked as paid:', ['external_id' => $externalId]);
-            }
-        });
-    }
-
-    /**
-     * Handle failed payment
-     */
-    private function handleFailedPayment($data)
-    {
-        DB::transaction(function () use ($data) {
-            $externalId = $data['external_id'] ?? $data['reference_id'];
-            
-            $pembayaran = Pembayaran::where('external_id', $externalId)->first();
-            
-            if ($pembayaran) {
-                $pembayaran->update([
-                    'status_pembayaran' => Pembayaran::STATUS_GAGAL,
-                ]);
-
-                \Log::info('Payment marked as failed:', ['external_id' => $externalId]);
-            }
-        });
-    }
-
-    /**
-     * Check payment status manually
-     */
-    public function checkPaymentStatus($orderId)
-    {
-        try {
-            $pembayaran = Pembayaran::where('id_pemesanan', $orderId)->first();
-
-            if (!$pembayaran) {
+            // Get cart items
+            $cartItems = Cart::where('id_customer', $customerId)->get();
+            if ($cartItems->isEmpty()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Pembayaran tidak ditemukan'
-                ]);
+                    'message' => 'Keranjang kosong'
+                ], 400);
             }
 
-            // If xendit_id exists, check with Xendit API
-            if ($pembayaran->xendit_id) {
-                $result = $this->xenditService->getPaymentStatus(
-                    $pembayaran->xendit_id,
-                    $pembayaran->metode_pembayaran
+            // Calculate totals
+            $subtotal = Cart::getTotalPrice($customerId);
+            $ongkir = $validated['ongkir'];
+            $grandTotal = $subtotal + $ongkir;
+
+            DB::beginTransaction();
+
+            // Create order
+            $pemesanan = Pemesanan::create([
+                'id_customer' => $customerId,
+                'tanggal_pemesanan' => now(),
+                'status_pemesanan' => 'pending',
+                'total_harga' => $grandTotal,
+            ]);
+
+            // Create order details
+            foreach ($cartItems as $item) {
+                DetailPemesanan::create([
+                    'id_pemesanan' => $pemesanan->id_pemesanan,
+                    'id_ukuran' => $item->id_ukuran,
+                    'jumlah' => $item->jumlah,
+                    'subtotal' => $item->detailUkuran->harga * $item->jumlah,
+                ]);
+
+                // Update stock
+                $item->detailUkuran->decrement('stok', $item->jumlah);
+            }
+
+            // Create shipping record
+            Pengiriman::create([
+                'id_pemesanan' => $pemesanan->id_pemesanan,
+                'nama_penerima' => $validated['nama_penerima'],
+                'no_hp_penerima' => $validated['no_hp_penerima'],
+                'alamat_tujuan' => $validated['alamat_tujuan'],
+                'ekspedisi' => $validated['ekspedisi'],
+                'layanan' => $validated['layanan'],
+                'biaya_ongkir' => $ongkir,
+                'status_pengiriman' => Pengiriman::STATUS_MENUNGGU,
+            ]);
+
+            // Create payment record
+            $pembayaran = Pembayaran::create([
+                'id_pemesanan' => $pemesanan->id_pemesanan,
+                'metode_pembayaran' => $validated['metode_pembayaran'],
+                'jumlah_bayar' => $grandTotal,
+                'status_pembayaran' => Pembayaran::STATUS_MENUNGGU,
+                'channel' => $validated['channel'] ?? null,
+                'tanggal_pembayaran' => null,
+            ]);
+
+            // Handle payment based on method
+            $paymentUrl = null;
+            if ($validated['metode_pembayaran'] === 'cod') {
+                // COD - no payment URL needed
+                $pembayaran->update(['status_pembayaran' => Pembayaran::STATUS_MENUNGGU]);
+            } else {
+                // Create Xendit payment
+                $channel = $validated['channel'] ?? null;
+                $xenditResponse = $this->xenditService->createPayment(
+                    $pemesanan->id_pemesanan,
+                    $grandTotal,
+                    $validated['metode_pembayaran'],
+                    $channel
                 );
 
-                if ($result['success']) {
-                    // Update status based on Xendit response
-                    $xenditStatus = $result['data']['status'] ?? null;
-
-                    if (in_array($xenditStatus, ['COMPLETED', 'SUCCEEDED', 'PAID'])) {
-                        $pembayaran->update(['status_pembayaran' => Pembayaran::STATUS_SUDAH_BAYAR]);
-                        $pembayaran->pemesanan->update(['status' => Pemesanan::STATUS_DIPROSES]);
-                    } elseif (in_array($xenditStatus, ['FAILED', 'EXPIRED'])) {
-                        $pembayaran->update(['status_pembayaran' => Pembayaran::STATUS_GAGAL]);
-                    }
+                if ($xenditResponse['success']) {
+                    $xenditData = $xenditResponse['data'] ?? [];
+                    $pembayaran->update([
+                        'external_id' => $xenditResponse['external_id'] ?? null,
+                        'xendit_id' => $xenditData['id'] ?? null,
+                        'xendit_external_id' => $xenditData['external_id'] ?? null,
+                        'xendit_account_number' => $xenditData['account_number'] ?? null,
+                        'xendit_merchant_name' => $xenditData['merchant_code'] ?? $xenditData['name'] ?? null,
+                        'xendit_expiry_date' => isset($xenditData['expiration_date']) ? \Carbon\Carbon::parse($xenditData['expiration_date']) : null,
+                    ]);
+                    $paymentUrl = $xenditResponse['payment_url'] ?? null;
+                } else {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Gagal membuat pembayaran: ' . ($xenditResponse['message'] ?? 'Unknown error')
+                    ], 500);
                 }
             }
 
-            // Map status to frontend format
-            $statusMapping = [
-                Pembayaran::STATUS_SUDAH_BAYAR => 'paid',
-                Pembayaran::STATUS_GAGAL => 'failed',
-                Pembayaran::STATUS_BELUM_BAYAR => 'pending'
-            ];
+            // Clear cart
+            Cart::where('id_customer', $customerId)->delete();
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
-                'status' => $statusMapping[$pembayaran->status_pembayaran] ?? 'pending',
-                'internal_status' => $pembayaran->status_pembayaran
+                'message' => 'Pesanan berhasil dibuat',
+                'order_id' => $pemesanan->id_pemesanan,
+                'payment_url' => $paymentUrl,
+                'redirect_url' => route('order.success', $pemesanan->id_pemesanan)
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Payment Status Check Error:', ['error' => $e->getMessage(), 'order_id' => $orderId]);
+            DB::rollBack();
+            Log::error('Checkout Process Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
 
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ]);
+                'message' => 'Gagal memproses checkout: ' . $e->getMessage()
+            ], 500);
         }
     }
 
     /**
-     * Calculate shipping cost (you can integrate with real shipping API)
+     * Calculate shipping cost using ManualShippingService
      */
     public function calculateShipping(Request $request)
     {
         $request->validate([
             'ekspedisi' => 'required|string',
-            'layanan' => 'required|string',
-            'destination' => 'nullable|string',
+            'destination' => 'required|string', // City ID
+            'weight' => 'nullable|integer', // Weight in grams
         ]);
 
-        // Simplified shipping cost calculation
-        // In real application, integrate with RajaOngkir or other shipping API
-        $shippingCosts = [
-            'JNE' => ['REG' => 15000, 'YES' => 25000, 'OKE' => 10000],
-            'TIKI' => ['REG' => 14000, 'ONS' => 24000, 'ECO' => 9000],
-            'POS' => ['REG' => 13000, 'NEXT' => 23000],
-            'SiCepat' => ['REG' => 12000, 'BEST' => 20000],
-            'JNT' => ['REG' => 11000, 'EXPRESS' => 19000],
-        ];
+        try {
+            // Use BinderByte origin city ID (Jakarta Pusat = 3171, but ManualService expects ID mapped in DB)
+            // In Seeder we mapped 152 (Jakarta Selatan) to Java Zone.
+            // Let's use 152 as default origin for now to match seeder data.
+            $origin = config('services.rajaongkir.origin_city_id', '152');
 
-        $ekspedisi = strtoupper($request->ekspedisi);
-        $layanan = strtoupper($request->layanan);
+            $destination = $request->destination;
+            $weight = $request->weight ?? 1000; // Default 1kg if not specified
+            $courier = strtolower($request->ekspedisi);
 
-        $cost = $shippingCosts[$ekspedisi][$layanan] ?? 15000;
+            Log::info('Calculate Shipping Request (Manual)', [
+                'origin' => $origin,
+                'destination' => $destination,
+                'weight' => $weight,
+                'courier' => $courier
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'cost' => $cost,
-            'cost_formatted' => 'Rp ' . number_format($cost, 0, ',', '.'),
-            'estimation' => '2-3 hari'
-        ]);
+            $costs = $this->manualShippingService->calculateShipping($origin, $destination, $weight, $courier);
+
+            $formattedCosts = [];
+
+            foreach ($costs as $c) {
+                $costValue = $c['cost'] ?? 0;
+                $etdValue = $c['etd'] ?? '-';
+                $serviceName = $c['service'] ?? 'Unknown Service';
+                $description = $c['description'] ?? $serviceName;
+
+                $formattedCosts[] = [
+                    'service' => $serviceName,
+                    'description' => $description,
+                    'cost' => $costValue,
+                    'cost_formatted' => 'Rp ' . number_format($costValue, 0, ',', '.'),
+                    'etd' => $etdValue
+                ];
+            }
+
+            Log::info('Shipping costs calculated successfully', [
+                'count' => count($formattedCosts)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'costs' => $formattedCosts
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Calculate Shipping Error', [
+                'error' => $e->getMessage(),
+                'request' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghitung ongkir: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get Cities by Province ID (BinderByte)
+     */
+    public function getCities(Request $request)
+    {
+        $provinceId = $request->province_id;
+        try {
+            if ($provinceId) {
+                $cities = $this->binderbyteService->getCities($provinceId);
+            } else {
+                $cities = [];
+            }
+
+            return response()->json([
+                'success' => true,
+                'cities' => $cities
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memuat kota'
+            ], 500);
+        }
     }
 
     /**
@@ -488,7 +371,7 @@ public function process(Request $request)
     public function paymentFailed($orderId)
     {
         $pemesanan = Pemesanan::with(['pembayaran'])->find($orderId);
-        
+
         if (!$pemesanan) {
             return redirect()->route('home')->with('error', 'Pesanan tidak ditemukan');
         }
