@@ -410,6 +410,10 @@
             });
         });
     </script>
+    
+    {{-- Chatbot Component --}}
+    @include('components.chatbot')
+    
     @stack('scripts')
 </body>
 </html>

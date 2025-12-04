@@ -9,7 +9,7 @@ class ChatService
 {
     protected $client;
     protected $apiKey;
-    protected $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+    protected $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
     public function __construct()
     {
@@ -47,8 +47,6 @@ class ChatService
                     ],
                     'generationConfig' => [
                         'temperature' => 0.7,
-                        'topK' => 40,
-                        'topP' => 0.95,
                         'maxOutputTokens' => 1024,
                     ],
                 ],
@@ -128,7 +126,7 @@ class ChatService
 
         // Add customer context if logged in
         if ($customerId) {
-            $customer = \DB::table('customers')->find($customerId);
+            $customer = \DB::table('customers')->where('id_customer', $customerId)->first();
             if ($customer) {
                 $prompt .= "Customer: {$customer->nama}\n";
 
