@@ -152,7 +152,7 @@ class CheckoutController extends Controller
             $pemesanan = Pemesanan::create([
                 'id_customer' => $customerId,
                 'tanggal_pemesanan' => now(),
-                'status_pemesanan' => 'pending',
+                'status' => 'pending',
                 'total_harga' => $grandTotal,
             ]);
 

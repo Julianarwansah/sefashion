@@ -20,6 +20,10 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             CustomerSeeder::class,
+            AdminSeeder::class,
+            ShippingZoneSeeder::class,
+            ShippingRateSeeder::class,
+            ShippingZoneCitySeeder::class,
             // Tambahkan seeder lainnya di sini
         ]);
     }
