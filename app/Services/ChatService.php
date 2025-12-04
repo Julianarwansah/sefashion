@@ -9,7 +9,7 @@ class ChatService
 {
     protected $client;
     protected $apiKey;
-    protected $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+    protected $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
     public function __construct()
     {
@@ -25,6 +25,12 @@ class ChatService
         try {
             // Build context from database
             $context = $this->buildDatabaseContext();
+
+            // Augment context with specific product data based on user query
+            $productContext = $this->augmentContextWithProductData($message);
+            if ($productContext) {
+                $context .= "\n\nINFORMASI TAMBAHAN DARI DATABASE:\n" . $productContext;
+            }
 
             // Build full prompt with context
             $fullPrompt = $this->buildPrompt($message, $context, $customerId);
@@ -72,6 +78,99 @@ class ChatService
     }
 
     /**
+     * Augment context with product data based on keywords
+     */
+    protected function augmentContextWithProductData(string $message): string
+    {
+        $message = strtolower($message);
+        $keywords = ['stok', 'harga', 'cari', 'produk', 'baju', 'celana', 'kemeja', 'kaos', 'jaket', 'dress', 'rok', 'sepatu', 'tas', 'topi', 'warna', 'ukuran'];
+
+        // Check if message contains any keywords
+        $hasKeyword = false;
+        foreach ($keywords as $keyword) {
+            if (str_contains($message, $keyword)) {
+                $hasKeyword = true;
+                break;
+            }
+        }
+
+        if (!$hasKeyword) {
+            return '';
+        }
+
+        // Extract potential product names (simple heuristic: words after "cari", "stok", "harga")
+        // For now, let's just search for any product that matches words in the message
+        $words = explode(' ', $message);
+        $searchTerms = array_filter($words, function ($word) use ($keywords) {
+            return strlen($word) > 2
+                && !in_array($word, ['yang', 'dan', 'atau', 'dari', 'untuk', 'dengan', 'saya', 'kamu', 'toko', 'halo', 'tolong', 'bisa', 'minta', 'info', 'cek', 'lihat', 'apa', 'saja'])
+                && !in_array($word, $keywords);
+        });
+
+        if (empty($searchTerms)) {
+            // If no specific terms, maybe list latest products
+            $products = \App\Models\Produk::latest()->take(5)->get();
+            $info = "Daftar Produk Terbaru:\n";
+            foreach ($products as $product) {
+                $info .= "- {$product->nama_produk} (Stok: {$product->total_stok})\n";
+            }
+            return $info;
+        }
+
+        // Search products
+        $query = \App\Models\Produk::query();
+
+        $query->where(function ($q) use ($searchTerms) {
+            foreach ($searchTerms as $term) {
+                $q->orWhere('nama_produk', 'like', "%{$term}%")
+                    ->orWhere('deskripsi', 'like', "%{$term}%")
+                    ->orWhere('kategori', 'like', "%{$term}%");
+            }
+        });
+
+        $products = $query->with([
+            'detailUkuran' => function ($q) {
+                $q->where('stok', '>', 0);
+            }
+        ])->take(5)->get();
+
+        if ($products->isEmpty()) {
+            return "Tidak ditemukan produk yang cocok dengan kata kunci pencarian.";
+        }
+
+        $info = "Ditemukan " . $products->count() . " produk relevan:\n";
+        foreach ($products as $product) {
+            $info .= "1. Nama: {$product->nama_produk}\n";
+            $info .= "   Kategori: {$product->kategori}\n";
+            $info .= "   Total Stok: {$product->total_stok}\n";
+
+            // Price range
+            $minPrice = $product->detailUkuran->min('harga');
+            $maxPrice = $product->detailUkuran->max('harga');
+            if ($minPrice == $maxPrice) {
+                $info .= "   Harga: Rp " . number_format($minPrice, 0, ',', '.') . "\n";
+            } else {
+                $info .= "   Harga: Rp " . number_format($minPrice, 0, ',', '.') . " - Rp " . number_format($maxPrice, 0, ',', '.') . "\n";
+            }
+
+            // Available sizes/colors
+            $variants = [];
+            foreach ($product->detailUkuran as $detail) {
+                $size = $detail->ukuran;
+                $color = $detail->detailWarna->nama_warna ?? 'Umum';
+                $stock = $detail->stok;
+                $variants[] = "{$size} ({$color}): {$stock}";
+            }
+            if (!empty($variants)) {
+                $info .= "   Varian Tersedia: " . implode(', ', array_slice($variants, 0, 5)) . (count($variants) > 5 ? ", dll" : "") . "\n";
+            }
+            $info .= "\n";
+        }
+
+        return $info;
+    }
+
+    /**
      * Build database context for AI
      */
     protected function buildDatabaseContext(): string
@@ -111,6 +210,7 @@ class ChatService
         $context .= "5. Informasi umum tentang toko\n\n";
 
         $context .= "Jawab dengan ramah, informatif, dan dalam Bahasa Indonesia.\n";
+        $context .= "Gunakan data produk yang diberikan untuk menjawab pertanyaan tentang stok dan harga secara akurat.\n";
 
         return $context;
     }
