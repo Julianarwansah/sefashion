@@ -207,10 +207,12 @@ class ChatService
         $context .= "2. Ketersediaan stok\n";
         $context .= "3. Kategori produk\n";
         $context .= "4. Rekomendasi produk\n";
-        $context .= "5. Informasi umum tentang toko\n\n";
+        $context .= "5. Informasi umum tentang toko\n";
+        $context .= "6. Tips fashion dan padu padan gaya (General Knowledge)\n\n";
 
         $context .= "Jawab dengan ramah, informatif, dan dalam Bahasa Indonesia.\n";
         $context .= "Gunakan data produk yang diberikan untuk menjawab pertanyaan tentang stok dan harga secara akurat.\n";
+        $context .= "Jika pertanyaan bersifat umum (misalnya tips fashion, tren, cara merawat pakaian) dan tidak ada di database, silakan gunakan pengetahuan umum Anda sebagai ahli fashion untuk menjawab.\n";
 
         return $context;
     }
