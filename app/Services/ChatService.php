@@ -41,14 +41,12 @@ class ChatService
                     'contents' => [
                         [
                             'parts' => [
-                                ['text' => $fullPrompt]
+                                [
+                                    'text' => $fullPrompt
+                                ]
                             ]
                         ]
-                    ],
-                    'generationConfig' => [
-                        'temperature' => 0.7,
-                        'maxOutputTokens' => 1024,
-                    ],
+                    ]
                 ],
             ]);
 
