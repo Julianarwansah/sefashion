@@ -18,6 +18,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\XenditTestController;
+use App\Http\Controllers\ChatbotController;
 
 
 // Public Routes
@@ -45,6 +46,11 @@ Route::get('/password/reset', fn() => view('auth.passwords.email'))
     ->middleware('guest');
 
 Route::post('/password/email', [LoginController::class, 'sendResetLinkEmail'])->name('password.email');
+
+// Chatbot Routes (accessible to all)
+Route::post('/chatbot/chat', [ChatbotController::class, 'chat'])->name('chatbot.chat');
+Route::get('/chatbot/history', [ChatbotController::class, 'history'])->name('chatbot.history');
+Route::delete('/chatbot/history', [ChatbotController::class, 'clearHistory'])->name('chatbot.clear');
 
 
 // ========================================================================
