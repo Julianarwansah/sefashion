@@ -9,7 +9,7 @@ class ChatService
 {
     protected $client;
     protected $apiKey;
-    protected $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+    protected $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
 
     public function __construct()
     {
@@ -23,6 +23,16 @@ class ChatService
     public function chat(string $message, ?int $customerId = null): array
     {
         try {
+            // Validate API key
+            if (empty($this->apiKey)) {
+                Log::error('Chatbot error: Google AI API Key is not set in .env file');
+                return [
+                    'success' => false,
+                    'response' => 'Maaf, konfigurasi chatbot belum lengkap. Silakan hubungi administrator.',
+                    'error' => 'API key not configured',
+                ];
+            }
+
             // Build context from database
             $context = $this->buildDatabaseContext();
 
@@ -66,12 +76,22 @@ class ChatService
                 'response' => $aiResponse,
             ];
 
+        } catch (\GuzzleHttp\Exception\ClientException $e) {
+            // API error (4xx responses)
+            $errorBody = $e->getResponse()->getBody()->getContents();
+            Log::error('Chatbot API error: ' . $e->getMessage() . ' | Response: ' . $errorBody);
+
+            return [
+                'success' => false,
+                'response' => 'Maaf, terjadi kesalahan saat menghubungi AI. Silakan coba lagi.',
+                'error' => 'API Error: ' . $e->getMessage(),
+            ];
         } catch (\Exception $e) {
             Log::error('Chatbot error: ' . $e->getMessage());
 
             return [
                 'success' => false,
-                'response' => 'Maaf, terjadi kesalahan. Silakan coba lagi nanti.',
+                'response' => 'Maaf, terjadi kesalahan. Silakan coba lagi.',
                 'error' => $e->getMessage(),
             ];
         }
